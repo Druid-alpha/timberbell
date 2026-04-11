@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/categori
     { returnDocument: 'after' }
   )
 
-  if (!result.value) {
+  if (!result || !result.value) {
     return Response.json({ message: 'Category not found' }, { status: 404 })
   }
 

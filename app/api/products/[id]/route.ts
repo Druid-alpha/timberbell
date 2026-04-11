@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/products
     { returnDocument: 'after' }
   )
 
-  if (!result.value) {
+  if (!result || !result.value) {
     return Response.json({ message: 'Product not found' }, { status: 404 })
   }
 

@@ -9,8 +9,12 @@ export async function GET(request: NextRequest, ctx: RouteContext<'/api/orders/[
   }
 
   const { id } = await ctx.params
+  if (!ObjectId.isValid(id)) {
+    return Response.json({ message: 'Invalid order id' }, { status: 400 })
+  }
+
   const db = await (await import('@/lib/db')).getDb()
-  const query = ObjectId.isValid(id) ? { _id: new ObjectId(id), userId: user.id } : { _id: id }
+  const query = { _id: new ObjectId(id), userId: user.id }
 
   const order = await db.collection('orders').findOne(query)
   if (!order) {
@@ -27,13 +31,17 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/orders/[
   }
 
   const { id } = await ctx.params
+  if (!ObjectId.isValid(id)) {
+    return Response.json({ message: 'Invalid order id' }, { status: 400 })
+  }
+
   const body = await request.json().catch(() => null)
   if (!body) {
     return Response.json({ message: 'Body required' }, { status: 400 })
   }
 
   const db = await (await import('@/lib/db')).getDb()
-  const query = ObjectId.isValid(id) ? { _id: new ObjectId(id), userId: user.id } : { _id: id }
+  const query = { _id: new ObjectId(id), userId: user.id }
 
   const result = await db.collection('orders').findOneAndUpdate(
     query,
@@ -41,7 +49,7 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/orders/[
     { returnDocument: 'after' }
   )
 
-  if (!result.value) {
+  if (!result || !result.value) {
     return Response.json({ message: 'Order not found' }, { status: 404 })
   }
 

@@ -1,11 +1,10 @@
 import 'server-only'
 import { getDb } from '@/lib/db'
-import type { Cart } from '@/types/catalog'
-import type { CartItem } from '@/types/catalog'
+import type { Cart, CartItem } from '@/types/catalog'
 
 export async function getCartByUserId(userId: string) {
   const db = await getDb()
-  const doc = await db.collection('carts').findOne({ userId })
+  const doc = await db.collection<CartDoc>('carts').findOne({ userId })
 
   if (!doc) {
     return null
@@ -19,7 +18,7 @@ export async function getCartByUserId(userId: string) {
 
 export async function createCartForUser(userId: string) {
   const db = await getDb()
-  const result = await db.collection('carts').insertOne({
+  const result = await db.collection<CartDoc>('carts').insertOne({
     userId,
     items: [],
     createdAt: new Date(),
@@ -32,14 +31,13 @@ export async function createCartForUser(userId: string) {
 export async function addCartItemForUser(userId: string, item: CartItem) {
   const db = await getDb()
 
-  const result = await db.collection('carts').findOneAndUpdate(
+  const updateExisting = await db.collection<CartDoc>('carts').updateOne(
     { userId, 'items.productId': item.productId },
-    { $inc: { 'items.$.quantity': item.quantity }, $set: { updatedAt: new Date() } },
-    { returnDocument: 'after' }
+    { $inc: { 'items.$.quantity': item.quantity }, $set: { updatedAt: new Date() } }
   )
 
-  if (!result.value) {
-    await db.collection('carts').updateOne(
+  if (updateExisting.matchedCount === 0) {
+    await db.collection<CartDoc>('carts').updateOne(
       { userId },
       {
         $setOnInsert: { createdAt: new Date() },
@@ -55,7 +53,7 @@ export async function addCartItemForUser(userId: string, item: CartItem) {
 
 export async function replaceCartItems(userId: string, items: CartItem[]) {
   const db = await getDb()
-  await db.collection('carts').updateOne(
+  await db.collection<CartDoc>('carts').updateOne(
     { userId },
     {
       $setOnInsert: { createdAt: new Date() },
@@ -69,10 +67,17 @@ export async function replaceCartItems(userId: string, items: CartItem[]) {
 
 export async function clearCart(userId: string) {
   const db = await getDb()
-  await db.collection('carts').updateOne(
+  await db.collection<CartDoc>('carts').updateOne(
     { userId },
     { $set: { items: [], updatedAt: new Date() } }
   )
 
   return getCartByUserId(userId)
+}
+
+type CartDoc = {
+  userId: string
+  items: CartItem[]
+  createdAt: Date
+  updatedAt: Date
 }

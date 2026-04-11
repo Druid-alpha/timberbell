@@ -9,7 +9,8 @@ export async function POST(request: Request) {
     return Response.json({ message: 'Missing STRIPE_WEBHOOK_SECRET' }, { status: 500 })
   }
 
-  const signature = headers().get('stripe-signature')
+  const headerList = await headers()
+  const signature = headerList.get('stripe-signature')
   if (!signature) {
     return Response.json({ message: 'Missing Stripe signature' }, { status: 400 })
   }
