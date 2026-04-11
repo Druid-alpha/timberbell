@@ -2,7 +2,7 @@
 import type { Product } from '@/types/catalog'
 import { formatMoney } from '@/lib/utils/format'
 
-const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`
+const ratingLabel = (rating: number | undefined) => `${(rating ?? 0).toFixed(1)} / 5`
 
 export default function ProductCard({ product }: { product: Product }) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
@@ -48,7 +48,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </p>
         <div className="mt-auto flex items-center justify-between text-xs text-neutral-500">
           <span>{ratingLabel(product.rating)}</span>
-          <span>{product.leadTime}</span>
+          <span>{product.leadTime ?? 'TBD'}</span>
         </div>
         <Link
           href={`/products/${product.id}`}
