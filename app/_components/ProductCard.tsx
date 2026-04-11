@@ -5,12 +5,14 @@ import { formatMoney } from '@/lib/utils/format'
 const ratingLabel = (rating: number) => `${rating.toFixed(1)} / 5`
 
 export default function ProductCard({ product }: { product: Product }) {
+  const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-neutral-200/80 bg-white/80 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
       <div
         className="relative h-44 w-full overflow-hidden"
         style={{
-          backgroundImage: `linear-gradient(135deg, ${product.palette[0]}, ${product.palette[1]}, ${product.palette[2]})`,
+          backgroundImage: `linear-gradient(135deg, ${palette[0]}, ${palette[1]}, ${palette[2]})`,
         }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.55),transparent_60%)]" />
