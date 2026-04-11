@@ -9,7 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+.env.local
 # testing
 /coverage
 
@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# caches
+.cache
+.turbo
+.eslintcache
+.parcel-cache
+.swc
+.npm
+
+# editors
+.vscode
+.idea
