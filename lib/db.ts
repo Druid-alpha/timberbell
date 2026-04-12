@@ -2,10 +2,6 @@ import { MongoClient } from 'mongodb'
 
 const uri = process.env.MONGODB_URI
 
-if (!uri) {
-  throw new Error('Missing MONGODB_URI in environment variables')
-}
-
 let clientPromise: Promise<MongoClient>
 
 declare global {
@@ -25,6 +21,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export async function getDb() {
+  if (!uri) {
+    throw new Error('Missing MONGODB_URI in environment variables')
+  }
   const client = await clientPromise
   return client.db()
 }
