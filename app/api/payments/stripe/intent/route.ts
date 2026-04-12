@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getUserFromRequest } from '@/lib/authServer'
 import { getCartByUserId } from '@/lib/services/cart'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 
 const currency = process.env.STRIPE_CURRENCY || 'usd'
 
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
 
   const orderId = orderResult.insertedId.toString()
 
+  const stripe = getStripe()
   const paymentIntent = await stripe.paymentIntents.create({
     amount: Math.round(total * 100),
     currency,

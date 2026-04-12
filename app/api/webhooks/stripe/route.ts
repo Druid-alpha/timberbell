@@ -1,10 +1,9 @@
 import { headers } from 'next/headers'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { ObjectId } from 'mongodb'
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
-
 export async function POST(request: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   if (!webhookSecret) {
     return Response.json({ message: 'Missing STRIPE_WEBHOOK_SECRET' }, { status: 500 })
   }
@@ -17,6 +16,7 @@ export async function POST(request: Request) {
 
   const payload = await request.text()
 
+  const stripe = getStripe()
   let event
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)

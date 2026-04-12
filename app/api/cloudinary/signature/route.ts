@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { cloudinary } from '@/lib/cloudinary'
+import { getCloudinary } from '@/lib/cloudinary'
 import { getUserFromRequest } from '@/lib/authServer'
 
 export async function POST(request: NextRequest) {
@@ -10,8 +10,9 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null)
-  const folder = body?.folder || 'timberbell/products'
+  const folder = body?.folder || 'timberbell'
 
+  const cloudinary = getCloudinary()
   const timestamp = Math.round(Date.now() / 1000)
   const signature = cloudinary.utils.api_sign_request(
     { timestamp, folder },
