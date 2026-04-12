@@ -1,10 +1,12 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-const secret = process.env.JWT_SECRET
-
-if (!secret) {
-  throw new Error('Missing JWT_SECRET in environment variables')
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error('Missing JWT_SECRET in environment variables')
+  }
+  return secret
 }
 
 export async function hashPassword(password: string) {
@@ -16,9 +18,14 @@ export async function verifyPassword(password: string, hash: string) {
 }
 
 export function signToken(payload: { id: string; email: string }) {
-  return jwt.sign(payload, secret, { expiresIn: '7d' })
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' })
 }
 
 export function verifyToken(token: string) {
-  return jwt.verify(token, secret) as { id: string; email: string; iat: number; exp: number }
+  return jwt.verify(token, getJwtSecret()) as {
+    id: string
+    email: string
+    iat: number
+    exp: number
+  }
 }
