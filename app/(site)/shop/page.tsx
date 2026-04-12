@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
@@ -20,7 +20,7 @@ type Product = {
   palette?: string[]
 }
 
-export default function ShopPage() {
+function ShopContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
   const category = searchParams.get('category') || ''
@@ -136,5 +136,19 @@ export default function ShopPage() {
         </div>
       ) : null}
     </div>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-7xl px-6 py-16 text-sm text-neutral-600">
+          Loading shop...
+        </div>
+      }
+    >
+      <ShopContent />
+    </Suspense>
   )
 }

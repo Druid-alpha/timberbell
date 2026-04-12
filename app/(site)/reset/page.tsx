@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import SectionHeading from '@/app/_components/SectionHeading'
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [password, setPassword] = useState('')
@@ -58,5 +59,19 @@ export default function ResetPasswordPage() {
         {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
       </form>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl px-6 py-16 text-sm text-neutral-600">
+          Loading reset form...
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   )
 }

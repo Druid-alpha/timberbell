@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') ?? ''
   const [status, setStatus] = useState('Verifying your email...')
@@ -41,5 +41,19 @@ export default function VerifyEmailPage() {
         {status}
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-3xl px-6 py-16 text-sm text-neutral-600">
+          Loading verification...
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
