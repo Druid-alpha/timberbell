@@ -9,21 +9,26 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 
-if (process.env.NODE_ENV === 'production') {
+let clientPromise: Promise<MongoClient>
+
+function createClientPromise() {
+  if (!uri) {
+    throw new Error('Missing MONGODB_URI in environment variables')
+  }
   const client = new MongoClient(uri)
-  clientPromise = client.connect()
+  return client.connect()
+}
+
+if (process.env.NODE_ENV === 'production') {
+  clientPromise = createClientPromise()
 } else {
   if (!global._mongoClientPromise) {
-    const client = new MongoClient(uri)
-    global._mongoClientPromise = client.connect()
+    global._mongoClientPromise = createClientPromise()
   }
   clientPromise = global._mongoClientPromise
 }
 
 export async function getDb() {
-  if (!uri) {
-    throw new Error('Missing MONGODB_URI in environment variables')
-  }
   const client = await clientPromise
   return client.db()
 }
