@@ -17,8 +17,12 @@ export async function GET(request: NextRequest) {
     user: {
       id: profile._id.toString(),
       name: profile.name,
-      email: profile.email,
+      email: profile.email?.toLowerCase(),
       phone: profile.phone ?? null,
+      avatarUrl: profile.avatarUrl ?? null,
+      role: profile.role ?? 'user',
+      createdAt: profile.createdAt,
+      lastLoginAt: profile.lastLoginAt ?? null,
       address: profile.address ?? null,
       city: profile.city ?? null,
       country: profile.country ?? null,
@@ -44,6 +48,7 @@ export async function PUT(request: NextRequest) {
     address: body.address,
     city: body.city,
     country: body.country,
+    avatarUrl: body.avatarUrl,
   })
 
   return Response.json({ message: 'Profile updated' })

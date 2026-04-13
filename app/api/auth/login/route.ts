@@ -9,7 +9,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'email and password required' }, { status: 400 })
   }
 
-  const user = await findUserByEmail(body.email)
+  const normalizedEmail = String(body.email).toLowerCase()
+  const user = await findUserByEmail(normalizedEmail)
   if (!user) {
     return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 })
   }
@@ -27,11 +28,17 @@ export async function POST(request: Request) {
   }
 
   const token = signToken({ id: user._id.toString(), email: user.email })
+  const { getDb } = await import('@/lib/db')
+  const db = await getDb()
+  await db.collection('users').updateOne(
+    { _id: user._id },
+    { $set: { lastLoginAt: new Date() } }
+  )
   const response = NextResponse.json({
     user: {
       id: user._id.toString(),
       name: user.name,
-      email: user.email,
+      email: user.email.toLowerCase(),
       emailVerified: user.emailVerified ?? false,
     },
   })

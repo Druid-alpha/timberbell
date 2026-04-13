@@ -18,7 +18,8 @@ export async function POST(request: Request) {
     )
   }
 
-  const existing = await findUserByEmail(body.email)
+  const normalizedEmail = String(body.email).toLowerCase()
+  const existing = await findUserByEmail(normalizedEmail)
   if (existing) {
     return NextResponse.json({ message: 'Email already in use' }, { status: 409 })
   }
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
   const passwordHash = await hashPassword(body.password)
   const userId = await createUser({
     name: body.name,
-    email: body.email,
+    email: normalizedEmail,
     passwordHash,
   })
 
@@ -39,14 +40,14 @@ export async function POST(request: Request) {
 
   const verifyUrl = `${appUrl}/verify?token=${verificationToken}`
   await sendEmail({
-    to: body.email,
+    to: normalizedEmail,
     subject: 'Verify your Timberbell account',
     html: verificationEmailTemplate(verifyUrl),
   })
 
-  const token = signToken({ id: userId, email: body.email })
+  const token = signToken({ id: userId, email: normalizedEmail })
   const response = NextResponse.json({
-    user: { id: userId, name: body.name, email: body.email, emailVerified: false },
+    user: { id: userId, name: body.name, email: normalizedEmail, emailVerified: false },
     message: 'Verification email sent',
   })
 

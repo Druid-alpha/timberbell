@@ -5,9 +5,31 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const category = searchParams.get('category') || undefined
   const query = searchParams.get('q') || undefined
+  const minPrice = searchParams.get('minPrice')
+  const maxPrice = searchParams.get('maxPrice')
+  const colors = searchParams.get('colors')
+  const materials = searchParams.get('materials')
+  const finishes = searchParams.get('finishes')
+  const sort = searchParams.get('sort') || undefined
+  const limitParam = searchParams.get('limit')
 
-  const products = await getProducts({ category, query })
-  return Response.json({ count: products.length, products })
+  const parseList = (value: string | null) =>
+    value ? value.split(',').map((item) => item.trim()).filter(Boolean) : undefined
+
+  const products = await getProducts({
+    category,
+    query,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    colors: parseList(colors),
+    materials: parseList(materials),
+    finishes: parseList(finishes),
+    sort: sort as any,
+  })
+
+  const limit = limitParam ? Number(limitParam) : undefined
+  const sliced = limit ? products.slice(0, limit) : products
+  return Response.json({ count: sliced.length, products: sliced })
 }
 
 export async function POST(request: NextRequest) {
@@ -22,6 +44,13 @@ export async function POST(request: NextRequest) {
     name: body.name,
     slug: body.slug,
     price: body.price,
+    inventoryCount: body.inventoryCount ?? null,
+    stockStatus: body.stockStatus ?? 'in_stock',
+    discountType: body.discountType ?? null,
+    discountValue: body.discountValue ?? null,
+    saleDiscount: body.saleDiscount ?? null,
+    saleStartAt: body.saleStartAt ? new Date(body.saleStartAt) : null,
+    saleEndAt: body.saleEndAt ? new Date(body.saleEndAt) : null,
     compareAt: body.compareAt,
     category: body.category,
     description: body.description ?? '',
@@ -34,6 +63,7 @@ export async function POST(request: NextRequest) {
     dimensions: body.dimensions ?? 'TBD',
     palette: body.palette ?? [],
     images: body.images ?? [],
+    variants: body.variants ?? [],
     createdAt: new Date(),
     updatedAt: new Date(),
   })

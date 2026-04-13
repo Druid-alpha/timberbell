@@ -11,6 +11,14 @@ export type Product = {
   slug?: string
   name: string
   price: number
+  inventoryCount?: number
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
+  discountType?: 'percentage' | 'fixed'
+  discountValue?: number
+  finalPrice?: number
+  saleDiscount?: number
+  saleStartAt?: string | Date | null
+  saleEndAt?: string | Date | null
   compareAt?: number
   category: string
   description: string
@@ -22,7 +30,25 @@ export type Product = {
   leadTime?: string
   dimensions?: string
   palette?: string[]
-  images?: string[]
+  images?: ProductImage[]
+  variants?: ProductVariant[]
+}
+
+export type ProductImage = {
+  url: string
+  publicId: string
+}
+
+export type ProductVariant = {
+  id: string
+  name: string
+  sku?: string
+  price?: number
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
+  stockCount?: number
+  color?: string
+  image?: ProductImage | null
+  specifications?: string[]
 }
 
 export type Review = {

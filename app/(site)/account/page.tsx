@@ -8,6 +8,7 @@ export default function AccountPage() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -40,6 +41,43 @@ export default function AccountPage() {
     }
   }, [])
 
+  async function uploadAvatar(file: File) {
+    setAvatarUploading(true)
+    try {
+      const signatureRes = await fetch('/api/cloudinary/signature', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'timberbell/avatars' }),
+      })
+      const signatureData = await signatureRes.json()
+      if (!signatureRes.ok) return
+
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('api_key', signatureData.apiKey)
+      formData.append('timestamp', String(signatureData.timestamp))
+      formData.append('signature', signatureData.signature)
+      formData.append('folder', signatureData.folder)
+
+      const uploadRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload`,
+        { method: 'POST', body: formData }
+      )
+      const uploadJson = await uploadRes.json()
+      if (!uploadRes.ok) return
+
+      await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: uploadJson.secure_url }),
+      })
+
+      setProfile((prev: any) => ({ ...prev, avatarUrl: uploadJson.secure_url }))
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
       <SectionHeading
@@ -66,9 +104,43 @@ export default function AccountPage() {
               <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Profile</div>
               {profile ? (
                 <div className="mt-3 space-y-2 text-sm text-neutral-600">
-                  <p>Name: {profile.name}</p>
-                  <p>Email: {profile.email}</p>
-                  <p>Phone: {profile.phone ?? 'Not set'}</p>
+                  <div className="flex items-center gap-3">
+                    {profile.avatarUrl ? (
+                      <img
+                        src={profile.avatarUrl}
+                        alt=""
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2A3320]">
+                        {(profile.name || 'U').slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <p>Name: {profile.name}</p>
+                      <p>Email: {profile.email}</p>
+                      <p>Phone: {profile.phone ?? 'Not set'}</p>
+                    </div>
+                  </div>
+                  <label className="mt-3 inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]">
+                    {avatarUploading ? 'Uploading...' : 'Upload avatar'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        if (!file) return
+                        uploadAvatar(file)
+                        event.target.value = ''
+                      }}
+                    />
+                  </label>
+                  {profile.role === 'admin' ? (
+                    <span className="inline-flex rounded-full border border-[#2A3320] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]">
+                      Admin
+                    </span>
+                  ) : null}
                 </div>
               ) : (
                 <p className="mt-3 text-sm text-neutral-600">No profile data.</p>

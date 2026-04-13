@@ -1,22 +1,16 @@
 import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
+import { getProductByIdOrSlug } from '@/lib/services/catalog'
 
 export async function GET(_request: NextRequest, ctx: RouteContext<'/api/products/[id]'>) {
   const { id } = await ctx.params
-  const db = await (await import('@/lib/db')).getDb()
-
-  const query = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }
-  const product = await db.collection('products').findOne(query)
+  const product = await getProductByIdOrSlug(id)
 
   if (!product) {
     return Response.json({ message: 'Product not found' }, { status: 404 })
   }
 
-  return Response.json({
-    id: product._id.toString(),
-    ...product,
-    _id: undefined,
-  })
+  return Response.json(product)
 }
 
 export async function PUT(request: NextRequest, ctx: RouteContext<'/api/products/[id]'>) {

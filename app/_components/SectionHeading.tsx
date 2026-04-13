@@ -16,15 +16,15 @@ export default function SectionHeading({
   return (
     <div className={`flex flex-col gap-3 ${alignClass}`}>
       {eyebrow ? (
-        <span className="text-xs uppercase tracking-[0.4em] text-neutral-500">
+        <span className="text-xs uppercase tracking-[0.4em] text-[#8B9A78]">
           {eyebrow}
         </span>
       ) : null}
-      <h2 className="font-display text-3xl sm:text-4xl text-neutral-900">
+      <h2 className="font-display text-3xl sm:text-4xl text-[#2A3320]">
         {title}
       </h2>
       {description ? (
-        <p className="max-w-2xl text-sm sm:text-base text-neutral-600">
+        <p className="max-w-2xl text-sm sm:text-base text-[#6B665A]">
           {description}
         </p>
       ) : null}

@@ -10,6 +10,9 @@ export type DbUser = {
   emailVerified?: boolean
   emailVerifiedAt?: Date
   phone?: string
+  avatarUrl?: string
+  role?: 'admin' | 'user'
+  lastLoginAt?: Date
   address?: string
   city?: string
   country?: string
@@ -18,7 +21,7 @@ export type DbUser = {
 
 export async function findUserByEmail(email: string) {
   const db = await getDb()
-  return db.collection<DbUser>('users').findOne({ email })
+  return db.collection<DbUser>('users').findOne({ email: email.toLowerCase() })
 }
 
 export async function findUserById(id: string) {
@@ -30,9 +33,10 @@ export async function createUser(data: { name: string; email: string; passwordHa
   const db = await getDb()
   const result = await db.collection('users').insertOne({
     name: data.name,
-    email: data.email,
+    email: data.email.toLowerCase(),
     passwordHash: data.passwordHash,
     emailVerified: false,
+    role: 'user',
     createdAt: new Date(),
   })
 
@@ -57,7 +61,14 @@ export async function updatePassword(userId: string, passwordHash: string) {
 
 export async function updateUserProfile(
   userId: string,
-  updates: { name?: string; phone?: string; address?: string; city?: string; country?: string }
+  updates: {
+    name?: string
+    phone?: string
+    address?: string
+    city?: string
+    country?: string
+    avatarUrl?: string
+  }
 ) {
   const db = await getDb()
   await db.collection('users').updateOne(

@@ -7,6 +7,7 @@ import {
   getCartByUserId,
   replaceCartItems,
 } from '@/lib/services/cart'
+import { computeFinalPrice } from '@/lib/utils/pricing'
 
 export async function GET(request: NextRequest) {
   const user = getUserFromRequest(request)
@@ -41,10 +42,24 @@ export async function GET(request: NextRequest) {
     }
   })
 
-  const items = cart.items.map((item) => ({
-    ...item,
-    product: productMap.get(item.productId) || null,
-  }))
+  const items = cart.items.map((item) => {
+    const product = productMap.get(item.productId) || null
+    if (!product) {
+      return { ...item, product: null }
+    }
+    const finalPrice = computeFinalPrice({
+      price: product.price,
+      discountType: product.discountType,
+      discountValue: product.discountValue,
+      saleDiscount: product.saleDiscount,
+      saleStartAt: product.saleStartAt,
+      saleEndAt: product.saleEndAt,
+    })
+    return {
+      ...item,
+      product: { ...product, finalPrice },
+    }
+  })
 
   return Response.json({ cart: { id: cart.id, items } })
 }

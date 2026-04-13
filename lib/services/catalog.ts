@@ -2,6 +2,7 @@ import 'server-only'
 import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
 import type { Category, Product, Review } from '@/types/catalog'
+import { computeFinalPrice } from '@/lib/utils/pricing'
 
 const fallbackPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
 
@@ -12,6 +13,21 @@ const normalizeProduct = (doc: any): Product => ({
   slug: doc.slug,
   name: doc.name,
   price: doc.price,
+  inventoryCount: doc.inventoryCount ?? null,
+  stockStatus: doc.stockStatus ?? 'in_stock',
+  discountType: doc.discountType,
+  discountValue: doc.discountValue,
+  saleDiscount: doc.saleDiscount,
+  saleStartAt: doc.saleStartAt ?? null,
+  saleEndAt: doc.saleEndAt ?? null,
+  finalPrice: computeFinalPrice({
+    price: doc.price,
+    discountType: doc.discountType,
+    discountValue: doc.discountValue,
+    saleDiscount: doc.saleDiscount,
+    saleStartAt: doc.saleStartAt ?? null,
+    saleEndAt: doc.saleEndAt ?? null,
+  }),
   compareAt: doc.compareAt,
   category: doc.category,
   description: doc.description ?? '',
@@ -24,6 +40,7 @@ const normalizeProduct = (doc: any): Product => ({
   dimensions: doc.dimensions ?? 'TBD',
   palette: doc.palette?.length ? doc.palette : fallbackPalette,
   images: doc.images ?? [],
+  variants: doc.variants ?? [],
 })
 
 const normalizeCategory = (doc: any): Category => ({
@@ -50,7 +67,16 @@ export async function getCategories() {
   return rows.map(normalizeCategory)
 }
 
-export async function getProducts(params?: { category?: string; query?: string }) {
+export async function getProducts(params?: {
+  category?: string
+  query?: string
+  minPrice?: number
+  maxPrice?: number
+  colors?: string[]
+  materials?: string[]
+  finishes?: string[]
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating'
+}) {
   const db = await getDb()
   const filter: Record<string, any> = {}
 
@@ -65,7 +91,41 @@ export async function getProducts(params?: { category?: string; query?: string }
     ]
   }
 
-  const rows = await db.collection('products').find(filter).sort({ createdAt: -1 }).toArray()
+  if (typeof params?.minPrice === 'number' || typeof params?.maxPrice === 'number') {
+    filter.price = {}
+    if (typeof params?.minPrice === 'number') filter.price.$gte = params.minPrice
+    if (typeof params?.maxPrice === 'number') filter.price.$lte = params.maxPrice
+  }
+
+  if (params?.colors?.length) {
+    filter.palette = { $in: params.colors }
+  }
+
+  if (params?.materials?.length) {
+    filter.materials = { $in: params.materials }
+  }
+
+  if (params?.finishes?.length) {
+    filter.finishes = { $in: params.finishes }
+  }
+
+  let sort: Record<string, 1 | -1> = { createdAt: -1 }
+  switch (params?.sort) {
+    case 'price_asc':
+      sort = { price: 1 }
+      break
+    case 'price_desc':
+      sort = { price: -1 }
+      break
+    case 'rating':
+      sort = { rating: -1, createdAt: -1 }
+      break
+    case 'newest':
+    default:
+      sort = { createdAt: -1 }
+  }
+
+  const rows = await db.collection('products').find(filter).sort(sort).toArray()
   return rows.map(normalizeProduct)
 }
 

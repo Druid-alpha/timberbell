@@ -1,36 +1,37 @@
-﻿import type { Metadata } from 'next'
-import { Manrope, Playfair_Display } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { Work_Sans, Newsreader } from "next/font/google";
+import "./globals.css";
 
-const manrope = Manrope({
-  variable: '--font-body',
-  subsets: ['latin'],
-})
+const body = Work_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-body",
+  display: "swap",
+});
 
-const playfair = Playfair_Display({
-  variable: '--font-display',
-  subsets: ['latin'],
-})
+const display = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'Timberbell Atelier',
-  description: 'Crafted furniture for modern rituals.',
-}
+  title: "Timberbell",
+  description: "Timberbell premium furniture store",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${manrope.variable} ${playfair.variable} h-full antialiased`}
-    >
-      <body className="min-h-full bg-[var(--paper)] text-[var(--ink)] font-body">
+    <html lang="en">
+      <body className={`${body.variable} ${display.variable} antialiased`}>
         {children}
       </body>
     </html>
-  )
+  );
 }
 
