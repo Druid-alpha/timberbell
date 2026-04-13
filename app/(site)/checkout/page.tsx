@@ -84,71 +84,71 @@ export default function CheckoutPage() {
       />
 
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-white/70 bg-white/70 p-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               name="firstName"
               placeholder="First name"
-              className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+              className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
               required
             />
             <input
               name="lastName"
               placeholder="Last name"
-              className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+              className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
               required
             />
           </div>
           <input
             name="email"
             placeholder="Email address"
-            className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
             required
           />
           <input
             name="address"
             placeholder="Delivery address"
-            className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
             required
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               name="city"
               placeholder="City"
-              className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+              className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
               required
             />
             <input
               name="postal"
               placeholder="Postal code"
-              className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+              className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
               required
             />
           </div>
           <textarea
             name="notes"
             placeholder="Delivery notes"
-            className="h-28 w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+            className="h-28 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
           />
           <button
             type="submit"
-            className="w-full rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white"
+            className="w-full rounded-full bg-[#7C4E2F] px-5 py-3 text-sm font-semibold text-white"
             disabled={loading || !cart || cart.items.length === 0}
           >
             Place order
           </button>
-          {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
+          {status ? <p className="text-sm text-[#6B594A]">{status}</p> : null}
           {status.includes('sign in') ? (
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-[#6B594A]">
               <a href="/login" className="underline">Go to login</a>
             </p>
           ) : null}
         </form>
 
-        <div className="space-y-4 rounded-3xl border border-white/70 bg-white/80 p-6 text-sm text-neutral-600">
-          <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Order summary</div>
+        <div className="space-y-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
+          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Order summary</div>
           {loading ? (
-            <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+            <div className="rounded-2xl border border-[#E6D9C8] bg-white/70 p-4">
               Loading cart...
             </div>
           ) : cart?.items?.length ? (
@@ -156,22 +156,22 @@ export default function CheckoutPage() {
               {cart.items.map((item: any) => (
                 <div key={item.productId} className="flex items-center justify-between">
                   <span>{item.product?.name}</span>
-                  <span className="font-semibold text-neutral-900">
+                  <span className="font-semibold text-[#2B2119]">
                     ${((item.product?.price ?? 0) * item.quantity).toLocaleString()}
                   </span>
                 </div>
               ))}
-              <div className="flex items-center justify-between border-t border-neutral-200/70 pt-3">
+              <div className="flex items-center justify-between border-t border-[#E6D9C8] pt-3">
                 <span>Delivery</span>
-                <span className="font-semibold text-neutral-900">${delivery.toLocaleString()}</span>
+                <span className="font-semibold text-[#2B2119]">${delivery.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-base font-semibold text-neutral-900">
+              <div className="flex items-center justify-between text-base font-semibold text-[#2B2119]">
                 <span>Total</span>
                 <span>${total.toLocaleString()}</span>
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+            <div className="rounded-2xl border border-[#E6D9C8] bg-white/70 p-4">
               Your cart is empty.
             </div>
           )}

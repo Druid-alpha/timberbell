@@ -52,18 +52,18 @@ export default function WishlistPage() {
         />
         <Link
           href="/productfilter"
-          className="rounded-full border border-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]"
+          className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
         >
           Continue shopping
         </Link>
       </div>
 
       {loading ? (
-        <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-8 text-center text-sm text-[#6B665A]">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
           Loading wishlist...
         </div>
       ) : error ? (
-        <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-8 text-center text-sm text-[#6B665A]">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
           {error}
         </div>
       ) : products.length ? (
@@ -73,10 +73,11 @@ export default function WishlistPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-8 text-center text-sm text-[#6B665A]">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
           Your wishlist is empty.
         </div>
       )}
     </div>
   )
 }
+

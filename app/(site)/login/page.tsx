@@ -37,14 +37,14 @@ export default function LoginPage() {
         description="Access your saved pieces and delivery schedule."
       />
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <form onSubmit={handleSubmit} className="space-y-5 rounded-3xl border border-white/70 bg-white/70 p-6">
+        <form onSubmit={handleSubmit} className="space-y-5 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
           <input
             type="email"
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Email address"
-            className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
           />
           <input
             type="password"
@@ -52,16 +52,16 @@ export default function LoginPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Password"
-            className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+            className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
           />
           <button
             type="submit"
-            className="w-full rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white"
+            className="w-full rounded-full bg-[#7C4E2F] px-5 py-3 text-sm font-semibold text-white"
           >
             Sign in
           </button>
-          {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
-          <div className="flex items-center justify-between text-xs text-neutral-500">
+          {status ? <p className="text-sm text-[#6B594A]">{status}</p> : null}
+          <div className="flex items-center justify-between text-xs text-[#8C7A6B]">
             <Link href="/forgot" className="underline">
               Forgot password?
             </Link>
@@ -70,8 +70,8 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
-        <div className="rounded-3xl border border-white/70 bg-white/80 p-6 text-sm text-neutral-600">
-          <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Need verification?</div>
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
+          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Need verification?</div>
           <p className="mt-3">If you have not received a verification email, resend it below.</p>
           <ResendVerification />
         </div>
@@ -112,16 +112,16 @@ function ResendVerification() {
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="Email address"
-        className="w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm"
+        className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
       />
       <button
         type="button"
         onClick={handleResend}
-        className="w-full rounded-full border border-neutral-900 px-4 py-2 text-sm font-semibold text-neutral-900"
+        className="w-full rounded-full border border-[#7C4E2F] px-4 py-2 text-sm font-semibold text-[#7C4E2F]"
       >
         Resend verification
       </button>
-      {status ? <p className="text-sm text-neutral-600">{status}</p> : null}
+      {status ? <p className="text-sm text-[#6B594A]">{status}</p> : null}
     </div>
   )
 }

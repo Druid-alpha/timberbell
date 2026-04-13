@@ -271,40 +271,40 @@ export default function AdminProductsPage() {
   return (
     <div className="space-y-8">
       <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <div className="rounded-[2rem] border border-[#E4DDCF] bg-white/70 p-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Add product</p>
-          <h2 className="mt-3 font-display text-2xl text-[#2A3320]">Create a new piece</h2>
+        <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Add product</p>
+          <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Create a new piece</h2>
           <form onSubmit={handleCreateSubmit} className="mt-6 space-y-4">
             <input
               value={form.name}
               onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               placeholder="Product name"
-              className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
             />
             <input
               value={form.slug}
               onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
               placeholder="Slug (optional)"
-              className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
             />
             <input
               value={form.price}
               onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
               placeholder="Price"
               type="number"
-              className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
             />
             <input
               value={form.category}
               onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
               placeholder="Category"
-              className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
             />
             <textarea
               value={form.description}
               onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
               placeholder="Short description"
-              className="min-h-[96px] w-full rounded-3xl border border-[#E4DDCF] bg-white px-4 py-3 text-sm"
+              className="min-h-[96px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <input
@@ -314,14 +314,14 @@ export default function AdminProductsPage() {
                 }
                 placeholder="Inventory count"
                 type="number"
-                className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
               />
               <select
                 value={form.stockStatus}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, stockStatus: event.target.value }))
                 }
-                className="h-11 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
               >
                 <option value="in_stock">In stock</option>
                 <option value="low_stock">Low stock</option>
@@ -330,13 +330,13 @@ export default function AdminProductsPage() {
               </select>
             </div>
 
-            <div className="rounded-3xl border border-dashed border-[#E4DDCF] bg-[#FCFAF6] p-4">
+            <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-[#F4EEE4] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Images</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Images</p>
                   <p className="text-sm text-[#6B665A]">Upload product imagery to Cloudinary.</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]">
+                <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
                   {uploading ? 'Uploading...' : 'Upload'}
                   <input
                     type="file"
@@ -374,7 +374,7 @@ export default function AdminProductsPage() {
                         onClick={() =>
                           setImages((prev) => prev.filter((item) => item.publicId !== img.publicId))
                         }
-                        className="absolute -right-2 -top-2 rounded-full bg-white px-2 py-1 text-[10px] text-[#2A3320]"
+                        className="absolute -right-2 -top-2 rounded-full bg-white px-2 py-1 text-[10px] text-[#2B2119]"
                       >
                         Remove
                       </button>
@@ -384,10 +384,10 @@ export default function AdminProductsPage() {
               ) : null}
             </div>
 
-            <div className="rounded-3xl border border-dashed border-[#E4DDCF] bg-[#FCFAF6] p-4">
+            <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-[#F4EEE4] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Variants</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Variants</p>
                   <p className="text-sm text-[#6B665A]">
                     Add color, image, and specifications for each variant.
                   </p>
@@ -395,7 +395,7 @@ export default function AdminProductsPage() {
                 <button
                   type="button"
                   onClick={() => addVariant(setVariants)}
-                  className="rounded-full border border-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]"
+                  className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]"
                 >
                   Add variant
                 </button>
@@ -406,7 +406,7 @@ export default function AdminProductsPage() {
                   {variants.map((variant) => (
                     <div
                       key={variant.id}
-                      className="rounded-2xl border border-[#E4DDCF] bg-white/80 p-4"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white/80 p-4"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <input
@@ -415,7 +415,7 @@ export default function AdminProductsPage() {
                             updateVariant(setVariants, variant.id, { name: event.target.value })
                           }
                           placeholder="Variant name"
-                          className="h-10 flex-1 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 flex-1 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <input
                           value={variant.sku ?? ''}
@@ -423,7 +423,7 @@ export default function AdminProductsPage() {
                             updateVariant(setVariants, variant.id, { sku: event.target.value })
                           }
                           placeholder="SKU"
-                          className="h-10 w-36 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <input
                           value={variant.price ?? ''}
@@ -432,7 +432,7 @@ export default function AdminProductsPage() {
                           }
                           placeholder="Variant price"
                           type="number"
-                          className="h-10 w-32 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-32 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <input
                           value={variant.stockCount ?? ''}
@@ -441,7 +441,7 @@ export default function AdminProductsPage() {
                           }
                           placeholder="Stock count"
                           type="number"
-                          className="h-10 w-28 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-28 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <select
                           value={variant.stockStatus ?? 'in_stock'}
@@ -450,7 +450,7 @@ export default function AdminProductsPage() {
                               stockStatus: event.target.value as Variant['stockStatus'],
                             })
                           }
-                          className="h-10 w-36 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         >
                           <option value="in_stock">In stock</option>
                           <option value="low_stock">Low stock</option>
@@ -463,7 +463,7 @@ export default function AdminProductsPage() {
                             updateVariant(setVariants, variant.id, { color: event.target.value })
                           }
                           placeholder="Color (hex or name)"
-                          className="h-10 w-40 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-40 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <button
                           type="button"
@@ -475,7 +475,7 @@ export default function AdminProductsPage() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center gap-3">
-                        <label className="inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]">
+                        <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
                           {uploading ? 'Uploading...' : 'Upload image'}
                           <input
                             type="file"
@@ -510,7 +510,7 @@ export default function AdminProductsPage() {
                           })
                         }
                         placeholder="Specifications (one per line)"
-                        className="mt-3 min-h-[80px] w-full rounded-3xl border border-[#E4DDCF] bg-white px-4 py-3 text-sm"
+                        className="mt-3 min-h-[80px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
                       />
                     </div>
                   ))}
@@ -522,44 +522,44 @@ export default function AdminProductsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="h-11 w-full rounded-full bg-[#2A3320] text-xs font-bold uppercase tracking-[0.3em] text-white transition hover:bg-[#232B1B] disabled:opacity-60"
+              className="h-11 w-full rounded-full bg-[#7C4E2F] text-xs font-bold uppercase tracking-[0.3em] text-white transition hover:bg-[#6A3F24] disabled:opacity-60"
             >
               {saving ? 'Saving...' : 'Add product'}
             </button>
           </form>
         </div>
 
-        <div className="rounded-[2rem] border border-[#E4DDCF] bg-white/70 p-6">
+        <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Catalog</p>
-              <h2 className="mt-3 font-display text-2xl text-[#2A3320]">Latest products</h2>
+              <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Catalog</p>
+              <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Latest products</h2>
             </div>
-            <span className="text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+            <span className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
               {products.length} items
             </span>
           </div>
           <div className="mt-6 space-y-4">
             {loading ? (
-              <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+              <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
                 Loading products...
               </div>
             ) : products.length ? (
               products.map((product) => (
                 <div
                   key={product.id}
-                  className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4"
+                  className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="text-sm font-semibold text-[#2A3320]">
+                      <div className="text-sm font-semibold text-[#2B2119]">
                         {product.name}
                       </div>
-                      <div className="text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                      <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                         {product.category}
                       </div>
                     </div>
-                    <div className="text-sm font-semibold text-[#2A3320]">
+                    <div className="text-sm font-semibold text-[#2B2119]">
                       ${product.price}
                     </div>
                   </div>
@@ -568,7 +568,7 @@ export default function AdminProductsPage() {
                       {product.description}
                     </p>
                   ) : null}
-                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                  <div className="mt-3 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                     <span>Stock: {product.inventoryCount ?? '-'}</span>
                     <span>Status: {product.stockStatus ?? 'in_stock'}</span>
                   </div>
@@ -583,7 +583,7 @@ export default function AdminProductsPage() {
                     <button
                       type="button"
                       onClick={() => beginEdit(product)}
-                      className="rounded-full border border-[#2A3320] px-3 py-2 text-[#2A3320]"
+                      className="rounded-full border border-[#7C4E2F] px-3 py-2 text-[#2B2119]"
                     >
                       Edit
                     </button>
@@ -604,7 +604,7 @@ export default function AdminProductsPage() {
                           setEditForm((prev) => ({ ...prev, name: event.target.value }))
                         }
                         placeholder="Product name"
-                        className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                        className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                       />
                       <input
                         value={editForm.slug}
@@ -612,7 +612,7 @@ export default function AdminProductsPage() {
                           setEditForm((prev) => ({ ...prev, slug: event.target.value }))
                         }
                         placeholder="Slug"
-                        className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                        className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                       />
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input
@@ -622,7 +622,7 @@ export default function AdminProductsPage() {
                           }
                           placeholder="Price"
                           type="number"
-                          className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <input
                           value={editForm.category}
@@ -630,7 +630,7 @@ export default function AdminProductsPage() {
                             setEditForm((prev) => ({ ...prev, category: event.target.value }))
                           }
                           placeholder="Category"
-                          className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                       </div>
                       <textarea
@@ -639,7 +639,7 @@ export default function AdminProductsPage() {
                           setEditForm((prev) => ({ ...prev, description: event.target.value }))
                         }
                         placeholder="Description"
-                        className="min-h-[88px] w-full rounded-3xl border border-[#E4DDCF] bg-white px-4 py-3 text-sm"
+                        className="min-h-[88px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
                       />
                       <div className="grid gap-3 sm:grid-cols-2">
                         <input
@@ -649,14 +649,14 @@ export default function AdminProductsPage() {
                           }
                           placeholder="Inventory count"
                           type="number"
-                          className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         />
                         <select
                           value={editForm.stockStatus}
                           onChange={(event) =>
                             setEditForm((prev) => ({ ...prev, stockStatus: event.target.value }))
                           }
-                          className="h-10 w-full rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                         >
                           <option value="in_stock">In stock</option>
                           <option value="low_stock">Low stock</option>
@@ -664,12 +664,12 @@ export default function AdminProductsPage() {
                           <option value="preorder">Preorder</option>
                         </select>
                       </div>
-                      <div className="rounded-3xl border border-dashed border-[#E4DDCF] bg-white/70 p-4">
+                      <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-white/70 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
+                          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                             Images
                           </div>
-                          <label className="inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]">
+                          <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
                             {uploading ? 'Uploading...' : 'Upload'}
                             <input
                               type="file"
@@ -711,7 +711,7 @@ export default function AdminProductsPage() {
                                       prev.filter((item) => item.publicId !== img.publicId)
                                     )
                                   }
-                                  className="absolute -right-2 -top-2 rounded-full bg-white px-2 py-1 text-[10px] text-[#2A3320]"
+                                  className="absolute -right-2 -top-2 rounded-full bg-white px-2 py-1 text-[10px] text-[#2B2119]"
                                 >
                                   Remove
                                 </button>
@@ -721,15 +721,15 @@ export default function AdminProductsPage() {
                         ) : null}
                       </div>
 
-                      <div className="rounded-3xl border border-dashed border-[#E4DDCF] bg-white/70 p-4">
+                      <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-white/70 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
+                          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                             Variants
                           </div>
                           <button
                             type="button"
                             onClick={() => addVariant(setEditVariants)}
-                            className="rounded-full border border-[#2A3320] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]"
+                            className="rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]"
                           >
                             Add variant
                           </button>
@@ -739,7 +739,7 @@ export default function AdminProductsPage() {
                             {editVariants.map((variant) => (
                               <div
                                 key={variant.id}
-                                className="rounded-2xl border border-[#E4DDCF] bg-white p-4"
+                                className="rounded-2xl border border-[#E6D9C8] bg-white p-4"
                               >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <input
@@ -750,7 +750,7 @@ export default function AdminProductsPage() {
                                       })
                                     }
                                     placeholder="Variant name"
-                                    className="h-10 flex-1 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 flex-1 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   />
                                   <input
                                     value={variant.sku ?? ''}
@@ -760,7 +760,7 @@ export default function AdminProductsPage() {
                                       })
                                     }
                                     placeholder="SKU"
-                                    className="h-10 w-36 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   />
                                   <input
                                     value={variant.price ?? ''}
@@ -771,7 +771,7 @@ export default function AdminProductsPage() {
                                     }
                                     placeholder="Variant price"
                                     type="number"
-                                    className="h-10 w-32 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 w-32 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   />
                                   <input
                                     value={variant.stockCount ?? ''}
@@ -782,7 +782,7 @@ export default function AdminProductsPage() {
                                     }
                                     placeholder="Stock count"
                                     type="number"
-                                    className="h-10 w-28 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 w-28 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   />
                                   <select
                                     value={variant.stockStatus ?? 'in_stock'}
@@ -791,7 +791,7 @@ export default function AdminProductsPage() {
                                         stockStatus: event.target.value as Variant['stockStatus'],
                                       })
                                     }
-                                    className="h-10 w-36 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   >
                                     <option value="in_stock">In stock</option>
                                     <option value="low_stock">Low stock</option>
@@ -806,7 +806,7 @@ export default function AdminProductsPage() {
                                       })
                                     }
                                     placeholder="Color"
-                                    className="h-10 w-40 rounded-full border border-[#E4DDCF] bg-white px-4 text-sm"
+                                    className="h-10 w-40 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
                                   />
                                   <button
                                     type="button"
@@ -818,7 +818,7 @@ export default function AdminProductsPage() {
                                 </div>
 
                                 <div className="mt-3 flex flex-wrap items-center gap-3">
-                                  <label className="inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]">
+                                  <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
                                     {uploading ? 'Uploading...' : 'Upload image'}
                                     <input
                                       type="file"
@@ -853,7 +853,7 @@ export default function AdminProductsPage() {
                                     })
                                   }
                                   placeholder="Specifications (one per line)"
-                                  className="mt-3 min-h-[80px] w-full rounded-3xl border border-[#E4DDCF] bg-white px-4 py-3 text-sm"
+                                  className="mt-3 min-h-[80px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
                                 />
                               </div>
                             ))}
@@ -864,14 +864,14 @@ export default function AdminProductsPage() {
                         <button
                           type="submit"
                           disabled={editSaving}
-                          className="rounded-full bg-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white"
+                          className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white"
                         >
                           {editSaving ? 'Saving...' : 'Save changes'}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingId(null)}
-                          className="rounded-full border border-[#E4DDCF] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#8A836F]"
+                          className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]"
                         >
                           Cancel
                         </button>
@@ -881,7 +881,7 @@ export default function AdminProductsPage() {
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+              <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
                 No products yet.
               </div>
             )}
@@ -891,3 +891,5 @@ export default function AdminProductsPage() {
     </div>
   )
 }
+
+

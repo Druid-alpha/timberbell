@@ -155,49 +155,49 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-[2rem] border border-[#E4DDCF] bg-white/70 p-6">
+      <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Orders</p>
-            <h2 className="mt-3 font-display text-2xl text-[#2A3320]">Manage orders</h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Orders</p>
+            <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Manage orders</h2>
           </div>
-          <span className="text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+          <span className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
             {orders.length} orders
           </span>
         </div>
         <div className="mt-6 space-y-4">
           {loading ? (
-            <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+            <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
               Loading orders...
             </div>
           ) : orders.length ? (
             orders.map((order) => (
               <div
                 key={order.id}
-                className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4"
+                className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <div className="text-sm font-semibold text-[#2A3320]">
+                    <div className="text-sm font-semibold text-[#2B2119]">
                       {order.customer?.name || 'Guest customer'}
                     </div>
-                    <div className="text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                    <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                       {order.customer?.email || 'no-email'}
                     </div>
-                    <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                    <div className="mt-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                       {formatDate(order.createdAt)}
                     </div>
                   </div>
-                  <div className="text-sm font-semibold text-[#2A3320]">
+                  <div className="text-sm font-semibold text-[#2B2119]">
                     {currency.format(order.total ?? 0)}
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-[#8A836F]">
+                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-[#8C7A6B]">
                   <span className="uppercase tracking-[0.3em]">Status</span>
                   <select
                     value={order.status ?? 'pending'}
                     onChange={(event) => updateStatus(order.id, event.target.value)}
-                    className="rounded-full border border-[#E4DDCF] bg-white px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-[#2A3320]"
+                    className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[11px] uppercase tracking-[0.3em] text-[#2B2119]"
                   >
                     {statusOptions.map((status) => (
                       <option key={status} value={status}>
@@ -208,7 +208,7 @@ export default function AdminOrdersPage() {
                   <button
                     type="button"
                     onClick={() => setSelected(order)}
-                    className="rounded-full border border-[#2A3320] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]"
+                    className="rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]"
                   >
                     View details
                   </button>
@@ -216,7 +216,7 @@ export default function AdminOrdersPage() {
               </div>
             ))
           ) : (
-            <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+            <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
               No orders yet.
             </div>
           )}
@@ -225,22 +225,22 @@ export default function AdminOrdersPage() {
 
       {selected ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 py-10">
-          <div className="w-full max-w-3xl rounded-[2rem] border border-[#E4DDCF] bg-[#FCFAF6] p-6 shadow-2xl">
+          <div className="w-full max-w-3xl rounded-[2rem] border border-[#E6D9C8] bg-[#F4EEE4] p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Order details</p>
-                <h3 className="mt-2 font-display text-2xl text-[#2A3320]">
+                <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Order details</p>
+                <h3 className="mt-2 font-display text-2xl text-[#2B2119]">
                   {selected.customer?.name || 'Guest customer'}
                 </h3>
                 <p className="text-sm text-[#6B665A]">{selected.customer?.email || 'no-email'}</p>
-                <p className="mt-2 text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+                <p className="mt-2 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                   {formatDate(selected.createdAt)}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded-full border border-[#2A3320] px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]"
+                className="rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2B2119]"
               >
                 Close
               </button>
@@ -251,7 +251,7 @@ export default function AdminOrdersPage() {
                 selected.items?.map((item) => (
                   <div
                     key={`${item.productId}-${item.name ?? 'item'}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E4DDCF] bg-white/80 p-4"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E6D9C8] bg-white/80 p-4"
                   >
                     <div className="flex items-center gap-3">
                       {item.image ? (
@@ -260,21 +260,21 @@ export default function AdminOrdersPage() {
                         <div className="h-12 w-12 rounded-xl bg-[#E9E1D4]" />
                       )}
                       <div>
-                        <div className="text-sm font-semibold text-[#2A3320]">
+                        <div className="text-sm font-semibold text-[#2B2119]">
                           {item.name ?? item.productId}
                         </div>
-                        <div className="text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                        <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                           Qty {item.quantity}
                         </div>
                       </div>
                     </div>
-                    <div className="text-sm font-semibold text-[#2A3320]">
+                    <div className="text-sm font-semibold text-[#2B2119]">
                       {currency.format((item.price ?? 0) * item.quantity)}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="rounded-2xl border border-[#E4DDCF] bg-white/80 p-4 text-sm text-[#6B665A]">
+                <div className="rounded-2xl border border-[#E6D9C8] bg-white/80 p-4 text-sm text-[#6B665A]">
                   No items available for this order.
                 </div>
               )}
@@ -290,7 +290,7 @@ export default function AdminOrdersPage() {
                   <span>Discount</span>
                   <span>-{currency.format(selectedTotals.discountTotal)}</span>
                 </div>
-                <div className="flex items-center justify-between text-base font-semibold text-[#2A3320]">
+                <div className="flex items-center justify-between text-base font-semibold text-[#2B2119]">
                   <span>Total</span>
                   <span>{currency.format(selectedTotals.total)}</span>
                 </div>
@@ -303,7 +303,7 @@ export default function AdminOrdersPage() {
                 onClick={() =>
                   downloadHtml(`receipt-${selected.id}.html`, buildReceiptHtml(selected, 'Receipt'))
                 }
-                className="rounded-full bg-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white"
+                className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-white"
               >
                 Download receipt
               </button>
@@ -312,7 +312,7 @@ export default function AdminOrdersPage() {
                 onClick={() =>
                   downloadHtml(`invoice-${selected.id}.html`, buildReceiptHtml(selected, 'Invoice'))
                 }
-                className="rounded-full border border-[#2A3320] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2A3320]"
+                className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]"
               >
                 Download invoice
               </button>
@@ -323,3 +323,5 @@ export default function AdminOrdersPage() {
     </div>
   )
 }
+
+

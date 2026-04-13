@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Work_Sans, Newsreader } from "next/font/google";
+import { Poppins, Open_Sans } from "next/font/google";
 import "./globals.css";
 
-const body = Work_Sans({
+const body = Open_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-body",
   display: "swap",
 });
 
-const display = Newsreader({
+const display = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-display",
   display: "swap",
 });

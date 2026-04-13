@@ -87,23 +87,27 @@ export default function AccountPage() {
       />
 
       {loading ? (
-        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 text-sm text-neutral-600">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
           Loading account...
         </div>
       ) : status ? (
-        <div className="rounded-3xl border border-white/70 bg-white/70 p-6 text-sm text-neutral-600">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
           <p>{status}</p>
           <p className="mt-2">
-            <a href="/login" className="underline">Go to login</a>
+            <a href="/login" className="underline">
+              Go to login
+            </a>
           </p>
         </div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-4">
-            <div className="rounded-3xl border border-white/70 bg-white/70 p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Profile</div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+              <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+                Profile
+              </div>
               {profile ? (
-                <div className="mt-3 space-y-2 text-sm text-neutral-600">
+                <div className="mt-3 space-y-2 text-sm text-[#6B594A]">
                   <div className="flex items-center gap-3">
                     {profile.avatarUrl ? (
                       <img
@@ -112,7 +116,7 @@ export default function AccountPage() {
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2A3320]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2B2119]">
                         {(profile.name || 'U').slice(0, 1).toUpperCase()}
                       </div>
                     )}
@@ -122,7 +126,7 @@ export default function AccountPage() {
                       <p>Phone: {profile.phone ?? 'Not set'}</p>
                     </div>
                   </div>
-                  <label className="mt-3 inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]">
+                  <label className="mt-3 inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#7C4E2F]">
                     {avatarUploading ? 'Uploading...' : 'Upload avatar'}
                     <input
                       type="file"
@@ -137,36 +141,41 @@ export default function AccountPage() {
                     />
                   </label>
                   {profile.role === 'admin' ? (
-                    <span className="inline-flex rounded-full border border-[#2A3320] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]">
+                    <span className="inline-flex rounded-full border border-[#7C4E2F] px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[#7C4E2F]">
                       Admin
                     </span>
                   ) : null}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-neutral-600">No profile data.</p>
+                <p className="mt-3 text-sm text-[#6B594A]">No profile data.</p>
               )}
             </div>
-            <div className="rounded-3xl border border-white/70 bg-white/70 p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Orders</div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+              <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Orders</div>
               {orders.length ? (
-                <div className="mt-4 space-y-3 text-sm text-neutral-600">
+                <div className="mt-4 space-y-3 text-sm text-[#6B594A]">
                   {orders.map((order) => (
                     <div key={order.id} className="flex items-center justify-between">
                       <span>Order {order.id.slice(-6)}</span>
-                      <span className="font-semibold text-neutral-900">${order.total?.toLocaleString?.() ?? 0}</span>
+                      <span className="font-semibold text-[#2B2119]">
+                        ${order.total?.toLocaleString?.() ?? 0}
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-neutral-600">No orders yet.</p>
+                <p className="mt-3 text-sm text-[#6B594A]">No orders yet.</p>
               )}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/70 bg-white/80 p-6 text-sm text-neutral-600">
-            <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Concierge notes</div>
+          <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
+            <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+              Concierge notes
+            </div>
             <p className="mt-4">
-              Keep your profile updated so the studio can reach you about delivery windows and styling notes.
+              Keep your profile updated so the studio can reach you about delivery windows and
+              styling notes.
             </p>
           </div>
         </div>

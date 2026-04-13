@@ -51,8 +51,8 @@ export default function WishlistButton({ productId }: { productId: string }) {
     <button
       type="button"
       onClick={toggle}
-      className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] transition ${
-        active ? 'border-[#2A3320] bg-[#2A3320] text-white' : 'border-[#E4DDCF] text-[#2A3320]'
+      className={`rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] transition ${
+        active ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] text-[#7C4E2F]'
       }`}
     >
       {loading ? '...' : active ? 'Wishlisted' : 'Wishlist'}

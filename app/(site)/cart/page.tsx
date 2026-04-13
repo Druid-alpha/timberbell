@@ -41,7 +41,7 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-neutral-600">
+      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
         Loading cart...
       </div>
     )
@@ -49,7 +49,7 @@ export default function CartPage() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-neutral-600">
+      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
         <div className="space-y-3">
           <p>{error}</p>
           {error.includes('sign in') ? (
@@ -70,12 +70,12 @@ export default function CartPage() {
           title="Your curated bundle"
           description="Review your selected pieces and schedule delivery when you are ready."
         />
-        <div className="rounded-3xl border border-white/70 bg-white/70 p-8 text-center text-sm text-neutral-600">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
           Your cart is empty. Start by exploring the shop.
           <div className="mt-4">
             <Link
               href="/shop"
-              className="rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white"
+              className="rounded-full bg-[#7C4E2F] px-6 py-3 text-sm font-semibold text-white"
             >
               Browse products
             </Link>
@@ -105,7 +105,7 @@ export default function CartPage() {
           {cart.items.map((item: any) => (
             <div
               key={item.productId}
-              className="flex flex-col gap-4 rounded-3xl border border-white/70 bg-white/70 p-6 sm:flex-row sm:items-center"
+              className="flex flex-col gap-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 sm:flex-row sm:items-center"
             >
               <div
                 className="h-28 w-full rounded-2xl sm:w-32"
@@ -116,40 +116,40 @@ export default function CartPage() {
                 }}
               />
               <div className="flex-1 space-y-2">
-                <div className="text-sm uppercase tracking-[0.3em] text-neutral-500">
+                <div className="text-sm uppercase tracking-[0.3em] text-[#8C7A6B]">
                   {item.product?.category}
                 </div>
-                <div className="text-lg font-semibold text-neutral-900">
+                <div className="text-lg font-semibold text-[#2B2119]">
                   {item.product?.name}
                 </div>
-                <div className="text-sm text-neutral-600">Qty {item.quantity}</div>
+                <div className="text-sm text-[#6B594A]">Qty {item.quantity}</div>
               </div>
-              <div className="text-right text-lg font-semibold text-neutral-900">
+              <div className="text-right text-lg font-semibold text-[#2B2119]">
                 ${(item.product?.price ?? 0).toLocaleString()}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-3xl border border-white/70 bg-white/80 p-6">
-          <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">Summary</div>
-          <div className="mt-4 space-y-3 text-sm text-neutral-600">
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Summary</div>
+          <div className="mt-4 space-y-3 text-sm text-[#6B594A]">
             <div className="flex items-center justify-between">
               <span>Subtotal</span>
-              <span className="font-semibold text-neutral-900">${subtotal.toLocaleString()}</span>
+              <span className="font-semibold text-[#2B2119]">${subtotal.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>White glove delivery</span>
-              <span className="font-semibold text-neutral-900">${delivery.toLocaleString()}</span>
+              <span className="font-semibold text-[#2B2119]">${delivery.toLocaleString()}</span>
             </div>
-            <div className="flex items-center justify-between border-t border-neutral-200/70 pt-3">
+            <div className="flex items-center justify-between border-t border-[#E6D9C8] pt-3">
               <span>Total</span>
-              <span className="text-lg font-semibold text-neutral-900">${total.toLocaleString()}</span>
+              <span className="text-lg font-semibold text-[#2B2119]">${total.toLocaleString()}</span>
             </div>
           </div>
           <Link
             href="/checkout"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-neutral-900 px-5 py-3 text-sm font-semibold text-white"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#7C4E2F] px-5 py-3 text-sm font-semibold text-white"
           >
             Continue to checkout
           </Link>

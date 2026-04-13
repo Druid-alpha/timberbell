@@ -78,7 +78,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-neutral-600">
+      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
         Loading product...
       </div>
     )
@@ -86,7 +86,7 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B665A]">
+      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
         Product not found.
       </div>
     )
@@ -97,6 +97,10 @@ export default function ProductDetailPage() {
   const price = variantPrice ?? product.finalPrice ?? product.price
   const compareAt = product.compareAt ?? (product.finalPrice ? product.price : undefined)
   const ratingLabel = useMemo(() => `${(product.rating ?? 0).toFixed(1)} / 5`, [product.rating])
+  const stars = useMemo(() => {
+    const safeRating = Math.round(product.rating ?? 0)
+    return Array.from({ length: 5 }).map((_, index) => index < safeRating)
+  }, [product.rating])
 
   const handleAddToCart = async () => {
     setStatus('Adding to cart...')
@@ -118,7 +122,7 @@ export default function ProductDetailPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
       <div className="flex flex-col gap-6">
-        <Link href="/shop" className="text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+        <Link href="/shop" className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
           Back to shop
         </Link>
         <SectionHeading
@@ -128,10 +132,10 @@ export default function ProductDetailPage() {
         />
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="space-y-4">
+      <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="space-y-6">
           <div
-            className="h-96 w-full rounded-[2.5rem] border border-[#E4DDCF] bg-[#FCFAF6] overflow-hidden"
+            className="relative h-[420px] w-full overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_30px_80px_-60px_rgba(55,32,15,0.6)]"
             style={{
               backgroundImage: images.length
                 ? undefined
@@ -139,8 +143,15 @@ export default function ProductDetailPage() {
             }}
           >
             {images.length ? (
-              <img src={activeImage || images[0]} alt={product.name} className="h-full w-full object-contain p-6" />
+              <img
+                src={activeImage || images[0]}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
             ) : null}
+            <div className="absolute right-4 top-4 rounded-full bg-white/90 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#7C4E2F]">
+              Featured
+            </div>
           </div>
           {images.length > 1 ? (
             <div className="grid grid-cols-4 gap-3">
@@ -149,42 +160,50 @@ export default function ProductDetailPage() {
                   key={img}
                   type="button"
                   onClick={() => setActiveImage(img)}
-                  className={`h-20 rounded-2xl border-2 overflow-hidden ${activeImage === img ? 'border-[#2A3320]' : 'border-[#E4DDCF]'}`}
+                  className={`h-20 rounded-2xl border-2 overflow-hidden ${activeImage === img ? 'border-[#2B2119]' : 'border-[#E6D9C8]'}`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-contain p-2" />
+                  <img src={img} alt="" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
           ) : null}
         </div>
+
         <div className="space-y-6">
-          <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-6">
+          <div className="rounded-[28px] border border-[#E6D9C8] bg-white/80 p-6 shadow-[0_18px_40px_-30px_rgba(55,32,15,0.35)]">
             <div className="flex items-center justify-between">
-              <div className="text-sm uppercase tracking-[0.3em] text-[#8B9A78]">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 Starting at
               </div>
-              <div className="text-2xl font-semibold text-[#2A3320]">
+              <div className="text-2xl font-semibold text-[#2B2119]">
                 {formatMoney(price)}
               </div>
             </div>
             {compareAt ? (
-              <div className="mt-1 text-xs text-[#8A836F] line-through">
+              <div className="mt-1 text-xs text-[#8C7A6B] line-through">
                 {formatMoney(compareAt)}
               </div>
             ) : null}
-            <div className="mt-4 flex flex-wrap gap-3 text-xs text-[#8A836F]">
-              <span className="rounded-full bg-[#2A3320]/10 px-3 py-1">
+            <div className="mt-4 flex flex-wrap gap-3 text-xs text-[#8C7A6B]">
+              <span className="rounded-full bg-[#7C4E2F]/10 px-3 py-1">
                 Lead time: {product.leadTime ?? 'TBD'}
               </span>
-              <span className="rounded-full bg-[#2A3320]/10 px-3 py-1">
-                Rating: {ratingLabel}
+              <span className="rounded-full bg-[#7C4E2F]/10 px-3 py-1 flex items-center gap-2">
+                <span className="flex items-center gap-1">
+                  {stars.map((filled, index) => (
+                    <span key={index} className={filled ? 'text-[#7C4E2F]' : 'text-[#D8C7B3]'}>
+                      ★
+                    </span>
+                  ))}
+                </span>
+                {ratingLabel}
               </span>
-              <span className="rounded-full bg-[#2A3320]/10 px-3 py-1">
+              <span className="rounded-full bg-[#7C4E2F]/10 px-3 py-1">
                 {product.reviewCount ?? 0} reviews
               </span>
             </div>
             <button
-              className="mt-6 w-full rounded-full bg-[#2A3320] px-5 py-3 text-xs font-bold uppercase tracking-[0.3em] text-white"
+              className="mt-6 w-full rounded-full bg-[#7C4E2F] px-5 py-3 text-xs font-bold uppercase tracking-[0.3em] text-white"
               onClick={handleAddToCart}
             >
               Add to cart
@@ -192,42 +211,12 @@ export default function ProductDetailPage() {
             <div className="mt-3 flex items-center justify-center">
               <WishlistButton productId={product.id} />
             </div>
-            {status ? <p className="mt-3 text-sm text-[#6B665A]">{status}</p> : null}
+            {status ? <p className="mt-3 text-sm text-[#6B594A]">{status}</p> : null}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-5">
-              <div className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
-                Materials
-              </div>
-              <ul className="mt-3 space-y-2 text-sm text-[#6B665A]">
-                {(product.materials ?? []).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-5">
-              <div className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
-                Dimensions
-              </div>
-              <p className="mt-3 text-sm text-[#6B665A]">{product.dimensions ?? 'TBD'}</p>
-              <div className="mt-4 text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
-                Finishes
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(product.finishes ?? []).map((finish) => (
-                  <span
-                    key={finish}
-                    className="rounded-full border border-[#E4DDCF] bg-white px-3 py-1 text-xs text-[#6B665A]"
-                  >
-                    {finish}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+
           {product.variants?.length ? (
-            <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">
+            <div className="rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 Variants
               </div>
               <div className="mt-4 flex flex-wrap gap-3">
@@ -245,12 +234,12 @@ export default function ProductDetailPage() {
                         setVariantPrice(variant.price ?? null)
                       }}
                       className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] ${
-                        isActive ? 'border-[#2A3320] text-[#2A3320]' : 'border-[#E4DDCF] text-[#8A836F]'
+                        isActive ? 'border-[#2B2119] text-[#2B2119]' : 'border-[#E6D9C8] text-[#8C7A6B]'
                       }`}
                     >
                       <span
-                        className="h-3 w-3 rounded-full border border-[#E4DDCF]"
-                        style={{ backgroundColor: variant.color || '#E4DDCF' }}
+                        className="h-3 w-3 rounded-full border border-[#E6D9C8]"
+                        style={{ backgroundColor: variant.color || '#E6D9C8' }}
                       />
                       {variant.name}
                     </button>
@@ -259,7 +248,7 @@ export default function ProductDetailPage() {
               </div>
               {product.variants.find((variant) => variant.id === activeVariantId)
                 ?.specifications?.length ? (
-                <ul className="mt-4 space-y-2 text-sm text-[#6B665A]">
+                <ul className="mt-4 space-y-2 text-sm text-[#6B594A]">
                   {product.variants
                     .find((variant) => variant.id === activeVariantId)
                     ?.specifications?.map((spec) => (
@@ -268,7 +257,7 @@ export default function ProductDetailPage() {
                 </ul>
               ) : null}
               {product.variants.find((variant) => variant.id === activeVariantId) ? (
-                <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+                <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                   <span>
                     Status:{' '}
                     {product.variants.find((variant) => variant.id === activeVariantId)
@@ -287,12 +276,45 @@ export default function ProductDetailPage() {
               ) : null}
             </div>
           ) : null}
-          <div className="rounded-3xl border border-[#E4DDCF] bg-[#FCFAF6] p-6 text-sm text-[#6B665A]">
-            Every Timberbell piece ships with a care kit, felt pads, and a detailed maintenance
-            guide to keep finishes looking their best.
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-5">
+              <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+                Materials
+              </div>
+              <ul className="mt-3 space-y-2 text-sm text-[#6B594A]">
+                {(product.materials ?? []).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-5">
+              <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+                Dimensions
+              </div>
+              <p className="mt-3 text-sm text-[#6B594A]">{product.dimensions ?? 'TBD'}</p>
+              <div className="mt-4 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+                Finishes
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(product.finishes ?? []).map((finish) => (
+                  <span
+                    key={finish}
+                    className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-xs text-[#6B594A]"
+                  >
+                    {finish}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
+            Every Arkwood piece ships with a care kit, felt pads, and a detailed maintenance guide.
           </div>
         </div>
       </div>
     </div>
   )
 }
+

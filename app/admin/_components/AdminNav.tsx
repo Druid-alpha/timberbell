@@ -24,8 +24,8 @@ export default function AdminNav() {
             href={link.href}
             className={`rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition ${
               isActive
-                ? 'bg-[#2A3320] text-white'
-                : 'border border-[#E4DDCF] bg-white/70 text-[#8A836F] hover:text-[#2A3320]'
+                ? 'bg-[#7C4E2F] text-white'
+                : 'border border-[#E6D9C8] bg-white/70 text-[#8C7A6B] hover:text-[#2B2119]'
             }`}
           >
             {link.label}
@@ -35,3 +35,4 @@ export default function AdminNav() {
     </nav>
   )
 }
+

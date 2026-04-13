@@ -98,26 +98,26 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="rounded-[2rem] border border-[#E4DDCF] bg-white/70 p-6">
+    <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-[#8B9A78]">Users</p>
-          <h2 className="mt-3 font-display text-2xl text-[#2A3320]">Customer list</h2>
+          <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Users</p>
+          <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Customer list</h2>
         </div>
-        <span className="text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+        <span className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
           {users.length} users
         </span>
       </div>
       <div className="mt-6 space-y-3">
         {loading ? (
-          <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+          <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
             Loading users...
           </div>
         ) : users.length ? (
           users.map((user) => (
             <div
               key={user.id}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4"
             >
               <div className="flex items-center gap-4">
                 {user.avatarUrl ? (
@@ -127,29 +127,29 @@ export default function AdminUsersPage() {
                     className="h-12 w-12 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2A3320]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2B2119]">
                     {(user.name || 'U').slice(0, 1).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <div className="text-sm font-semibold text-[#2A3320]">
+                  <div className="text-sm font-semibold text-[#2B2119]">
                     {user.name || 'Unnamed user'}
                   </div>
-                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                     {user.email?.toLowerCase() || 'no-email'}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <input
                       defaultValue={user.phone || ''}
                       placeholder="Phone"
-                      className="h-9 w-44 rounded-full border border-[#E4DDCF] bg-white px-3 text-xs"
+                      className="h-9 w-44 rounded-full border border-[#E6D9C8] bg-white px-3 text-xs"
                       onBlur={(event) => updatePhone(user.id, event.target.value)}
                     />
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-[#8A836F]">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                       {user.role || 'user'}
                     </span>
                   </div>
-                  <label className="mt-2 inline-flex cursor-pointer items-center rounded-full border border-[#2A3320] px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]">
+                  <label className="mt-2 inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-[#2B2119]">
                     Upload avatar
                     <input
                       type="file"
@@ -165,7 +165,7 @@ export default function AdminUsersPage() {
                   </label>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#8A836F]">
+              <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                 <span>
                   Joined:{' '}
                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
@@ -184,7 +184,7 @@ export default function AdminUsersPage() {
                 <select
                   value={user.role ?? 'user'}
                   onChange={(event) => updateRole(user.id, event.target.value as 'admin' | 'user')}
-                  className="h-9 rounded-full border border-[#E4DDCF] bg-white px-3 text-[10px] uppercase tracking-[0.3em] text-[#2A3320]"
+                  className="h-9 rounded-full border border-[#E6D9C8] bg-white px-3 text-[10px] uppercase tracking-[0.3em] text-[#2B2119]"
                 >
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
@@ -201,7 +201,7 @@ export default function AdminUsersPage() {
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-[#E4DDCF] bg-[#FCFAF6] p-4 text-sm text-[#6B665A]">
+          <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
             No users yet.
           </div>
         )}
@@ -209,3 +209,5 @@ export default function AdminUsersPage() {
     </div>
   )
 }
+
+

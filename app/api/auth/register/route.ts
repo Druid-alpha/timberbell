@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     name: body.name,
     email: normalizedEmail,
     passwordHash,
+    avatarUrl: body.avatarUrl ?? null,
   })
 
   const verificationToken = generateToken()

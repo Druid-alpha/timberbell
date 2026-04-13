@@ -29,7 +29,12 @@ export async function findUserById(id: string) {
   return db.collection<DbUser>('users').findOne({ _id: new ObjectId(id) })
 }
 
-export async function createUser(data: { name: string; email: string; passwordHash: string }) {
+export async function createUser(data: {
+  name: string
+  email: string
+  passwordHash: string
+  avatarUrl?: string | null
+}) {
   const db = await getDb()
   const result = await db.collection('users').insertOne({
     name: data.name,
@@ -37,6 +42,7 @@ export async function createUser(data: { name: string; email: string; passwordHa
     passwordHash: data.passwordHash,
     emailVerified: false,
     role: 'user',
+    avatarUrl: data.avatarUrl ?? null,
     createdAt: new Date(),
   })
 
