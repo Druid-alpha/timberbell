@@ -48,6 +48,10 @@ export default function SiteHeader() {
       const name = String(user.name || '').trim()
       const seed = name || String(user.email || '').trim() || 'TB'
       setInitials(seed.slice(0, 2).toUpperCase())
+
+      if (user.role === 'admin') {
+        setIsAdmin(true)
+      }
     }
     loadProfile()
     return () => {
@@ -108,7 +112,11 @@ export default function SiteHeader() {
 
         <nav className="hidden flex-1 items-center justify-center gap-8 text-[11px] uppercase tracking-[0.35em] text-[#8C7A6B] lg:flex">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-[#2B2119]">
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`transition hover:text-[#2B2119] ${link.label === 'Admin' ? 'rounded-full border border-[#7C4E2F] px-4 py-1.5 text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white' : ''}`}
+            >
               {link.label}
             </Link>
           ))}
@@ -237,7 +245,12 @@ export default function SiteHeader() {
         >
           <div className="flex flex-col gap-4 border-t border-[#E6D9C8] bg-[#F4EEE4] px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-[#8C7A6B]">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className={link.label === 'Admin' ? 'rounded-2xl bg-[#7C4E2F] px-4 py-3 text-center text-white' : ''}
+              >
                 {link.label}
               </Link>
             ))}
