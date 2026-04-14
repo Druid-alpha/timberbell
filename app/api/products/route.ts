@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const finishes = searchParams.get('finishes')
   const sort = searchParams.get('sort') || undefined
   const limitParam = searchParams.get('limit')
+  const pageParam = searchParams.get('page')
 
   const parseList = (value: string | null) =>
     value ? value.split(',').map((item) => item.trim()).filter(Boolean) : undefined
@@ -28,8 +29,11 @@ export async function GET(request: NextRequest) {
   })
 
   const limit = limitParam ? Number(limitParam) : undefined
-  const sliced = limit ? products.slice(0, limit) : products
-  return Response.json({ count: sliced.length, products: sliced })
+  const page = pageParam ? Math.max(1, Number(pageParam)) : 1
+  const total = products.length
+  const start = limit ? (page - 1) * limit : 0
+  const sliced = limit ? products.slice(start, start + limit) : products
+  return Response.json({ total, count: sliced.length, page, products: sliced })
 }
 
 export async function POST(request: NextRequest) {

@@ -3,14 +3,36 @@ import type { Product } from '@/types/catalog'
 import { formatMoney } from '@/lib/utils/format'
 import WishlistButton from '@/app/_components/WishlistButton'
 
-const ratingLabel = (rating: number | undefined) => `${(rating ?? 0).toFixed(1)} / 5`
+const StarIcon = ({ variant }: { variant: 'full' | 'half' | 'empty' }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className="h-3.5 w-3.5"
+    fill="none"
+    aria-hidden="true"
+  >
+    <defs>
+      <linearGradient id="half-star" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="50%" stopColor="#7C4E2F" />
+        <stop offset="50%" stopColor="#D8C7B3" />
+      </linearGradient>
+    </defs>
+    <path
+      d="M12 3.5 14.6 9l6 .9-4.3 4.2 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.4 9.9 9.4 9 12 3.5Z"
+      fill={
+        variant === 'full' ? '#7C4E2F' : variant === 'half' ? 'url(#half-star)' : '#D8C7B3'
+      }
+    />
+  </svg>
+)
+
 const renderStars = (rating?: number) => {
-  const safeRating = Math.round(rating ?? 0)
-  return Array.from({ length: 5 }).map((_, index) => (
-    <span key={index} className={index < safeRating ? 'text-[#7C4E2F]' : 'text-[#D8C7B3]'}>
-      ★
-    </span>
-  ))
+  const safeRating = Math.round((rating ?? 0) * 2) / 2
+  return Array.from({ length: 5 }).map((_, index) => {
+    const starNumber = index + 1
+    if (safeRating >= starNumber) return <StarIcon key={index} variant="full" />
+    if (safeRating + 0.5 === starNumber) return <StarIcon key={index} variant="half" />
+    return <StarIcon key={index} variant="empty" />
+  })
 }
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -47,7 +69,7 @@ export default function ProductCard({ product }: { product: Product }) {
         </span>
         <div className="absolute left-4 bottom-4 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[9px] uppercase tracking-[0.3em] text-[#7C4E2F]">
           <span className="h-2.5 w-2.5 rounded-full bg-[#7C4E2F]" />
-          Arkwood
+          Timberbell
         </div>
         {variants.length ? (
           <div className="absolute inset-x-3 bottom-3 hidden gap-2 rounded-2xl bg-white/90 p-2 backdrop-blur-sm transition group-hover:flex">
@@ -74,7 +96,7 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-1 flex-col gap-4 px-5 pb-5 pt-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-[#2B2119]">{product.name}</h3>
+            <h3 className="text-lg font-semibold text-[#2B2119] line-clamp-1">{product.name}</h3>
             <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
               {product.category}
             </p>
@@ -87,13 +109,8 @@ export default function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
         <p className="text-sm text-[#6B594A] line-clamp-2">{product.description}</p>
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-          <span className="rounded-full border border-[#E6D9C8] px-2 py-1">Premium</span>
-          <span className="rounded-full border border-[#E6D9C8] px-2 py-1">Organic</span>
-        </div>
-        <div className="mt-auto flex items-center justify-between text-xs text-[#8C7A6B]">
+        <div className="mt-auto flex items-center gap-2 text-xs text-[#8C7A6B]">
           <span className="flex items-center gap-1">{renderStars(product.rating)}</span>
-          <span>{product.leadTime ?? 'TBD'}</span>
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Link

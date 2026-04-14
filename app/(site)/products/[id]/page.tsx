@@ -98,9 +98,35 @@ export default function ProductDetailPage() {
   const compareAt = product.compareAt ?? (product.finalPrice ? product.price : undefined)
   const ratingLabel = useMemo(() => `${(product.rating ?? 0).toFixed(1)} / 5`, [product.rating])
   const stars = useMemo(() => {
-    const safeRating = Math.round(product.rating ?? 0)
-    return Array.from({ length: 5 }).map((_, index) => index < safeRating)
+    const safeRating = Math.round((product.rating ?? 0) * 2) / 2
+    return Array.from({ length: 5 }).map((_, index) => {
+      const starNumber = index + 1
+      if (safeRating >= starNumber) return 'full'
+      if (safeRating + 0.5 === starNumber) return 'half'
+      return 'empty'
+    })
   }, [product.rating])
+
+  const StarIcon = ({ variant }: { variant: 'full' | 'half' | 'empty' }) => (
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="half-star-detail" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="50%" stopColor="#7C4E2F" />
+          <stop offset="50%" stopColor="#D8C7B3" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M12 3.5 14.6 9l6 .9-4.3 4.2 1 5.9-5.3-2.8-5.3 2.8 1-5.9L3.4 9.9 9.4 9 12 3.5Z"
+        fill={
+          variant === 'full'
+            ? '#7C4E2F'
+            : variant === 'half'
+              ? 'url(#half-star-detail)'
+              : '#D8C7B3'
+        }
+      />
+    </svg>
+  )
 
   const handleAddToCart = async () => {
     setStatus('Adding to cart...')
@@ -186,14 +212,12 @@ export default function ProductDetailPage() {
             ) : null}
             <div className="mt-4 flex flex-wrap gap-3 text-xs text-[#8C7A6B]">
               <span className="rounded-full bg-[#7C4E2F]/10 px-3 py-1">
-                Lead time: {product.leadTime ?? 'TBD'}
+                Delivery window: {product.leadTime ?? 'TBD'}
               </span>
               <span className="rounded-full bg-[#7C4E2F]/10 px-3 py-1 flex items-center gap-2">
                 <span className="flex items-center gap-1">
-                  {stars.map((filled, index) => (
-                    <span key={index} className={filled ? 'text-[#7C4E2F]' : 'text-[#D8C7B3]'}>
-                      ★
-                    </span>
+                  {stars.map((variant, index) => (
+                    <StarIcon key={index} variant={variant as 'full' | 'half' | 'empty'} />
                   ))}
                 </span>
                 {ratingLabel}
@@ -310,11 +334,12 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
-            Every Arkwood piece ships with a care kit, felt pads, and a detailed maintenance guide.
+            Every Timberbell piece ships with a care kit, felt pads, and a detailed maintenance guide.
           </div>
         </div>
       </div>
     </div>
   )
 }
+
 

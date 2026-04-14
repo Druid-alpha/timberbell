@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-    --font-display: "Cormorant Garamond", "Plus Jakarta Sans", serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+    --font-display: "Playfair Display", "Inter", serif;
     --spacing: 0.25rem;
     --space-1: 0.25rem;
     --space-2: 0.5rem;

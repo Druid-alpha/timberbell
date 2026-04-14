@@ -47,6 +47,7 @@ function ProductFilterContent() {
   const materialsParam = searchParams.get('materials') || ''
   const finishesParam = searchParams.get('finishes') || ''
   const sortParam = searchParams.get('sort') || 'newest'
+  const pageParam = searchParams.get('page') || '1'
 
   const [search, setSearch] = useState(query)
   const [minPrice, setMinPrice] = useState(minPriceParam || '0')
@@ -61,10 +62,12 @@ function ProductFilterContent() {
     finishesParam ? finishesParam.split(',').filter(Boolean) : []
   )
   const [sort, setSort] = useState(sortParam)
+  const [page, setPage] = useState(Number(pageParam) || 1)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
   const [suggestions, setSuggestions] = useState<Product[]>([])
   const [suggestOpen, setSuggestOpen] = useState(false)
 
@@ -78,9 +81,11 @@ function ProductFilterContent() {
     if (materials.length) params.set('materials', materials.join(','))
     if (finishes.length) params.set('finishes', finishes.join(','))
     if (sort) params.set('sort', sort)
+    if (page > 1) params.set('page', String(page))
+    params.set('limit', '12')
     const qs = params.toString()
     return `/api/products${qs ? `?${qs}` : ''}`
-  }, [query, category, minPrice, maxPrice, colors, materials, finishes, sort])
+  }, [query, category, minPrice, maxPrice, colors, materials, finishes, sort, page])
 
   useEffect(() => {
     let active = true
@@ -92,6 +97,7 @@ function ProductFilterContent() {
       if (!active) return
       setCategories(catJson.categories ?? [])
       setProducts(prodJson.products ?? [])
+      setTotal(prodJson.total ?? prodJson.count ?? 0)
       setLoading(false)
     }
     load()
@@ -108,7 +114,8 @@ function ProductFilterContent() {
     setMaterials(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
     setFinishes(finishesParam ? finishesParam.split(',').filter(Boolean) : [])
     setSort(sortParam || 'newest')
-  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, finishesParam, sortParam])
+    setPage(Number(pageParam) || 1)
+  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, finishesParam, sortParam, pageParam])
 
   useEffect(() => {
     if (!search || search.trim().length < 2) {
@@ -130,6 +137,7 @@ function ProductFilterContent() {
   }
 
   function applyFilters() {
+    setPage(1)
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     if (category) params.set('category', category)
@@ -139,6 +147,7 @@ function ProductFilterContent() {
     if (materials.length) params.set('materials', materials.join(','))
     if (finishes.length) params.set('finishes', finishes.join(','))
     if (sort) params.set('sort', sort)
+    params.set('limit', '12')
     const qs = params.toString()
     router.push(`/productfilter${qs ? `?${qs}` : ''}`)
   }
@@ -151,6 +160,7 @@ function ProductFilterContent() {
     setMaterials([])
     setFinishes([])
     setSort('newest')
+    setPage(1)
     router.push('/productfilter')
   }
 
@@ -158,7 +168,7 @@ function ProductFilterContent() {
     <div className="mx-auto max-w-7xl space-y-12 px-6 py-16">
       <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
         <div className="flex items-center gap-3">
-          <span className="rounded-full border border-[#E6D9C8] bg-white/70 px-3 py-2">Arkwood</span>
+          <span className="rounded-full border border-[#E6D9C8] bg-white/70 px-3 py-2">Timberbell</span>
           <span className="rounded-full border border-[#E6D9C8] bg-white/70 px-3 py-2">Filter</span>
         </div>
         <div className="flex items-center gap-2">
@@ -177,7 +187,7 @@ function ProductFilterContent() {
       <div className="rounded-[36px] border border-[#E6D9C8] bg-[#F4EEE4] px-8 py-10 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.55)]">
         <div className="flex flex-wrap items-center justify-between gap-6">
           <div className="space-y-3">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">Arkwood</p>
+            <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">Timberbell</p>
             <h1 className="font-display text-3xl text-[#2B2119] sm:text-4xl">
               Shop with category
             </h1>
@@ -186,12 +196,6 @@ function ProductFilterContent() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/shop"
-              className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]"
-            >
-              Standard shop
-            </Link>
             <button
               type="button"
               onClick={clearFilters}
@@ -407,7 +411,7 @@ function ProductFilterContent() {
 
         <section className="space-y-6">
           <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-            <span>{loading ? 'Loading results' : `${products.length} results`}</span>
+            <span>{loading ? 'Loading results' : `${total} results`}</span>
             <span>{sort.replace('_', ' ')}</span>
           </div>
           {loading ? (
@@ -425,6 +429,44 @@ function ProductFilterContent() {
           {!loading && products.length === 0 ? (
             <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
               No products found. Try adjusting your filters.
+            </div>
+          ) : null}
+
+          {!loading && products.length > 0 ? (
+            <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] px-6 py-4 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextPage = Math.max(1, page - 1)
+                  const params = new URLSearchParams(searchParams.toString())
+                  if (nextPage <= 1) params.delete('page')
+                  else params.set('page', String(nextPage))
+                  params.set('limit', '12')
+                  router.push(`/productfilter?${params.toString()}`)
+                }}
+                disabled={page <= 1}
+                className={`rounded-full border px-4 py-2 ${page <= 1 ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F]'}`}
+              >
+                Prev
+              </button>
+              <span>
+                Page {page} / {Math.max(1, Math.ceil(total / 12))}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const totalPages = Math.max(1, Math.ceil(total / 12))
+                  const nextPage = Math.min(totalPages, page + 1)
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.set('page', String(nextPage))
+                  params.set('limit', '12')
+                  router.push(`/productfilter?${params.toString()}`)
+                }}
+                disabled={page >= Math.max(1, Math.ceil(total / 12))}
+                className={`rounded-full border px-4 py-2 ${page >= Math.max(1, Math.ceil(total / 12)) ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F]'}`}
+              >
+                Next
+              </button>
             </div>
           ) : null}
         </section>

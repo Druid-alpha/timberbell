@@ -123,7 +123,7 @@ export default function AccountPage() {
                     <div>
                       <p>Name: {profile.name}</p>
                       <p>Email: {profile.email}</p>
-                      <p>Phone: {profile.phone ?? 'Not set'}</p>
+                      {profile.phone ? <p>Phone: {profile.phone}</p> : null}
                     </div>
                   </div>
                   <label className="mt-3 inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#7C4E2F]">

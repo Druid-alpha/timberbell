@@ -56,6 +56,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [heroLiked, setHeroLiked] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -99,7 +100,7 @@ export default function HomePage() {
             <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
               <div className="space-y-6 arkwood-stagger">
                 <div className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white/70 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-[#7C5A3B]">
-                  Arkwood Atelier
+                  Timberbell Atelier
                 </div>
                 <h1 className="font-display text-4xl leading-tight text-[#2B2119] sm:text-5xl lg:text-6xl">
                   Nature in your home
@@ -150,7 +151,9 @@ export default function HomePage() {
                       <span>Featured</span>
                       <span>2025</span>
                     </div>
-                    <div className="mt-6 h-48 rounded-[24px] bg-[radial-gradient(circle_at_top,#ffffff,transparent_60%)]" />
+                    <div className="mt-6 h-48 overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,#ffffff,transparent_60%)]">
+                      <img src="/hero-chair.svg" alt="Orbital chair" className="h-full w-full object-contain" />
+                    </div>
                     <div className="mt-6 flex items-center justify-between">
                       <div>
                         <div className="text-sm font-semibold text-[#2B2119]">
@@ -174,8 +177,43 @@ export default function HomePage() {
                     </div>
                   </div>
                 </div>
-                <div className="absolute -left-6 -bottom-6 rounded-[28px] border border-[#E6D9C8] bg-white px-4 py-3 text-[10px] uppercase tracking-[0.3em] text-[#7C5A3B] shadow-lg">
-                  Natural essence
+
+                <div className="mt-6 flex w-full rounded-[22px] border border-[#E6D9C8] bg-white p-4 shadow-xl lg:absolute lg:-left-6 lg:top-8 lg:w-[220px]">
+                  <div className="flex items-start gap-3">
+                    <div className="h-14 w-14 overflow-hidden rounded-2xl bg-[#F4EEE4]">
+                      <img src="/hero-room.svg" alt="Natural living room" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Natural calm</p>
+                      <p className="text-sm font-semibold text-[#2B2119]">Soft wood dining</p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Toggle wishlist"
+                      onClick={() => setHeroLiked((prev) => !prev)}
+                      className={`flex h-9 w-9 items-center justify-center rounded-full border ${heroLiked ? 'border-[#7C4E2F] bg-[#7C4E2F]' : 'border-[#E6D9C8] bg-white'} transition`}
+                    >
+                      <svg viewBox="0 0 24 24" className={`h-4 w-4 ${heroLiked ? 'text-white' : 'text-[#7C4E2F]'}`} fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M12 19s-6-4.35-8-7.9C2.5 8 4 5.5 6.7 5.2 8.3 5 10 5.8 12 7.8c2-2 3.7-2.8 5.3-2.6C20 5.5 21.5 8 20 11.1 18 14.65 12 19 12 19Z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 w-full rounded-[24px] border border-[#E6D9C8] bg-white p-4 shadow-xl lg:absolute lg:-right-6 lg:bottom-6 lg:w-[200px]">
+                  <div className="h-24 w-full overflow-hidden rounded-2xl bg-[#F4EEE4]">
+                    <img src="/hero-chair.svg" alt="Lounge chair" className="h-full w-full object-contain" />
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Studio drop</p>
+                    <p className="text-sm font-semibold text-[#2B2119]">Natural essence</p>
+                    <Link
+                      href="/productfilter"
+                      className="inline-flex w-full items-center justify-center rounded-full bg-[#7C4E2F] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white"
+                    >
+                      Shop now
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -235,7 +273,7 @@ export default function HomePage() {
               <div className="absolute inset-0 bg-white/40" />
               <div className="relative space-y-3">
                 <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">
-                  Arkwood
+                  Timberbell
                 </p>
                 <h3 className="font-display text-2xl text-[#2B2119]">{banner.title}</h3>
                 <p className="max-w-sm text-sm text-[#6B594A]">{banner.detail}</p>

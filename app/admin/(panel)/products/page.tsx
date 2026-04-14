@@ -270,64 +270,105 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Add product</p>
-          <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Create a new piece</h2>
-          <form onSubmit={handleCreateSubmit} className="mt-6 space-y-4">
-            <input
-              value={form.name}
-              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-              placeholder="Product name"
-              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-            />
-            <input
-              value={form.slug}
-              onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-              placeholder="Slug (optional)"
-              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-            />
-            <input
-              value={form.price}
-              onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
-              placeholder="Price"
-              type="number"
-              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-            />
-            <input
-              value={form.category}
-              onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-              placeholder="Category"
-              className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-            />
-            <textarea
-              value={form.description}
-              onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-              placeholder="Short description"
-              className="min-h-[96px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                value={form.inventoryCount}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, inventoryCount: event.target.value }))
-                }
-                placeholder="Inventory count"
-                type="number"
-                className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-              />
-              <select
-                value={form.stockStatus}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, stockStatus: event.target.value }))
-                }
-                className="h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
-              >
-                <option value="in_stock">In stock</option>
-                <option value="low_stock">Low stock</option>
-                <option value="out_of_stock">Out of stock</option>
-                <option value="preorder">Preorder</option>
-              </select>
+      <div className="rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.45)]">
+        <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">Timberbell Studio</p>
+        <h1 className="mt-3 font-display text-3xl text-[#2B2119]">Product Command Center</h1>
+        <p className="mt-2 text-sm text-[#6B594A]">
+          Build premium listings with rich imagery, variants, and stock-ready details for a world‑class catalog.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-[32px] border border-[#E6D9C8] bg-white/80 p-6 shadow-[0_18px_40px_-30px_rgba(55,32,15,0.35)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Add product</p>
+              <h2 className="mt-2 font-display text-2xl text-[#2B2119]">Create a new piece</h2>
+            </div>
+            <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+              Form v2
+            </span>
+          </div>
+          <form onSubmit={handleCreateSubmit} className="mt-6 space-y-6">
+            <div className="grid gap-4">
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Name</label>
+                <input
+                  value={form.name}
+                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                  placeholder="Product name"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Slug</label>
+                  <input
+                    value={form.slug}
+                    onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
+                    placeholder="Slug (optional)"
+                    className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Category</label>
+                  <input
+                    value={form.category}
+                    onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
+                    placeholder="Category"
+                    className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Story</label>
+                <textarea
+                  value={form.description}
+                  onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                  placeholder="Short description"
+                  className="mt-2 min-h-[110px] w-full rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Price</label>
+                <input
+                  value={form.price}
+                  onChange={(event) => setForm((prev) => ({ ...prev, price: event.target.value }))}
+                  placeholder="Price"
+                  type="number"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Inventory</label>
+                <input
+                  value={form.inventoryCount}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, inventoryCount: event.target.value }))
+                  }
+                  placeholder="Inventory count"
+                  type="number"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Stock</label>
+                <select
+                  value={form.stockStatus}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, stockStatus: event.target.value }))
+                  }
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                >
+                  <option value="in_stock">In stock</option>
+                  <option value="low_stock">Low stock</option>
+                  <option value="out_of_stock">Out of stock</option>
+                  <option value="preorder">Preorder</option>
+                </select>
+              </div>
             </div>
 
             <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-[#F4EEE4] p-4">
@@ -529,16 +570,55 @@ export default function AdminProductsPage() {
           </form>
         </div>
 
-        <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Catalog</p>
-              <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Latest products</h2>
+        <div className="space-y-6">
+          <div className="rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 shadow-[0_18px_40px_-30px_rgba(55,32,15,0.35)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Live preview</p>
+                <h2 className="mt-2 font-display text-2xl text-[#2B2119]">How it will look</h2>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Timberbell</span>
             </div>
-            <span className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-              {products.length} items
-            </span>
+            <div className="mt-6 overflow-hidden rounded-[24px] border border-[#E6D9C8] bg-white">
+              <div className="h-44 w-full bg-[#EFE6DA]">
+                {images[0]?.url ? (
+                  <img src={images[0].url} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+                    Add image
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold text-[#2B2119]">
+                    {form.name.trim() || 'New Timberbell Piece'}
+                  </div>
+                  <div className="text-sm font-semibold text-[#2B2119]">
+                    {form.price ? `$${Number(form.price).toLocaleString()}` : '$0'}
+                  </div>
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+                  {form.category.trim() || 'Category'}
+                </div>
+                <p className="text-sm text-[#6B665A] line-clamp-2">
+                  {form.description.trim() ||
+                    'A clean, refined Timberbell description will appear here once you add it.'}
+                </p>
+              </div>
+            </div>
           </div>
+
+          <div className="rounded-[32px] border border-[#E6D9C8] bg-white/80 p-6 shadow-[0_18px_40px_-30px_rgba(55,32,15,0.35)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Catalog</p>
+                <h2 className="mt-2 font-display text-2xl text-[#2B2119]">Latest products</h2>
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+                {products.length} items
+              </span>
+            </div>
           <div className="mt-6 space-y-4">
             {loading ? (
               <div className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4 text-sm text-[#6B665A]">
@@ -889,7 +969,9 @@ export default function AdminProductsPage() {
         </div>
       </div>
     </div>
-  )
+  </div>
+)
 }
+
 
 
