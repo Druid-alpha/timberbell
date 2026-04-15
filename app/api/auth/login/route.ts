@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const response = NextResponse.json({
     user: {
       id: user._id.toString(),
-      name: user.name,
+      name: user.name || (user.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : null),
       email: user.email.toLowerCase(),
       role: user.role ?? 'user',
       emailVerified: user.emailVerified ?? false,

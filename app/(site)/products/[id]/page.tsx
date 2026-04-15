@@ -79,16 +79,28 @@ export default function ProductDetailPage() {
     setVariantPrice(product.variants?.[0]?.price ?? null)
   }, [product])
 
+  const ratingLabel = useMemo(() => `${(product?.rating ?? 0).toFixed(1)} / 5`, [product?.rating])
+  const stars = useMemo(() => {
+    const safeRating = Math.round((product?.rating ?? 0) * 2) / 2
+    return Array.from({ length: 5 }).map((_, index) => {
+      const starNumber = index + 1
+      if (safeRating >= starNumber) return 'full'
+      if (safeRating + 0.5 === starNumber) return 'half'
+      return 'empty'
+    })
+  }, [product?.rating])
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
-        <div className="flex flex-col gap-6">
-          <div className="h-4 w-48 animate-pulse rounded bg-[#E6D9C8]/40" />
-          <div className="h-10 w-64 animate-pulse rounded bg-[#E6D9C8]/40" />
-        </div>
-        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="h-[420px] w-full animate-pulse rounded-[32px] bg-[#E6D9C8]/40" />
-          <div className="h-[500px] w-full animate-pulse rounded-[28px] bg-[#E6D9C8]/40" />
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <div className="h-6 w-32 animate-pulse rounded bg-[#E6D9C8]" />
+        <div className="mt-8 grid gap-10 lg:grid-cols-2">
+          <div className="aspect-square animate-pulse rounded-[32px] bg-[#E6D9C8]/40" />
+          <div className="space-y-6">
+            <div className="h-10 w-2/3 animate-pulse rounded bg-[#E6D9C8]" />
+            <div className="h-24 w-full animate-pulse rounded bg-[#E6D9C8]/40" />
+            <div className="h-12 w-full animate-pulse rounded bg-[#E6D9C8]" />
+          </div>
         </div>
       </div>
     )
@@ -106,16 +118,6 @@ export default function ProductDetailPage() {
   const fallbackPalette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   const price = variantPrice ?? product.finalPrice ?? product.price
   const compareAt = product.compareAt ?? (product.finalPrice ? product.price : undefined)
-  const ratingLabel = useMemo(() => `${(product.rating ?? 0).toFixed(1)} / 5`, [product.rating])
-  const stars = useMemo(() => {
-    const safeRating = Math.round((product.rating ?? 0) * 2) / 2
-    return Array.from({ length: 5 }).map((_, index) => {
-      const starNumber = index + 1
-      if (safeRating >= starNumber) return 'full'
-      if (safeRating + 0.5 === starNumber) return 'half'
-      return 'empty'
-    })
-  }, [product.rating])
 
   const StarIcon = ({ variant }: { variant: 'full' | 'half' | 'empty' }) => (
     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden="true">

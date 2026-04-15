@@ -12,6 +12,8 @@ export type DbUser = {
   phone?: string
   avatarUrl?: string
   role?: 'admin' | 'user'
+  firstName?: string
+  lastName?: string
   lastLoginAt?: Date
   address?: string
   city?: string

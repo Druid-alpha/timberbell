@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   return Response.json({
     user: {
       id: profile._id.toString(),
-      name: profile.name,
+      name: profile.name || (profile.firstName ? `${profile.firstName} ${profile.lastName ?? ''}`.trim() : null),
       email: profile.email?.toLowerCase(),
       phone: profile.phone ?? null,
       avatarUrl: profile.avatarUrl ?? null,
