@@ -36,6 +36,9 @@ type Product = {
   discountValue?: number
   compareAt?: number
   badge?: string
+  materials?: string[]
+  finishes?: string[]
+  palette?: string[]
 }
 
 type ProductForm = {
@@ -50,6 +53,8 @@ type ProductForm = {
   discountValue: string
   compareAt: string
   badge: string
+  materials: string
+  finishes: string
 }
 
 const emptyForm: ProductForm = {
@@ -64,6 +69,8 @@ const emptyForm: ProductForm = {
   discountValue: '',
   compareAt: '',
   badge: '',
+  materials: '',
+  finishes: '',
 }
 
 export default function AdminProductsPage() {
