@@ -28,7 +28,9 @@ export default function WishlistButton({ productId }: { productId: string }) {
     }
   }, [productId])
 
-  async function toggle() {
+  async function toggle(e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
     if (loading) return
     setLoading(true)
     const method = active ? 'DELETE' : 'POST'

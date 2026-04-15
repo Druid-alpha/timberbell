@@ -185,17 +185,26 @@ export default function SiteHeader() {
 
           {/* Auth: logged in → avatar/profile; logged out → Login + Sign Up */}
           {isLoggedIn ? (
-            <Link
-              href="/account"
-              className="hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4] lg:inline-flex"
-              aria-label="Profile"
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                initials
-              )}
-            </Link>
+            <div className="hidden items-center gap-3 lg:flex">
+              <Link
+                href="/account"
+                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                aria-label="Profile"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B] transition hover:text-[#7C4E2F]"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
             <div className="hidden items-center gap-2 lg:flex">
               <Link
@@ -335,17 +344,26 @@ export default function SiteHeader() {
                 )}
               </Link>
               {isLoggedIn ? (
-                <Link
-                  href="/account"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
-                >
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
-                </Link>
+                <>
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                  >
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      initials
+                    )}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-[#8C7A6B]"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
                 <>
                   <Link

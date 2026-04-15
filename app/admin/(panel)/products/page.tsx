@@ -68,6 +68,7 @@ const emptyForm: ProductForm = {
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<{id:string, slug:string, name:string}[]>([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [images, setImages] = useState<ProductImage[]>([])
@@ -84,6 +85,12 @@ export default function AdminProductsPage() {
   const [editDragIndex, setEditDragIndex] = useState<number | null>(null)
   const [editSaving, setEditSaving] = useState(false)
 
+  async function loadCategories() {
+    const res = await fetch('/api/categories', { cache: 'no-store' })
+    const json = await res.json().catch(() => ({}))
+    setCategories(json?.categories ?? [])
+  }
+
   async function loadProducts() {
     const res = await fetch('/api/admin/products', { cache: 'no-store' })
     const json = await res.json().catch(() => ({}))
@@ -95,6 +102,7 @@ export default function AdminProductsPage() {
     async function load() {
       try {
         await loadProducts()
+        await loadCategories()
       } finally {
         if (active) setLoading(false)
       }
@@ -158,6 +166,9 @@ export default function AdminProductsPage() {
       discountValue: form.discountValue ? Number(form.discountValue) : undefined,
       compareAt: form.compareAt ? Number(form.compareAt) : undefined,
       badge: form.badge || undefined,
+      materials: form.materials.split(',').map((x) => x.trim()).filter(Boolean),
+      finishes: form.finishes.split(',').map((x) => x.trim()).filter(Boolean),
+      palette: variants.map(v => v.color).filter(Boolean),
       images,
       variants: variants.map((variant) => ({
         ...variant,
@@ -196,6 +207,8 @@ export default function AdminProductsPage() {
       discountValue: product.discountValue ? String(product.discountValue) : '',
       compareAt: product.compareAt ? String(product.compareAt) : '',
       badge: product.badge ?? '',
+      materials: product.materials?.join(', ') ?? '',
+      finishes: product.finishes?.join(', ') ?? '',
     })
     setEditImages(product.images ?? [])
     setEditVariants(product.variants ?? [])
@@ -217,6 +230,9 @@ export default function AdminProductsPage() {
       discountValue: editForm.discountValue ? Number(editForm.discountValue) : undefined,
       compareAt: editForm.compareAt ? Number(editForm.compareAt) : undefined,
       badge: editForm.badge || undefined,
+      materials: editForm.materials.split(',').map((x) => x.trim()).filter(Boolean),
+      finishes: editForm.finishes.split(',').map((x) => x.trim()).filter(Boolean),
+      palette: editVariants.map(v => v.color).filter(Boolean),
       images: editImages,
       variants: editVariants.map((variant) => ({
         ...variant,

@@ -136,13 +136,13 @@ export default function QuickViewModal({ product }: { product: Product }) {
                 >
                   Quick Add to Cart
                 </button>
-                <Link
+                <a
                   href={`/products/${product.id}`}
                   onClick={() => document.body.style.overflow = 'unset'}
                   className="flex w-full items-center justify-center rounded-full border border-[#E6D9C8] py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] transition hover:bg-[#F4EEE4]"
                 >
                   View Full Details
-                </Link>
+                </a>
               </div>
             </div>
           </div>
