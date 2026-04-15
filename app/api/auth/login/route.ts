@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       id: user._id.toString(),
       name: user.name,
       email: user.email.toLowerCase(),
+      role: user.role ?? 'user',
       emailVerified: user.emailVerified ?? false,
     },
   })

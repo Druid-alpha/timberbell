@@ -186,17 +186,27 @@ export default function SiteHeader() {
           {/* Auth: logged in → avatar/profile; logged out → Login + Sign Up */}
           {isLoggedIn ? (
             <div className="hidden items-center gap-3 lg:flex">
-              <Link
-                href="/account"
-                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
-                aria-label="Profile"
-              >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  initials
-                )}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/account"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                  aria-label="Profile"
+                >
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    initials
+                  )}
+                </Link>
+                <div className="hidden flex-col justify-center xl:flex">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#2B2119]">
+                    {user.name || 'Atelier Member'}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-[0.2em] text-[#8C7A6B]">
+                    {isAdmin ? 'Admin' : 'Member'}
+                  </span>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -345,17 +355,24 @@ export default function SiteHeader() {
               </Link>
               {isLoggedIn ? (
                 <>
-                  <Link
-                    href="/account"
-                    onClick={() => setOpen(false)}
-                    className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
-                  >
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      initials
-                    )}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/account"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                    >
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        initials
+                      )}
+                    </Link>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-semibold tracking-[0.2em] text-[#2B2119]">
+                        {user.name || 'Atelier Member'}
+                      </span>
+                    </div>
+                  </div>
                   <button
                     type="button"
                     onClick={handleLogout}
