@@ -11,11 +11,16 @@ const appUrl = process.env.APP_URL || 'http://localhost:3000'
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
 
-  if (!body?.name || !body?.email || !body?.password) {
+  if (!body?.email || !body?.password) {
     return NextResponse.json(
-      { message: 'name, email, and password required' },
+      { message: 'email and password required' },
       { status: 400 }
     )
+  }
+
+  const nameFallback = body.name || [body.firstName, body.lastName].filter(Boolean).join(' ').trim()
+  if (!nameFallback) {
+    return NextResponse.json({ message: 'name is required' }, { status: 400 })
   }
 
   const normalizedEmail = String(body.email).toLowerCase()
@@ -26,7 +31,7 @@ export async function POST(request: Request) {
 
   const passwordHash = await hashPassword(body.password)
   const userId = await createUser({
-    name: body.name,
+    name: nameFallback,
     email: normalizedEmail,
     passwordHash,
     avatarUrl: body.avatarUrl ?? null,
@@ -54,7 +59,7 @@ export async function POST(request: Request) {
 
   const token = signToken({ id: userId, email: normalizedEmail })
   const response = NextResponse.json({
-    user: { id: userId, name: body.name, email: normalizedEmail, emailVerified: false },
+    user: { id: userId, name: nameFallback, email: normalizedEmail, emailVerified: false },
     message: 'Verification email sent',
   })
 

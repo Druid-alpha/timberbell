@@ -167,3 +167,17 @@ export async function getReviews(limit = 3) {
 export async function getCollection(slug: string) {
   return getProducts({ category: slug })
 }
+
+export async function getRelatedProducts(productId: string, category: string, limit = 4) {
+  const db = await getDb()
+  const rows = await db
+    .collection('products')
+    .find({
+      category,
+      _id: { $ne: new ObjectId(productId) },
+    })
+    .limit(limit)
+    .toArray()
+
+  return rows.map(normalizeProduct)
+}

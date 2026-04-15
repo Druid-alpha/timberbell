@@ -1,63 +1,53 @@
+'use client'
+
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 
 export default function AboutPage() {
   return (
-    <div className="mx-auto max-w-5xl space-y-12 px-6 py-16">
+    <div className="mx-auto max-w-5xl space-y-24 px-6 py-16">
       <div className="flex flex-col gap-6">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'About' }]} />
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'About Us' }]} />
         <SectionHeading
-          eyebrow="About"
-          title="Our craft begins with quiet rituals"
-          description="Timberbell is a furniture atelier blending Pacific Northwest craftsmanship with calm, modern design."
+          eyebrow="Our Story"
+          title="Architectural furniture for modern rituals"
+          description="Born in Seattle, built for generations. We believe in the quiet power of natural materials."
         />
       </div>
-      <div className="grid gap-6 rounded-[2.5rem] border border-white/70 bg-white/70 p-8 sm:grid-cols-2">
-        <div className="space-y-4 text-sm text-neutral-600">
-          <p>
-            We partner with small workshops to build pieces in small batches, emphasizing natural
-            materials, thoughtful joinery, and long-lasting comfort.
+
+      <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+        <div className="space-y-6 text-[#6B594A]">
+          <h2 className="font-display text-3xl text-[#2B2119]">The Studio</h2>
+          <p className="leading-relaxed">
+            Timberbell began as a small woodworking studio dedicated to the idea that furniture 
+            should be more than just functional — it should be a quiet companion to our daily rituals.
           </p>
-          <p>
-            Every Timberbell order is reviewed by our design concierge, ensuring the dimensions,
-            finishes, and delivery details align with your space.
+          <p className="leading-relaxed">
+            Every piece is designed with architectural precision and built using traditional 
+            joinery techniques that have stood the test of time.
           </p>
         </div>
-        <div className="space-y-4 text-sm text-neutral-600">
-          <p>
-            Sustainability is woven into our process. We prioritize FSC-certified woods, low-VOC
-            finishes, and recyclable packaging to minimize our footprint.
-          </p>
-          <p>
-            We design for longevity. Every piece includes a care kit and a promise of continued
-            support for future refinishing or reupholstery needs.
-          </p>
+        <div className="aspect-[4/3] overflow-hidden rounded-[40px] bg-[#F4EEE4]">
+          <img src="/hero-room.svg" alt="Studio" className="h-full w-full object-cover" />
         </div>
       </div>
-      <div className="grid gap-6 sm:grid-cols-3">
-        {[
-          {
-            title: 'Workshops',
-            detail: '6 artisan studios across the West Coast.',
-          },
-          {
-            title: 'Materials',
-            detail: 'Sustainably sourced hardwoods and natural fabrics.',
-          },
-          {
-            title: 'Support',
-            detail: 'Lifetime care guidance and refinishing options.',
-          },
-        ].map((item) => (
-          <div key={item.title} className="rounded-3xl border border-white/70 bg-white/70 p-6">
-            <div className="text-xs uppercase tracking-[0.3em] text-neutral-500">
-              {item.title}
-            </div>
-            <p className="mt-3 text-sm text-neutral-700">{item.detail}</p>
+
+      <div className="rounded-[48px] border border-[#E6D9C8] bg-[#2B2119] p-12 text-[#E6D9C8]">
+        <div className="grid gap-12 md:grid-cols-3">
+          <div className="space-y-4">
+            <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/50">Honest Materials</h3>
+            <p className="text-sm">We use only sustainably sourced hardwoods and organic fabrics that patina beautifully over time.</p>
           </div>
-        ))}
+          <div className="space-y-4">
+            <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/50">Modern Utility</h3>
+            <p className="text-sm">Function is never sacrificed. Our pieces are designed for real life, with smart storage and ergonomic fit.</p>
+          </div>
+          <div className="space-y-4">
+            <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/50">Timeless Form</h3>
+            <p className="text-sm">We avoid trends in favor of silhouettes that remain relevant decade after decade.</p>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
-

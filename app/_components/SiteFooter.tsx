@@ -6,14 +6,14 @@ const footerLinks = [
     links: [
       { label: 'Appointments', href: '/contact' },
       { label: 'Virtual tours', href: '/contact' },
-      { label: 'Delivery zones', href: '/contact' },
+      { label: 'Delivery zones', href: '/shipping' },
     ],
   },
   {
     title: 'Support',
     links: [
       { label: 'Care guide', href: '/about' },
-      { label: 'Returns', href: '/about' },
+      { label: 'Returns', href: '/returns' },
       { label: 'Trade program', href: '/contact' },
     ],
   },

@@ -147,5 +147,18 @@ export async function POST(request: NextRequest) {
 
   await clearCart(user.id)
 
+  // Stock Reduction
+  try {
+    for (const item of normalizedItems) {
+      if (!item.productId) continue
+      const query = ObjectId.isValid(item.productId) 
+        ? { _id: new ObjectId(item.productId) } 
+        : { slug: item.productId }
+      await db.collection('products').updateOne(query, { $inc: { inventoryCount: -item.quantity } })
+    }
+  } catch (err) {
+    console.error('Stock reduction failed:', err)
+  }
+
   return Response.json({ id: result.insertedId.toString(), total }, { status: 201 })
 }

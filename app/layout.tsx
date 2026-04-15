@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
+import { ToastProvider } from "@/app/_components/ToastProvider";
 
 const body = Inter({
   subsets: ["latin"],
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${body.variable} ${display.variable} antialiased`}>
         <ReduxProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ReduxProvider>
       </body>
     </html>

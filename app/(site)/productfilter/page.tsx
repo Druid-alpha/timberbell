@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import ProductSkeleton from '@/app/_components/ProductSkeleton'
 
 type Category = {
   id: string
@@ -430,9 +431,9 @@ function ProductFilterContent() {
             <span>{sort.replace('_', ' ')}</span>
           </div>
           {loading ? (
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+            <div className={`grid gap-8 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className={`animate-pulse rounded-[28px] bg-[#E6D9C8]/40 ${viewMode === 'grid' ? 'h-[400px]' : 'h-32'}`} />
+                <ProductSkeleton key={i} />
               ))}
             </div>
           ) : (

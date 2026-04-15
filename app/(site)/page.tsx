@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 
@@ -21,6 +22,27 @@ type Product = {
   description: string
   palette?: string[]
 }
+
+const heroSlides = [
+  {
+    title: 'Nature in your home',
+    description: 'Curate warm, grounded interiors with sculptural seating and organic finishes.',
+    image: '/lifestyle-1.svg',
+    chip: 'Timberbell Atelier'
+  },
+  {
+    title: 'Quiet Silhouettes',
+    description: 'Soft edges and warm textures designed for slow mornings.',
+    image: '/lifestyle-2.svg',
+    chip: 'Organic Collection'
+  },
+  {
+    title: 'Artisan Crafted',
+    description: 'Sustainably sourced oak and walnut blends built for longevity.',
+    image: '/hero-room.svg',
+    chip: 'Limited Drop'
+  }
+]
 
 const heroChips = ['Natural wood', 'Organic fabrics', 'Artisan made', 'Smart storage']
 
@@ -56,7 +78,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
-  const [heroLiked, setHeroLiked] = useState(false)
+  const [activeSlide, setActiveSlide] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -81,10 +103,14 @@ export default function HomePage() {
     }
 
     load()
+    return () => { active = false }
+  }, [])
 
-    return () => {
-      active = false
-    }
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % heroSlides.length)
+    }, 6000)
+    return () => clearInterval(timer)
   }, [])
 
   const featured = useMemo(() => products.slice(0, 6), [products])
@@ -92,276 +118,193 @@ export default function HomePage() {
 
   return (
     <div className="space-y-24 pb-24">
-      <section className="px-6 pt-10 arkwood-reveal">
+      {/* Hero Carousel */}
+      <section className="px-6 pt-10">
         <div className="mx-auto max-w-7xl">
-          <div className="relative overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] px-6 py-12 shadow-[0_30px_80px_-60px_rgba(55,32,15,0.55)] lg:px-14 lg:py-16">
-            <div className="absolute -left-24 top-0 h-72 w-72 rounded-full bg-[#E6D6C4] blur-3xl" />
-            <div className="absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-[#D9C7B3] blur-3xl" />
-            <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-              <div className="space-y-6 arkwood-stagger">
-                <div className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white/70 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-[#7C5A3B]">
-                  Timberbell Atelier
-                </div>
-                <h1 className="font-display text-4xl leading-tight text-[#2B2119] sm:text-5xl lg:text-6xl">
-                  Nature in your home
-                </h1>
-                <p className="max-w-xl text-sm text-[#6B594A] sm:text-base">
-                  Curate warm, grounded interiors with sculptural seating, serene palettes, and
-                  organic finishes designed for slow living.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Link
-                    href="/productfilter"
-                    className="rounded-full bg-[#7C4E2F] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-white"
+          <div className="relative overflow-hidden rounded-[48px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_40px_100px_-50px_rgba(55,32,15,0.4)]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSlide}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center px-10 py-16 lg:px-20 lg:py-24"
+              >
+                <div className="space-y-8">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white/70 px-6 py-2.5 text-[10px] uppercase tracking-[0.4em] text-[#7C5A3B] font-bold"
                   >
-                    Shop now
-                  </Link>
-                  <Link
-                    href="/productfilter"
-                    className="rounded-full border border-[#7C4E2F] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
+                    {heroSlides[activeSlide].chip}
+                  </motion.div>
+                  <motion.h1 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="font-display text-5xl leading-tight text-[#2B2119] sm:text-6xl lg:text-7xl"
                   >
-                    Explore
-                  </Link>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {heroChips.map((chip) => (
-                    <span
-                      key={chip}
-                      className="rounded-full border border-[#E2D3C1] bg-white/80 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[#7C5A3B]"
-                    >
-                      {chip}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-6 flex items-center gap-3 rounded-full border border-[#E6D9C8] bg-white/80 px-4 py-2">
-                  <input
-                    placeholder="Search products, materials, colors"
-                    className="w-full bg-transparent text-sm text-[#2B2119] placeholder:text-[#8C7A6B] focus:outline-none"
-                  />
-                  <button className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">
-                    Search
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="rounded-[36px] border border-[#E6D9C8] bg-[#EFE6DA] p-6 shadow-[0_30px_80px_-60px_rgba(55,32,15,0.6)] arkwood-float">
-                  <div className="rounded-[28px] bg-white p-6">
-                    <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#7C5A3B]">
-                      <span>Featured</span>
-                      <span>2025</span>
-                    </div>
-                    <div className="mt-6 h-48 overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_top,#ffffff,transparent_60%)]">
-                      <img src="/hero-chair.svg" alt="Orbital chair" className="h-full w-full object-contain" />
-                    </div>
-                    <div className="mt-6 flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold text-[#2B2119]">
-                          Orbital Chair
-                        </div>
-                        <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-                          Walnut leather
-                        </div>
-                      </div>
-                      <div className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">
-                        $280
-                      </div>
-                    </div>
-                    <div className="mt-4 grid grid-cols-4 gap-2">
-                      {[1, 2, 3, 4].map((item) => (
-                        <div
-                          key={item}
-                          className="h-10 rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4]"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex w-full rounded-[22px] border border-[#E6D9C8] bg-white p-4 shadow-xl lg:absolute lg:-left-6 lg:top-8 lg:w-[220px]">
-                  <div className="flex items-start gap-3">
-                    <div className="h-14 w-14 overflow-hidden rounded-2xl bg-[#F4EEE4]">
-                      <img src="/hero-room.svg" alt="Natural living room" className="h-full w-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Natural calm</p>
-                      <p className="text-sm font-semibold text-[#2B2119]">Soft wood dining</p>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label="Toggle wishlist"
-                      onClick={() => setHeroLiked((prev) => !prev)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border ${heroLiked ? 'border-[#7C4E2F] bg-[#7C4E2F]' : 'border-[#E6D9C8] bg-white'} transition`}
-                    >
-                      <svg viewBox="0 0 24 24" className={`h-4 w-4 ${heroLiked ? 'text-white' : 'text-[#7C4E2F]'}`} fill="none" stroke="currentColor" strokeWidth="1.8">
-                        <path d="M12 19s-6-4.35-8-7.9C2.5 8 4 5.5 6.7 5.2 8.3 5 10 5.8 12 7.8c2-2 3.7-2.8 5.3-2.6C20 5.5 21.5 8 20 11.1 18 14.65 12 19 12 19Z" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="mt-4 w-full rounded-[24px] border border-[#E6D9C8] bg-white p-4 shadow-xl lg:absolute lg:-right-6 lg:bottom-6 lg:w-[200px]">
-                  <div className="h-24 w-full overflow-hidden rounded-2xl bg-[#F4EEE4]">
-                    <img src="/hero-chair.svg" alt="Lounge chair" className="h-full w-full object-contain" />
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Studio drop</p>
-                    <p className="text-sm font-semibold text-[#2B2119]">Natural essence</p>
+                    {heroSlides[activeSlide].title}
+                  </motion.h1>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="max-w-xl text-base leading-relaxed text-[#6B594A]"
+                  >
+                    {heroSlides[activeSlide].description}
+                  </motion.p>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex flex-wrap gap-4 pt-4"
+                  >
                     <Link
                       href="/productfilter"
-                      className="inline-flex w-full items-center justify-center rounded-full bg-[#7C4E2F] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white"
+                      className="rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white shadow-lg hover:shadow-xl transition-all hover:bg-[#5C3A24]"
                     >
-                      Shop now
+                      Shop Collection
                     </Link>
+                    <Link
+                      href="/productfilter"
+                      className="rounded-full border border-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] hover:bg-white/50 transition-all"
+                    >
+                      View the Lookbook
+                    </Link>
+                  </motion.div>
+                  
+                  <div className="flex gap-2 pt-8">
+                    {heroSlides.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveSlide(i)}
+                        className={`h-1 rounded-full transition-all duration-500 ${activeSlide === i ? 'bg-[#7C4E2F] w-12' : 'bg-[#E6D9C8] w-4 hover:bg-[#D9C7B3]'}`}
+                      />
+                    ))}
                   </div>
                 </div>
-              </div>
-            </div>
+
+                <div className="relative aspect-square">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 1.1, rotate: 2 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full w-full overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-2xl"
+                  >
+                    <img 
+                      src={heroSlides[activeSlide].image} 
+                      alt="" 
+                      className="h-full w-full object-cover transition-transform duration-[20s] hover:scale-110" 
+                    />
+                  </motion.div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>
 
+      {/* Categories */}
       <section className="mx-auto max-w-7xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <SectionHeading
-            eyebrow="Collections"
-            title="Shop with category"
-            description="Refined silhouettes for dining, living, and slow mornings."
+            eyebrow="The Collections"
+            title="Shop with intention"
+            description="Refined silhouettes curated for every corner of your sanctuary."
           />
-          <Link href="/productfilter" className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]">
-            View all
+          <Link href="/productfilter" className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] border-b-2 border-[#7C4E2F]">
+            View all categories
           </Link>
         </div>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          {(categoryPreview.length ? categoryPreview : []).slice(0, 3).map((category) => (
-            <div
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {categoryPreview.slice(0, 3).map((category) => (
+            <Link
               key={category.id}
-              className="rounded-[28px] border border-[#E6D9C8] bg-white/80 p-6"
+              href={`/productfilter?category=${category.slug}`}
+              className="group relative h-64 overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:shadow-xl hover:-translate-y-1"
             >
-              <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-                {category.name}
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                   <div className="text-[10px] uppercase tracking-[0.4em] text-[#8C7A6B] font-bold group-hover:text-[#7C4E2F] transition-colors">
+                    {category.name}
+                  </div>
+                  <div className="mt-3 font-display text-3xl text-[#2B2119]">
+                    {category.description || 'Natural essence'}
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F]">
+                   Explore Collection &rarr;
+                </div>
               </div>
-              <div className="mt-3 font-display text-2xl text-[#2B2119]">
-                {category.description || 'Natural essence'}
-              </div>
-              <Link
-                href={`/productfilter?category=${category.slug}`}
-                className="mt-6 inline-flex items-center text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
-              >
-                Explore
-              </Link>
-            </div>
+              <div className="absolute -right-4 -bottom-4 h-32 w-32 rounded-full bg-[#F4EEE4] transition-transform group-hover:scale-150" />
+            </Link>
           ))}
         </div>
       </section>
 
+      {/* Featured Products */}
       <section className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <SectionHeading
+            eyebrow="New Arrivals"
+            title="The Artisan Edit"
+            description="Hand-selected pieces that define our current seasonal tone."
+          />
+        </div>
+
+        {loading ? (
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-[40px] bg-[#E6D9C8]/30" />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-12 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {featured.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Lifestyle Banners */}
+      <section className="mx-auto max-w-7xl px-6">
+        <div className="grid gap-8 lg:grid-cols-2">
           {categoryBanners.map((banner) => (
             <div
               key={banner.title}
-              className="relative overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4] p-6"
+              className="group relative h-[500px] overflow-hidden rounded-[48px] border border-[#E6D9C8] bg-[#F4EEE4]"
             >
               <div
-                className="absolute inset-0 opacity-90"
+                className="absolute inset-0 transition-transform duration-[1.5s] ease-out group-hover:scale-110"
                 style={{
                   backgroundImage: `url(${banner.image})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               />
-              <div className="absolute inset-0 bg-white/40" />
-              <div className="relative space-y-3">
-                <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">
-                  Timberbell
-                </p>
-                <h3 className="font-display text-2xl text-[#2B2119]">{banner.title}</h3>
-                <p className="max-w-sm text-sm text-[#6B594A]">{banner.detail}</p>
-                <Link
-                  href="/productfilter"
-                  className="inline-flex items-center text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
-                >
-                  Shop the edit
-                </Link>
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#2B2119]/60 via-transparent to-transparent" />
+              <div className="relative flex h-full flex-col justify-end p-12 text-white">
+                <div className="space-y-4">
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-white/80 font-bold">
+                    The Lookbook
+                  </p>
+                  <h3 className="font-display text-4xl leading-tight">{banner.title}</h3>
+                  <p className="max-w-sm text-sm text-white/90">{banner.detail}</p>
+                  <Link
+                    href="/productfilter"
+                    className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119] shadow-lg hover:shadow-xl transition-all"
+                  >
+                    View products
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
         </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6">
-        <div className="grid gap-8 rounded-[36px] border border-[#E6D9C8] bg-[#F4EEE4] p-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">
-              Natural essence
-            </p>
-            <h3 className="font-display text-3xl text-[#2B2119]">
-              Crafted serenity for the rooms you love.
-            </h3>
-            <p className="text-sm text-[#6B594A]">
-              Designed to feel light, warm, and grounded. Each piece is curated to pair seamlessly.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {featureCards.map((card) => (
-                <div key={card.title} className="rounded-2xl border border-[#E6D9C8] bg-white/80 p-4">
-                  <div className="text-sm font-semibold text-[#2B2119]">{card.title}</div>
-                  <p className="mt-2 text-xs text-[#6B594A]">{card.detail}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[28px] border border-[#E6D9C8] bg-white p-6">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Signature</div>
-            <div className="mt-4 h-48 rounded-[24px] bg-[#EFE6DA]" />
-            <div className="mt-4 flex items-center justify-between">
-              <div>
-                <div className="text-sm font-semibold text-[#2B2119]">Cedar Lounge</div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-                  Soft boucle
-                </div>
-              </div>
-              <button className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white">
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <SectionHeading
-            eyebrow="Shop"
-            title="Modern pieces for every room"
-            description="Select from curated seating, lighting, and dining essentials."
-          />
-          <div className="flex flex-wrap gap-2">
-            {['Living', 'Dining', 'Bedroom', 'Decor'].map((tab) => (
-              <span
-                key={tab}
-                className="rounded-full border border-[#E6D9C8] bg-white/80 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]"
-              >
-                {tab}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="mt-8 rounded-3xl border border-[#E6D9C8] bg-white/70 p-8 text-sm text-[#6B594A]">
-            Loading products...
-          </div>
-        ) : featured.length ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-8 rounded-3xl border border-[#E6D9C8] bg-white/70 p-8 text-sm text-[#6B594A]">
-            No products found.
-          </div>
-        )}
       </section>
     </div>
   )

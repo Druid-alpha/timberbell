@@ -9,6 +9,7 @@ export type CartItem = {
   variantId?: string
   variantName?: string
   color?: string
+  saved?: boolean
 }
 
 type CartState = {
@@ -22,7 +23,7 @@ const initialState: CartState = {
 }
 
 function calcCount(items: CartItem[]) {
-  return items.reduce((sum, item) => sum + item.quantity, 0)
+  return items.reduce((sum, item) => sum + (item.saved ? 0 : item.quantity), 0)
 }
 
 const cartSlice = createSlice({

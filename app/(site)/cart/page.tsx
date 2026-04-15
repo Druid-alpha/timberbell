@@ -4,159 +4,200 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import { useAppDispatch } from '@/lib/redux/hooks'
+import { syncCart } from '@/lib/redux/cartSlice'
+import { formatMoney } from '@/lib/utils/format'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useToast } from '@/app/_components/ToastProvider'
 
 export default function CartPage() {
   const [cart, setCart] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
+
+  const dispatch = useAppDispatch()
+  const { toast } = useToast()
+
+  async function load() {
+    const res = await fetch('/api/cart')
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      setError(data.message || 'Unable to load cart')
+      if (res.status === 401) setError('Please sign in to view your cart.')
+      setCart(null)
+    } else {
+      setCart(data.cart)
+      setError('')
+      // Sync Redux
+      const reduxItems = data.cart.items.map((item: any) => ({
+        productId: item.productId,
+        name: item.product?.name,
+        price: item.product?.price,
+        quantity: item.quantity,
+        imageUrl: item.product?.images?.[0]?.url,
+        saved: item.saved
+      }))
+      dispatch(syncCart(reduxItems))
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
-    let active = true
-
-    async function load() {
-      setLoading(true)
-      const res = await fetch('/api/cart')
-      const data = await res.json().catch(() => ({}))
-
-      if (!active) return
-
-      if (!res.ok) {
-        setError(data.message || 'Unable to load cart')
-        if (res.status === 401) {
-          setError('Please sign in to view your cart.')
-        }
-        setCart(null)
-      } else {
-        setCart(data.cart)
-        setError('')
-      }
-      setLoading(false)
-    }
-
     load()
-
-    return () => {
-      active = false
-    }
   }, [])
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
-        Loading cart...
-      </div>
+  async function updateItem(productId: string, updates: any) {
+    setUpdatingId(productId)
+    const updatedItems = cart.items.map((item: any) => 
+      item.productId === productId ? { ...item, ...updates } : item
     )
+    
+    // Remove if quantity 0
+    const finalItems = updatedItems.filter((item: any) => item.quantity > 0)
+
+    const res = await fetch('/api/cart', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: finalItems.map((it: any) => ({ productId: it.productId, quantity: it.quantity, saved: it.saved })) })
+    })
+
+    if (res.ok) {
+      if (updates.saved === true) toast('Piece saved for later', 'info')
+      if (updates.saved === false) toast('Piece moved to active bundle', 'success')
+      if (updates.quantity === 0) toast('Piece removed from bundle', 'info')
+      load()
+    }
+    setUpdatingId(null)
   }
 
-  if (error) {
-    return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
-        <div className="space-y-3">
-          <p>{error}</p>
-          {error.includes('sign in') ? (
-            <Link href="/login" className="underline">
-              Go to login
-            </Link>
-          ) : null}
-        </div>
-      </div>
-    )
-  }
+  const activeItems = cart?.items?.filter((item: any) => !item.saved) || []
+  const savedItems = cart?.items?.filter((item: any) => item.saved) || []
 
-  if (!cart || cart.items.length === 0) {
-    return (
-      <div className="mx-auto max-w-6xl space-y-6 px-6 py-16">
-        <SectionHeading
-          eyebrow="Cart"
-          title="Your curated bundle"
-          description="Review your selected pieces and schedule delivery when you are ready."
-        />
-        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
-          Your cart is empty. Start by exploring the shop.
-          <div className="mt-4">
-            <Link
-              href="/shop"
-              className="rounded-full bg-[#7C4E2F] px-6 py-3 text-sm font-semibold text-white"
-            >
-              Browse products
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const subtotal = cart.items.reduce(
+  const subtotal = activeItems.reduce(
     (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
     0
   )
   const delivery = subtotal > 0 ? 140 : 0
   const total = subtotal + delivery
 
+  if (loading) return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">Curating your studio bundle...</div>
+
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
+    <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
       <div className="flex flex-col gap-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
         <SectionHeading
-          eyebrow="Cart"
-          title="Your curated bundle"
-          description="Review your selected pieces and schedule delivery when you are ready."
+          eyebrow="Shopping Cart"
+          title="Your Curated Bundle"
+          description="Pieces currently held in your session for review and checkout."
         />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-4">
-          {cart.items.map((item: any) => (
-            <div
-              key={item.productId}
-              className="flex flex-col gap-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 sm:flex-row sm:items-center"
-            >
-              <div
-                className="h-28 w-full rounded-2xl sm:w-32"
-                style={{
-                  backgroundImage: item.product?.palette
-                    ? `linear-gradient(135deg, ${item.product.palette[0]}, ${item.product.palette[1]}, ${item.product.palette[2]})`
-                    : 'linear-gradient(135deg,#f1f1f1,#e2e2e2)',
-                }}
-              />
-              <div className="flex-1 space-y-2">
-                <div className="text-sm uppercase tracking-[0.3em] text-[#8C7A6B]">
-                  {item.product?.category}
-                </div>
-                <div className="text-lg font-semibold text-[#2B2119]">
-                  {item.product?.name}
-                </div>
-                <div className="text-sm text-[#6B594A]">Qty {item.quantity}</div>
+      <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-8">
+          {activeItems.length > 0 ? (
+            <div className="space-y-4">
+              <AnimatePresence mode="popLayout">
+                {activeItems.map((item: any) => (
+                  <motion.div
+                    key={item.productId}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className={`flex flex-col gap-6 rounded-[32px] border border-[#E6D9C8] bg-white p-6 shadow-sm sm:flex-row sm:items-center ${updatingId === item.productId ? 'opacity-50' : 'opacity-100'}`}
+                  >
+                    <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#F4EEE4]">
+                      <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-full w-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                       <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B] font-bold">{item.product?.category}</p>
+                       <h3 className="text-lg font-display text-[#2B2119]">{item.product?.name}</h3>
+                       <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney(item.product?.price)}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-3">
+                       <div className="flex items-center gap-3 rounded-full border border-[#E6D9C8] p-1">
+                          <button onClick={() => updateItem(item.productId, { quantity: item.quantity - 1 })} className="h-8 w-8 rounded-full bg-[#F4EEE4] transition hover:bg-[#E6D9C8]">-</button>
+                          <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
+                          <button onClick={() => updateItem(item.productId, { quantity: item.quantity + 1 })} className="h-8 w-8 rounded-full bg-[#F4EEE4] transition hover:bg-[#E6D9C8]">+</button>
+                       </div>
+                       <div className="flex gap-4">
+                          <button onClick={() => updateItem(item.productId, { saved: true })} className="text-[10px] uppercase tracking-widest font-bold text-[#8C7A6B] hover:text-[#7C4E2F] transition-colors">Save for later</button>
+                          <button onClick={() => updateItem(item.productId, { quantity: 0 })} className="text-[10px] uppercase tracking-widest font-bold text-red-800 hover:underline">Remove</button>
+                       </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <div className="rounded-[40px] border-2 border-dashed border-[#E6D9C8] py-20 text-center">
+              <p className="text-sm text-[#8C7A6B]">Your bundle is currently empty.</p>
+              <Link href="/productfilter" className="mt-4 inline-block text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F] border-b-2 border-[#7C4E2F]">Explore the collection</Link>
+            </div>
+          )}
+
+          {savedItems.length > 0 && (
+            <div className="mt-16 space-y-6">
+              <div>
+                <h2 className="font-display text-2xl text-[#2B2119]">Saved for later</h2>
+                <p className="text-xs text-[#8C7A6B]">Items you're keeping an eye on for future curation.</p>
               </div>
-              <div className="text-right text-lg font-semibold text-[#2B2119]">
-                ${(item.product?.price ?? 0).toLocaleString()}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AnimatePresence>
+                  {savedItems.map((item: any) => (
+                    <motion.div
+                      key={item.productId}
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="group flex gap-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4]/30 p-4 transition hover:bg-white"
+                    >
+                      <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-16 w-16 rounded-xl object-cover grayscale group-hover:grayscale-0 transition-all" />
+                      <div className="flex-1">
+                        <h4 className="text-sm font-bold text-[#2B2119]">{item.product?.name}</h4>
+                        <button onClick={() => updateItem(item.productId, { saved: false })} className="mt-2 text-[9px] uppercase tracking-widest font-bold text-[#7C4E2F] border-b border-[#7C4E2F]">Add back to bundle</button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
-          ))}
+          )}
         </div>
 
-        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
-          <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Summary</div>
-          <div className="mt-4 space-y-3 text-sm text-[#6B594A]">
-            <div className="flex items-center justify-between">
-              <span>Subtotal</span>
-              <span className="font-semibold text-[#2B2119]">${subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>White glove delivery</span>
-              <span className="font-semibold text-[#2B2119]">${delivery.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between border-t border-[#E6D9C8] pt-3">
-              <span>Total</span>
-              <span className="text-lg font-semibold text-[#2B2119]">${total.toLocaleString()}</span>
+        <div className="sticky top-28 h-fit space-y-6">
+          <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-8">
+            <h2 className="text-[10px] uppercase tracking-widest font-bold text-[#8C7A6B] mb-6">Summary</h2>
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span className="font-bold text-[#2B2119]">${subtotal.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>White-Glove Tier</span>
+                <span className="font-bold text-[#2B2119]">${delivery.toLocaleString()}</span>
+              </div>
+              <div className="pt-4 border-t border-[#E6D9C8] flex justify-between items-end">
+                <span className="text-[10px] uppercase font-bold tracking-widest">Total cost</span>
+                <span className="text-2xl font-display text-[#7C4E2F]">{formatMoney(total)}</span>
+              </div>
+              <Link
+                href="/checkout"
+                className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white transition-all ${activeItems.length > 0 ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'bg-[#D8C7B3] cursor-not-allowed'}`}
+                onClick={(e) => activeItems.length === 0 && e.preventDefault()}
+              >
+                Proceed to delivery
+              </Link>
             </div>
           </div>
-          <Link
-            href="/checkout"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-[#7C4E2F] px-5 py-3 text-sm font-semibold text-white"
-          >
-            Continue to checkout
-          </Link>
+          <div className="flex items-center gap-3 px-8 text-[10px] text-[#8C7A6B] uppercase tracking-widest">
+             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2A3320] text-white">✓</div>
+             <span>Insured for transit</span>
+          </div>
         </div>
       </div>
     </div>

@@ -130,7 +130,7 @@ export default function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-[11px] uppercase tracking-[0.35em] text-[#8C7A6B] lg:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-6 text-[11px] uppercase tracking-[0.35em] text-[#8C7A6B] lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -142,13 +142,71 @@ export default function SiteHeader() {
           ))}
         </nav>
 
+        {/* Desktop Prominent Search */}
+        <div className="hidden lg:flex flex-[0.8] max-w-md items-center relative">
+           <div className="w-full relative group">
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onFocus={() => setSearchOpen(true)}
+                placeholder="Search Timberbell pieces..."
+                className="w-full rounded-full border border-[#E6D9C8] bg-white px-5 py-2.5 pl-11 text-sm text-[#2B2119] placeholder:text-[#8C7A6B] focus:border-[#7C4E2F] focus:outline-none transition-all shadow-sm group-hover:shadow-md"
+              />
+              <svg viewBox="0 0 24 24" className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8C7A6B]" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm8 2-4.35-4.35" strokeLinecap="round" />
+              </svg>
+           </div>
+           
+           {/* Instant Results Dropdown */}
+           {searchOpen && (searchTerm.trim().length >= 2 || searchResults.length > 0) && (
+             <div className="absolute top-full left-0 right-0 mt-2 rounded-[24px] border border-[#E6D9C8] bg-white p-3 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-300">
+               {searchLoading ? (
+                 <div className="p-4 text-center text-xs text-[#8C7A6B] uppercase tracking-widest">Searching...</div>
+               ) : searchResults.length > 0 ? (
+                 <div className="space-y-1">
+                   {searchResults.map((item) => (
+                     <Link
+                       key={item.id}
+                       href={`/products/${item.id}`}
+                       onClick={() => {
+                         setSearchOpen(false)
+                         setSearchTerm('')
+                       }}
+                       className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-[#F4EEE4]"
+                     >
+                       <div className="flex-1">
+                         <div className="text-sm font-medium text-[#2B2119] line-clamp-1">{item.name}</div>
+                         <div className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">{item.category}</div>
+                       </div>
+                       <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#7C4E2F] opacity-0 transition group-hover:opacity-100" fill="none" stroke="currentColor" strokeWidth="2">
+                         <path d="M5 12h14m-7-7 7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                       </svg>
+                     </Link>
+                   ))}
+                 </div>
+               ) : (
+                 <div className="p-4 text-center text-xs text-[#8C7A6B]">No pieces found.</div>
+               )}
+               <div className="mt-2 border-t border-[#F4EEE4] pt-2">
+                 <Link 
+                   href={`/productfilter?q=${searchTerm}`}
+                   onClick={() => setSearchOpen(false)}
+                   className="block w-full py-2 text-center text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F] hover:underline"
+                 >
+                   View all arrivals
+                 </Link>
+               </div>
+             </div>
+           )}
+        </div>
+
         <div className="flex items-center gap-2">
-          {/* Search */}
+          {/* Mobile Search Icon */}
           <button
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen((prev) => !prev)}
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70 lg:inline-flex"
+            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm8 2-4.35-4.35" strokeLinecap="round" />

@@ -64,6 +64,7 @@ export type Review = {
 export type CartItem = {
   productId: string
   quantity: number
+  saved?: boolean
 }
 
 export type Cart = {

@@ -38,23 +38,24 @@ export default function QuickViewModal({ product }: { product: Product }) {
   }
 
   async function handleAddToCart() {
-    // Optimistic Redux update
-    dispatch(addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: 1,
-      imageUrl: product.images?.[0]?.url
-    }))
-    
     // Server sync
-    await fetch('/api/cart', {
+    const res = await fetch('/api/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId: product.id, quantity: 1 }),
-    }).catch(() => {})
+    })
 
-    close()
+    if (res.ok) {
+      dispatch(addItem({
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        imageUrl: product.images?.[0]?.url
+      }))
+      close()
+      setTimeout(() => router.push('/cart'), 300)
+    }
   }
 
   return (
