@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import SectionHeading from '@/app/_components/SectionHeading'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<any>(null)
@@ -77,11 +78,18 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
-      <SectionHeading
-        eyebrow="Checkout"
-        title="Schedule your delivery"
-        description="Confirm your details and we will prepare your Timberbell pieces for shipment."
-      />
+      <div className="flex flex-col gap-6">
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: 'Cart', href: '/cart' },
+          { label: 'Checkout' }
+        ]} />
+        <SectionHeading
+          eyebrow="Checkout"
+          title="Schedule your delivery"
+          description="Confirm your details and we will prepare your Timberbell pieces for shipment."
+        />
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={handleSubmit} className="space-y-6 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">

@@ -2,13 +2,13 @@ import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getUserFromRequest } from '@/lib/authServer'
 
-export async function GET(request: NextRequest, ctx: RouteContext<'/api/orders/[id]'>) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = getUserFromRequest(request)
   if (!user) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id } = await ctx.params
+  const { id } = await params
   if (!ObjectId.isValid(id)) {
     return Response.json({ message: 'Invalid order id' }, { status: 400 })
   }
@@ -24,13 +24,13 @@ export async function GET(request: NextRequest, ctx: RouteContext<'/api/orders/[
   return Response.json({ id: order._id.toString(), ...order, _id: undefined })
 }
 
-export async function PUT(request: NextRequest, ctx: RouteContext<'/api/orders/[id]'>) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = getUserFromRequest(request)
   if (!user) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id } = await ctx.params
+  const { id } = await params
   if (!ObjectId.isValid(id)) {
     return Response.json({ message: 'Invalid order id' }, { status: 400 })
   }

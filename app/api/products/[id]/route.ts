@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getProductByIdOrSlug } from '@/lib/services/catalog'
 
-export async function GET(_request: NextRequest, ctx: RouteContext<'/api/products/[id]'>) {
-  const { id } = await ctx.params
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const product = await getProductByIdOrSlug(id)
 
   if (!product) {
@@ -13,8 +13,8 @@ export async function GET(_request: NextRequest, ctx: RouteContext<'/api/product
   return Response.json(product)
 }
 
-export async function PUT(request: NextRequest, ctx: RouteContext<'/api/products/[id]'>) {
-  const { id } = await ctx.params
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const body = await request.json().catch(() => null)
 
   if (!body) {
@@ -41,8 +41,8 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/products
   })
 }
 
-export async function DELETE(_request: NextRequest, ctx: RouteContext<'/api/products/[id]'>) {
-  const { id } = await ctx.params
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const db = await (await import('@/lib/db')).getDb()
   const query = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }
 

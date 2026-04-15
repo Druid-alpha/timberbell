@@ -1,13 +1,17 @@
-﻿import SectionHeading from '@/app/_components/SectionHeading'
+import SectionHeading from '@/app/_components/SectionHeading'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-12 px-6 py-16">
-      <SectionHeading
-        eyebrow="About"
-        title="Our craft begins with quiet rituals"
-        description="Timberbell is a furniture atelier blending Pacific Northwest craftsmanship with calm, modern design."
-      />
+      <div className="flex flex-col gap-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'About' }]} />
+        <SectionHeading
+          eyebrow="About"
+          title="Our craft begins with quiet rituals"
+          description="Timberbell is a furniture atelier blending Pacific Northwest craftsmanship with calm, modern design."
+        />
+      </div>
       <div className="grid gap-6 rounded-[2.5rem] border border-white/70 bg-white/70 p-8 sm:grid-cols-2">
         <div className="space-y-4 text-sm text-neutral-600">
           <p>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 type Product = {
   id: string
@@ -44,18 +45,21 @@ export default function WishlistPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-6 py-16">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <SectionHeading
-          eyebrow="Wishlist"
-          title="Saved pieces"
-          description="Keep track of the furniture pieces you love."
-        />
-        <Link
-          href="/productfilter"
-          className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
-        >
-          Continue shopping
-        </Link>
+      <div className="flex flex-col gap-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Wishlist' }]} />
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <SectionHeading
+            eyebrow="Wishlist"
+            title="Saved pieces"
+            description="Keep track of the furniture pieces you love."
+          />
+          <Link
+            href="/productfilter"
+            className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
+          >
+            Continue shopping
+          </Link>
+        </div>
       </div>
 
       {loading ? (

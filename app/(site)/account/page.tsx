@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import SectionHeading from '@/app/_components/SectionHeading'
+import Breadcrumb from '@/app/_components/Breadcrumb'
+import ShipmentTracking from '@/app/_components/ShipmentTracking'
 
 export default function AccountPage() {
   const [profile, setProfile] = useState<any>(null)
@@ -9,6 +11,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -80,11 +83,14 @@ export default function AccountPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
-      <SectionHeading
-        eyebrow="Account"
-        title="Welcome back, Atelier member"
-        description="Manage orders, track deliveries, and curate your next room."
-      />
+      <div className="flex flex-col gap-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Account' }]} />
+        <SectionHeading
+          eyebrow="Account"
+          title="Welcome back, Atelier member"
+          description="Manage orders, track deliveries, and curate your next room."
+        />
+      </div>
 
       {loading ? (
         <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
@@ -153,13 +159,36 @@ export default function AccountPage() {
             <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
               <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Orders</div>
               {orders.length ? (
-                <div className="mt-4 space-y-3 text-sm text-[#6B594A]">
+                <div className="mt-4 space-y-6">
                   {orders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between">
-                      <span>Order {order.id.slice(-6)}</span>
-                      <span className="font-semibold text-[#2B2119]">
-                        ${order.total?.toLocaleString?.() ?? 0}
-                      </span>
+                    <div key={order.id} className="space-y-4">
+                      <div className="flex items-center justify-between rounded-2xl border border-[#E6D9C8] bg-white p-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2B2119]">
+                            Order {order.id.slice(-6)}
+                          </p>
+                          <p className="text-[11px] text-[#8C7A6B]">
+                            {new Date(order.createdAt).toLocaleDateString()} • {order.items?.length || 0} items
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm font-semibold text-[#2B2119]">
+                            ${order.total?.toLocaleString?.() ?? 0}
+                          </span>
+                          <button
+                            onClick={() => setTrackingOrderId(trackingOrderId === order.id ? null : order.id)}
+                            className="rounded-full border border-[#7C4E2F] px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition hover:bg-[#7C4E2F] hover:text-white"
+                          >
+                            {trackingOrderId === order.id ? 'Hide Tracking' : 'Track Order'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {trackingOrderId === order.id && (
+                        <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                          <ShipmentTracking createdAt={order.createdAt} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -117,7 +117,7 @@ export default function AdminUsersPage() {
           users.map((user) => (
             <div
               key={user.id}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4"
+              className="flex flex-col gap-6 rounded-[2.5rem] border border-[#E6D9C8] bg-[#F4EEE4] p-6 lg:flex-row lg:items-center lg:justify-between"
             >
               <div className="flex items-center gap-4">
                 {user.avatarUrl ? (
@@ -138,14 +138,14 @@ export default function AdminUsersPage() {
                   <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                     {user.email?.toLowerCase() || 'no-email'}
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
                     <input
                       defaultValue={user.phone || ''}
                       placeholder="Phone"
-                      className="h-9 w-44 rounded-full border border-[#E6D9C8] bg-white px-3 text-xs"
+                      className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-xs sm:w-44"
                       onBlur={(event) => updatePhone(user.id, event.target.value)}
                     />
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+                    <span className="rounded-full border border-[#7C4E2F]/20 bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F]">
                       {user.role || 'user'}
                     </span>
                   </div>
@@ -165,38 +165,46 @@ export default function AdminUsersPage() {
                   </label>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-                <span>
-                  Joined:{' '}
-                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
-                </span>
-                <span>
-                  Last login:{' '}
-                  {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : '-'}
-                </span>
-                <span>Orders: {user.ordersCount ?? 0}</span>
-                <span>
-                  Last order:{' '}
-                  {user.lastOrderAt ? new Date(user.lastOrderAt).toLocaleDateString() : '-'}
-                </span>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B] lg:flex lg:flex-wrap lg:gap-6">
+                <div className="flex flex-col gap-1">
+                  <span className="opacity-60 text-[8px]">Joined</span>
+                  <span className="font-semibold text-[#2B2119]">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="opacity-60 text-[8px]">Last login</span>
+                  <span className="font-semibold text-[#2B2119]">
+                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : '-'}
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="opacity-60 text-[8px]">Orders</span>
+                  <span className="font-semibold text-[#2B2119]">{user.ordersCount ?? 0}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="opacity-60 text-[8px]">Last order</span>
+                  <span className="font-semibold text-[#2B2119]">
+                    {user.lastOrderAt ? new Date(user.lastOrderAt).toLocaleDateString() : '-'}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.3em]">
+              <div className="flex items-center gap-3 pt-4 border-t border-[#E6D9C8] lg:border-t-0 lg:pt-0">
                 <select
                   value={user.role ?? 'user'}
                   onChange={(event) => updateRole(user.id, event.target.value as 'admin' | 'user')}
-                  className="h-9 rounded-full border border-[#E6D9C8] bg-white px-3 text-[10px] uppercase tracking-[0.3em] text-[#2B2119]"
+                  className="h-10 flex-1 rounded-full border border-[#E6D9C8] bg-white px-4 text-[9px] font-bold uppercase tracking-[0.3em] text-[#2B2119] lg:w-32 lg:flex-none"
                 >
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
-                <Button
+                <button
                   type="button"
                   onClick={() => handleDelete(user.id)}
-                  variant="destructive"
-                  size="sm"
+                  className="rounded-full bg-[#7C4E2F] px-5 py-2.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white transition hover:bg-red-800"
                 >
                   Delete
-                </Button>
+                </button>
               </div>
             </div>
           ))

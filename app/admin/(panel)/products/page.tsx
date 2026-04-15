@@ -32,6 +32,10 @@ type Product = {
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
   variants?: Variant[]
   createdAt?: string
+  discountType?: string
+  discountValue?: number
+  compareAt?: number
+  badge?: string
 }
 
 type ProductForm = {
@@ -42,6 +46,10 @@ type ProductForm = {
   description: string
   inventoryCount: string
   stockStatus: string
+  discountType: string
+  discountValue: string
+  compareAt: string
+  badge: string
 }
 
 const emptyForm: ProductForm = {
@@ -52,6 +60,10 @@ const emptyForm: ProductForm = {
   description: '',
   inventoryCount: '',
   stockStatus: 'in_stock',
+  discountType: '',
+  discountValue: '',
+  compareAt: '',
+  badge: '',
 }
 
 export default function AdminProductsPage() {
@@ -142,6 +154,10 @@ export default function AdminProductsPage() {
       description: form.description.trim(),
       inventoryCount: form.inventoryCount ? Number(form.inventoryCount) : null,
       stockStatus: form.stockStatus || 'in_stock',
+      discountType: form.discountType || undefined,
+      discountValue: form.discountValue ? Number(form.discountValue) : undefined,
+      compareAt: form.compareAt ? Number(form.compareAt) : undefined,
+      badge: form.badge || undefined,
       images,
       variants: variants.map((variant) => ({
         ...variant,
@@ -176,6 +192,10 @@ export default function AdminProductsPage() {
       description: product.description ?? '',
       inventoryCount: product.inventoryCount ? String(product.inventoryCount) : '',
       stockStatus: product.stockStatus ?? 'in_stock',
+      discountType: product.discountType ?? '',
+      discountValue: product.discountValue ? String(product.discountValue) : '',
+      compareAt: product.compareAt ? String(product.compareAt) : '',
+      badge: product.badge ?? '',
     })
     setEditImages(product.images ?? [])
     setEditVariants(product.variants ?? [])
@@ -193,6 +213,10 @@ export default function AdminProductsPage() {
       description: editForm.description.trim(),
       inventoryCount: editForm.inventoryCount ? Number(editForm.inventoryCount) : null,
       stockStatus: editForm.stockStatus || 'in_stock',
+      discountType: editForm.discountType || undefined,
+      discountValue: editForm.discountValue ? Number(editForm.discountValue) : undefined,
+      compareAt: editForm.compareAt ? Number(editForm.compareAt) : undefined,
+      badge: editForm.badge || undefined,
       images: editImages,
       variants: editVariants.map((variant) => ({
         ...variant,
@@ -371,19 +395,65 @@ export default function AdminProductsPage() {
               </div>
             </div>
 
+            <div className="grid gap-4 sm:grid-cols-4">
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Discount Type</label>
+                <select
+                  value={form.discountType}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, discountType: event.target.value }))
+                  }
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                >
+                  <option value="">None</option>
+                  <option value="percentage">Percentage</option>
+                  <option value="flat">Flat amount</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Discount Val</label>
+                <input
+                  value={form.discountValue}
+                  onChange={(event) => setForm((prev) => ({ ...prev, discountValue: event.target.value }))}
+                  placeholder="e.g. 15"
+                  type="number"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Compare At</label>
+                <input
+                  value={form.compareAt}
+                  onChange={(event) => setForm((prev) => ({ ...prev, compareAt: event.target.value }))}
+                  placeholder="Original price"
+                  type="number"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">Badge</label>
+                <input
+                  value={form.badge}
+                  onChange={(event) => setForm((prev) => ({ ...prev, badge: event.target.value }))}
+                  placeholder="e.g. New, Sale"
+                  className="mt-2 h-11 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                />
+              </div>
+            </div>
+
             <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-[#F4EEE4] p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Images</p>
-                  <p className="text-sm text-[#6B665A]">Upload product imagery to Cloudinary.</p>
+                  <p className="text-sm text-[#6B665A]">Upload product imagery to Cloudinary (Max 3).</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
-                  {uploading ? 'Uploading...' : 'Upload'}
+                <label className={`inline-flex items-center rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.3em] ${images.length >= 3 || uploading ? 'border-[#E6D9C8] text-[#8C7A6B] opacity-50 cursor-not-allowed' : 'border-[#7C4E2F] text-[#2B2119] cursor-pointer'}`}>
+                  {uploading ? 'Uploading...' : images.length >= 3 ? 'Limit reached' : 'Upload'}
                   <input
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    disabled={uploading}
+                    disabled={uploading || images.length >= 3}
                     onChange={(event) => {
                       const file = event.target.files?.[0]
                       if (!file) return
@@ -449,14 +519,14 @@ export default function AdminProductsPage() {
                       key={variant.id}
                       className="rounded-2xl border border-[#E6D9C8] bg-white/80 p-4"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:items-center lg:gap-3">
                         <input
                           value={variant.name}
                           onChange={(event) =>
                             updateVariant(setVariants, variant.id, { name: event.target.value })
                           }
                           placeholder="Variant name"
-                          className="h-10 flex-1 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:flex-1"
                         />
                         <input
                           value={variant.sku ?? ''}
@@ -464,25 +534,25 @@ export default function AdminProductsPage() {
                             updateVariant(setVariants, variant.id, { sku: event.target.value })
                           }
                           placeholder="SKU"
-                          className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:w-36"
                         />
                         <input
                           value={variant.price ?? ''}
                           onChange={(event) =>
                             updateVariant(setVariants, variant.id, { price: event.target.value })
                           }
-                          placeholder="Variant price"
+                          placeholder="Price"
                           type="number"
-                          className="h-10 w-32 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:w-32"
                         />
                         <input
                           value={variant.stockCount ?? ''}
                           onChange={(event) =>
                             updateVariant(setVariants, variant.id, { stockCount: event.target.value })
                           }
-                          placeholder="Stock count"
+                          placeholder="Stock"
                           type="number"
-                          className="h-10 w-28 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:w-28"
                         />
                         <select
                           value={variant.stockStatus ?? 'in_stock'}
@@ -491,7 +561,7 @@ export default function AdminProductsPage() {
                               stockStatus: event.target.value as Variant['stockStatus'],
                             })
                           }
-                          className="h-10 w-36 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:w-36"
                         >
                           <option value="in_stock">In stock</option>
                           <option value="low_stock">Low stock</option>
@@ -503,13 +573,13 @@ export default function AdminProductsPage() {
                           onChange={(event) =>
                             updateVariant(setVariants, variant.id, { color: event.target.value })
                           }
-                          placeholder="Color (hex or name)"
-                          className="h-10 w-40 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                          placeholder="Color"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm lg:w-40"
                         />
                         <button
                           type="button"
                           onClick={() => removeVariant(setVariants, variant.id)}
-                          className="rounded-full border border-red-300 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-red-600"
+                          className="w-full rounded-full border border-red-300 px-3 py-2 text-[10px] uppercase tracking-[0.3em] text-red-600 lg:w-auto"
                         >
                           Remove
                         </button>
@@ -628,9 +698,9 @@ export default function AdminProductsPage() {
               products.map((product) => (
                 <div
                   key={product.id}
-                  className="rounded-2xl border border-[#E6D9C8] bg-[#F4EEE4] p-4"
+                  className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-5 shadow-sm"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="text-sm font-semibold text-[#2B2119]">
                         {product.name}
@@ -744,18 +814,57 @@ export default function AdminProductsPage() {
                           <option value="preorder">Preorder</option>
                         </select>
                       </div>
+                      <div className="grid gap-3 sm:grid-cols-4">
+                        <select
+                          value={editForm.discountType}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, discountType: event.target.value }))
+                          }
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                        >
+                          <option value="">No discount</option>
+                          <option value="percentage">Percentage</option>
+                          <option value="flat">Flat</option>
+                        </select>
+                        <input
+                          value={editForm.discountValue}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, discountValue: event.target.value }))
+                          }
+                          placeholder="Discount value"
+                          type="number"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                        />
+                        <input
+                          value={editForm.compareAt}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, compareAt: event.target.value }))
+                          }
+                          placeholder="Compare-At"
+                          type="number"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                        />
+                        <input
+                          value={editForm.badge}
+                          onChange={(event) =>
+                            setEditForm((prev) => ({ ...prev, badge: event.target.value }))
+                          }
+                          placeholder="Badge"
+                          className="h-10 w-full rounded-full border border-[#E6D9C8] bg-white px-4 text-sm"
+                        />
+                      </div>
                       <div className="rounded-3xl border border-dashed border-[#E6D9C8] bg-white/70 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-                            Images
+                            Images (Max 3)
                           </div>
-                          <label className="inline-flex cursor-pointer items-center rounded-full border border-[#7C4E2F] px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119]">
-                            {uploading ? 'Uploading...' : 'Upload'}
+                          <label className={`inline-flex items-center rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.3em] ${editImages.length >= 3 || uploading ? 'border-[#E6D9C8] text-[#8C7A6B] opacity-50 cursor-not-allowed' : 'border-[#7C4E2F] text-[#2B2119] cursor-pointer'}`}>
+                            {uploading ? 'Uploading...' : editImages.length >= 3 ? 'Limit reached' : 'Upload'}
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
-                              disabled={uploading}
+                              disabled={uploading || editImages.length >= 3}
                               onChange={(event) => {
                                 const file = event.target.files?.[0]
                                 if (!file) return

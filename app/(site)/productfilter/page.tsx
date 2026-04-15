@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 type Category = {
   id: string
@@ -166,11 +167,8 @@ function ProductFilterContent() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-12 px-6 py-16">
-      <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-        <div className="flex items-center gap-3">
-          <span className="rounded-full border border-[#E6D9C8] bg-white/70 px-3 py-2">Timberbell</span>
-          <span className="rounded-full border border-[#E6D9C8] bg-white/70 px-3 py-2">Filter</span>
-        </div>
+      <div className="flex items-center justify-between">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Shop' }]} />
         <div className="flex items-center gap-2">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/70">
             <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#7C4E2F]" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -255,29 +253,35 @@ function ProductFilterContent() {
               <button
                 type="button"
                 onClick={() => router.push('/productfilter')}
-                className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] ${
-                  !category ? 'border-[#7C4E2F] text-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B]'
+                className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
+                  !category ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                 }`}
               >
                 All
               </button>
-              {categories.map((item) => {
-                const isActive = item.slug === category
-                return (
-                  <button
-                    type="button"
-                    key={item.id}
-                    onClick={() => router.push(`/productfilter?category=${item.slug}`)}
-                    className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] ${
-                      isActive
-                        ? 'border-[#7C4E2F] text-[#7C4E2F]'
-                        : 'border-[#E6D9C8] text-[#8C7A6B]'
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                )
-              })}
+              {loading && !categories.length ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-8 w-20 animate-pulse rounded-full bg-[#E6D9C8]" />
+                ))
+              ) : (
+                categories.map((item) => {
+                  const isActive = item.slug === category
+                  return (
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => router.push(`/productfilter?category=${item.slug}`)}
+                      className={`rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
+                        isActive
+                          ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white'
+                          : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
+                      }`}
+                    >
+                      {item.name}
+                    </button>
+                  )
+                })
+              )}
             </div>
           </div>
 
@@ -353,12 +357,12 @@ function ProductFilterContent() {
                     key={color.value}
                     type="button"
                     onClick={() => setColors((prev) => toggleValue(prev, color.value))}
-                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] ${
-                      active ? 'border-[#7C4E2F] text-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B]'
+                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
+                      active ? 'border-[#7C4E2F] bg-[#7C4E2F]/5 text-[#7C4E2F] ring-1 ring-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                     }`}
                   >
                     <span
-                      className="h-3 w-3 rounded-full border border-[#E6D9C8]"
+                      className="h-4 w-4 rounded-full border shadow-sm"
                       style={{ backgroundColor: color.value }}
                     />
                     {color.label}
@@ -411,12 +415,14 @@ function ProductFilterContent() {
 
         <section className="space-y-6">
           <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-            <span>{loading ? 'Loading results' : `${total} results`}</span>
+            <span>{loading ? 'Search...' : `${total} results`}</span>
             <span>{sort.replace('_', ' ')}</span>
           </div>
           {loading ? (
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
-              Loading products...
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} className="h-[400px] w-full animate-pulse rounded-[28px] bg-[#E6D9C8]/40" />
+              ))}
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -427,13 +433,16 @@ function ProductFilterContent() {
           )}
 
           {!loading && products.length === 0 ? (
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-center text-sm text-[#6B594A]">
+            <div className="rounded-[28px] border border-[#E6D9C8] bg-white p-12 text-center text-sm text-[#6B594A] shadow-sm">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mx-auto mb-4 h-12 w-12 opacity-20">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               No products found. Try adjusting your filters.
             </div>
           ) : null}
 
           {!loading && products.length > 0 ? (
-            <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] px-6 py-4 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+            <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-white px-6 py-4 text-xs uppercase tracking-[0.3em] text-[#8C7A6B] shadow-sm">
               <button
                 type="button"
                 onClick={() => {

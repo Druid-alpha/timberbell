@@ -1,7 +1,13 @@
-﻿import SiteFooter from '@/app/_components/SiteFooter'
+import SiteFooter from '@/app/_components/SiteFooter'
 import SiteHeader from '@/app/_components/SiteHeader'
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default function SiteLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode
+  modal: React.ReactNode
+}) {
   return (
     <div className="relative flex min-h-screen flex-col">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -11,7 +17,10 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.9),transparent_55%)]" />
       </div>
       <SiteHeader />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1">
+        {children}
+        {modal}
+      </main>
       <SiteFooter />
     </div>
   )

@@ -4,7 +4,7 @@ import { hashPassword, signToken } from '@/lib/auth'
 import { createEmailVerification } from '@/lib/services/authTokens'
 import { generateToken, hashToken } from '@/lib/utils/tokens'
 import { sendEmail } from '@/lib/email'
-import { verificationEmailTemplate } from '@/lib/emailTemplates'
+import { verificationEmailTemplate, welcomeEmailTemplate } from '@/lib/emailTemplates'
 
 const appUrl = process.env.APP_URL || 'http://localhost:3000'
 
@@ -44,6 +44,12 @@ export async function POST(request: Request) {
     to: normalizedEmail,
     subject: 'Verify your Timberbell account',
     html: verificationEmailTemplate(verifyUrl),
+  })
+
+  await sendEmail({
+    to: normalizedEmail,
+    subject: `Welcome to Timberbell, ${body.name}`,
+    html: welcomeEmailTemplate(body.name),
   })
 
   const token = signToken({ id: userId, email: normalizedEmail })

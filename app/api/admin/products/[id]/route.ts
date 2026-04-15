@@ -7,12 +7,12 @@ function getQuery(id: string) {
   return ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }
 }
 
-export async function PUT(request: NextRequest, ctx: RouteContext<'/api/admin/products/[id]'>) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminRequest(request)) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id } = await ctx.params
+  const { id } = await params
   const body = await request.json().catch(() => null)
   if (!body) {
     return Response.json({ message: 'Body required' }, { status: 400 })
@@ -76,12 +76,12 @@ export async function PUT(request: NextRequest, ctx: RouteContext<'/api/admin/pr
   })
 }
 
-export async function DELETE(request: NextRequest, ctx: RouteContext<'/api/admin/products/[id]'>) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminRequest(request)) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id } = await ctx.params
+  const { id } = await params
   const db = await (await import('@/lib/db')).getDb()
   const product = await db.collection('products').findOne(getQuery(id))
 

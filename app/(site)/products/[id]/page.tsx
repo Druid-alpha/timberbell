@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 import { formatMoney } from '@/lib/utils/format'
 import WishlistButton from '@/app/_components/WishlistButton'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 type Product = {
   id: string
@@ -78,8 +79,15 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
-        Loading product...
+      <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
+        <div className="flex flex-col gap-6">
+          <div className="h-4 w-48 animate-pulse rounded bg-[#E6D9C8]/40" />
+          <div className="h-10 w-64 animate-pulse rounded bg-[#E6D9C8]/40" />
+        </div>
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="h-[420px] w-full animate-pulse rounded-[32px] bg-[#E6D9C8]/40" />
+          <div className="h-[500px] w-full animate-pulse rounded-[28px] bg-[#E6D9C8]/40" />
+        </div>
       </div>
     )
   }
@@ -148,9 +156,12 @@ export default function ProductDetailPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
       <div className="flex flex-col gap-6">
-        <Link href="/shop" className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
-          Back to shop
-        </Link>
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: 'Shop', href: '/productfilter' },
+          { label: product.category, href: `/productfilter?category=${product.category.toLowerCase().replace(/ /g, '-')}` },
+          { label: product.name }
+        ]} />
         <SectionHeading
           eyebrow={product.category}
           title={product.name}
@@ -178,6 +189,11 @@ export default function ProductDetailPage() {
             <div className="absolute right-4 top-4 rounded-full bg-white/90 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-[#7C4E2F]">
               Featured
             </div>
+            {compareAt && compareAt > price ? (
+              <div className="absolute left-4 top-4 rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white">
+                {Math.round(((compareAt - price) / compareAt) * 100)}% OFF
+              </div>
+            ) : null}
           </div>
           {images.length > 1 ? (
             <div className="grid grid-cols-4 gap-3">
@@ -257,12 +273,12 @@ export default function ProductDetailPage() {
                         }
                         setVariantPrice(variant.price ?? null)
                       }}
-                      className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] ${
-                        isActive ? 'border-[#2B2119] text-[#2B2119]' : 'border-[#E6D9C8] text-[#8C7A6B]'
+                      className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
+                        isActive ? 'border-[#7C4E2F] bg-[#7C4E2F]/5 text-[#7C4E2F] ring-1 ring-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                       }`}
                     >
                       <span
-                        className="h-3 w-3 rounded-full border border-[#E6D9C8]"
+                        className="h-4 w-4 rounded-full border shadow-sm"
                         style={{ backgroundColor: variant.color || '#E6D9C8' }}
                       />
                       {variant.name}
@@ -281,7 +297,7 @@ export default function ProductDetailPage() {
                 </ul>
               ) : null}
               {product.variants.find((variant) => variant.id === activeVariantId) ? (
-                <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
+               <div className="mt-4 flex flex-wrap gap-2 text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">
                   <span>
                     Status:{' '}
                     {product.variants.find((variant) => variant.id === activeVariantId)
@@ -324,7 +340,7 @@ export default function ProductDetailPage() {
                 {(product.finishes ?? []).map((finish) => (
                   <span
                     key={finish}
-                    className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-xs text-[#6B594A]"
+                    className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]"
                   >
                     {finish}
                   </span>
@@ -341,5 +357,3 @@ export default function ProductDetailPage() {
     </div>
   )
 }
-
-

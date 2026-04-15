@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 
 export default function CartPage() {
   const [cart, setCart] = useState<any>(null)
@@ -94,11 +95,14 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
-      <SectionHeading
-        eyebrow="Cart"
-        title="Your curated bundle"
-        description="Review your selected pieces and schedule delivery when you are ready."
-      />
+      <div className="flex flex-col gap-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+        <SectionHeading
+          eyebrow="Cart"
+          title="Your curated bundle"
+          description="Review your selected pieces and schedule delivery when you are ready."
+        />
+      </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-4">
