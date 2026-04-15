@@ -71,6 +71,7 @@ function ProductFilterContent() {
   const [total, setTotal] = useState(0)
   const [suggestions, setSuggestions] = useState<Product[]>([])
   const [suggestOpen, setSuggestOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const url = useMemo(() => {
     const params = new URLSearchParams()
@@ -170,16 +171,26 @@ function ProductFilterContent() {
       <div className="flex items-center justify-between">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Shop' }]} />
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/70">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#7C4E2F]" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${viewMode === 'list' ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white/70 text-[#7C4E2F]'}`}
+            aria-label="List view"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M4 6h16M7 12h10M10 18h4" strokeLinecap="round" />
             </svg>
-          </span>
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/70">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#7C4E2F]" fill="none" stroke="currentColor" strokeWidth="1.8">
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('grid')}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${viewMode === 'grid' ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white/70 text-[#7C4E2F]'}`}
+            aria-label="Grid view"
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" strokeLinecap="round" />
             </svg>
-          </span>
+          </button>
         </div>
       </div>
       <div className="rounded-[36px] border border-[#E6D9C8] bg-[#F4EEE4] px-8 py-10 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.55)]">
@@ -419,15 +430,15 @@ function ProductFilterContent() {
             <span>{sort.replace('_', ' ')}</span>
           </div>
           {loading ? (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
               {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="h-[400px] w-full animate-pulse rounded-[28px] bg-[#E6D9C8]/40" />
+                <div key={i} className={`animate-pulse rounded-[28px] bg-[#E6D9C8]/40 ${viewMode === 'grid' ? 'h-[400px]' : 'h-32'}`} />
               ))}
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} variant={viewMode} />
               ))}
             </div>
           )}

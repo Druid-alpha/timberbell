@@ -7,6 +7,8 @@ import SectionHeading from '@/app/_components/SectionHeading'
 import { formatMoney } from '@/lib/utils/format'
 import WishlistButton from '@/app/_components/WishlistButton'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import { useAppDispatch } from '@/lib/redux/hooks'
+import { addItem } from '@/lib/redux/cartSlice'
 
 type Product = {
   id: string
@@ -136,6 +138,7 @@ export default function ProductDetailPage() {
     </svg>
   )
 
+  const dispatch = useAppDispatch()
   const handleAddToCart = async () => {
     setStatus('Adding to cart...')
     const res = await fetch('/api/cart', {
@@ -145,6 +148,15 @@ export default function ProductDetailPage() {
     })
 
     if (res.ok) {
+      dispatch(addItem({
+        productId: product.id,
+        name: product.name,
+        price: price, // price is defined below in the render but actually I should define it above if needed, wait price is defined inside the component body
+        quantity: 1,
+        imageUrl: product.images?.[0]?.url,
+        variantId: activeVariantId || undefined,
+        variantName: product.variants?.find(v => v.id === activeVariantId)?.name
+      }))
       setStatus('Added to cart.')
       return
     }
@@ -159,7 +171,7 @@ export default function ProductDetailPage() {
         <Breadcrumb items={[
           { label: 'Home', href: '/' },
           { label: 'Shop', href: '/productfilter' },
-          { label: product.category, href: `/productfilter?category=${product.category.toLowerCase().replace(/ /g, '-')}` },
+          { label: product.category || 'Collection', href: `/productfilter?category=${(product.category || '').toLowerCase().replace(/ /g, '-')}` },
           { label: product.name }
         ]} />
         <SectionHeading

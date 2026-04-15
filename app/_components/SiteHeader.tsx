@@ -101,8 +101,8 @@ export default function SiteHeader() {
   const isLoggedIn = user.isLoggedIn
   const avatarUrl = user.avatarUrl
   const initials = (() => {
-    const seed = user.name || user.email || 'TB'
-    return seed.slice(0, 2).toUpperCase()
+    const seed = user.name || user.email || ''
+    return seed.slice(0, 2).toUpperCase() || '??'
   })()
 
   const navLinks = isAdmin ? [...baseLinks, { href: '/admin', label: 'Admin' }] : baseLinks
@@ -198,14 +198,13 @@ export default function SiteHeader() {
                     initials
                   )}
                 </Link>
+              {user.name && (
                 <div className="hidden flex-col justify-center xl:flex">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#2B2119]">
-                    {user.name || 'Atelier Member'}
-                  </span>
-                  <span className="text-[9px] uppercase tracking-[0.2em] text-[#8C7A6B]">
-                    {isAdmin ? 'Admin' : 'Member'}
+                    {user.name}
                   </span>
                 </div>
+              )}
               </div>
               <button
                 type="button"
@@ -367,11 +366,13 @@ export default function SiteHeader() {
                         initials
                       )}
                     </Link>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-semibold tracking-[0.2em] text-[#2B2119]">
-                        {user.name || 'Atelier Member'}
-                      </span>
-                    </div>
+                    {user.name && (
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-semibold tracking-[0.2em] text-[#2B2119]">
+                          {user.name}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"

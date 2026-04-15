@@ -35,7 +35,13 @@ const renderStars = (rating?: number) => {
   })
 }
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  variant = 'grid',
+}: {
+  product: Product
+  variant?: 'grid' | 'list'
+}) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   // Final price logic if discount exists
   let price = product.price
@@ -61,6 +67,71 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const discountPercent = compareAt ? Math.round(((compareAt - price) / compareAt) * 100) : null
   const variants = product.variants ?? []
+
+  if (variant === 'list') {
+    return (
+      <article className="group flex flex-col gap-6 rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-4 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
+        <Link
+          href={`/products/${product.id}`}
+          className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:w-48"
+        >
+          {product.images?.[0]?.url ? (
+            <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `linear-gradient(135deg, ${palette[0]}, ${palette[1]}, ${palette[2]})`,
+              }}
+            />
+          )}
+          {discountPercent ? (
+            <span className="absolute left-2 top-2 rounded-full bg-[#7C4E2F] px-2 py-0.5 text-[8px] uppercase tracking-[0.25em] text-white">
+              {discountPercent}%
+            </span>
+          ) : null}
+        </Link>
+        <div className="flex-1 space-y-2">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+                {product.category}
+              </p>
+              <h3 className="text-lg font-semibold text-[#2B2119]">
+                <Link href={`/products/${product.id}`}>{product.name}</Link>
+              </h3>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-[#2B2119]">{formatMoney(price)}</div>
+              {compareAt && compareAt > price && (
+                <div className="text-[10px] text-[#8C7A6B] line-through">
+                  {formatMoney(compareAt)}
+                </div>
+              )}
+            </div>
+          </div>
+          <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
+            {product.description}
+          </p>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-0.5">{renderStars(product.rating)}</span>
+              <span className="text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <WishlistButton productId={product.id} />
+              <Link
+                href={`/products/${product.id}`}
+                className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F]"
+              >
+                View
+              </Link>
+            </div>
+          </div>
+        </div>
+      </article>
+    )
+  }
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">

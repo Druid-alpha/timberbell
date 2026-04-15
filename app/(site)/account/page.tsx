@@ -87,7 +87,7 @@ export default function AccountPage() {
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Account' }]} />
         <SectionHeading
           eyebrow="Account"
-          title="Welcome back, Atelier member"
+          title={`Welcome back, ${profile?.name || 'Atelier member'}`}
           description="Manage orders, track deliveries, and curate your next room."
         />
       </div>
@@ -127,7 +127,7 @@ export default function AccountPage() {
                       </div>
                     )}
                     <div>
-                      <p>Name: {profile.name}</p>
+                      <p className="font-semibold text-[#2B2119]">Name: {profile.name?.trim() || 'Not provided'}</p>
                       <p>Email: {profile.email}</p>
                       {profile.phone ? <p>Phone: {profile.phone}</p> : null}
                     </div>
