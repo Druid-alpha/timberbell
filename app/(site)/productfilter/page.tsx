@@ -23,19 +23,8 @@ type Product = {
   palette?: string[]
   materials?: string[]
   finishes?: string[]
+  variants?: any[]
 }
-
-const colorOptions = [
-  { label: 'Cream', value: '#F2EBDD' },
-  { label: 'Mocha', value: '#8C7A6B' },
-  { label: 'Walnut', value: '#8B6A4E' },
-  { label: 'Sand', value: '#E6D8C7' },
-  { label: 'Charcoal', value: '#5B5A52' },
-  { label: 'White', value: '#F9F7F2' },
-]
-
-const materialOptions = ['Oak', 'Walnut', 'Boucle', 'Linen', 'Leather', 'Stone']
-const finishOptions = ['Matte', 'Natural', 'Brushed', 'Polished', 'Smoked', 'Waxed']
 
 function ProductFilterContent() {
   const router = useRouter()
@@ -73,6 +62,7 @@ function ProductFilterContent() {
   const [suggestions, setSuggestions] = useState<Product[]>([])
   const [suggestOpen, setSuggestOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [filterProducts, setFilterProducts] = useState<Product[]>([])
 
   const url = useMemo(() => {
     const params = new URLSearchParams()
@@ -94,13 +84,19 @@ function ProductFilterContent() {
     let active = true
     async function load() {
       setLoading(true)
-      const [catRes, prodRes] = await Promise.all([fetch('/api/categories'), fetch(url)])
+      const [catRes, prodRes, filterRes] = await Promise.all([
+        fetch('/api/categories'),
+        fetch(url),
+        fetch('/api/products?limit=100'),
+      ])
       const catJson = await catRes.json()
       const prodJson = await prodRes.json()
+      const filterJson = await filterRes.json().catch(() => ({}))
       if (!active) return
       setCategories(catJson.categories ?? [])
       setProducts(prodJson.products ?? [])
       setTotal(prodJson.total ?? prodJson.count ?? 0)
+      setFilterProducts(filterJson.products ?? [])
       setLoading(false)
     }
     load()
@@ -166,6 +162,24 @@ function ProductFilterContent() {
     setPage(1)
     router.push('/productfilter')
   }
+
+  const colorOptions = useMemo(() => {
+    const allColors = filterProducts.flatMap((product) => [
+      ...(product.palette ?? []),
+      ...((product.variants ?? []).map((variant) => variant.color).filter(Boolean) as string[]),
+    ])
+    return Array.from(new Set(allColors)).slice(0, 12)
+  }, [filterProducts])
+
+  const materialOptions = useMemo(() => {
+    const allMaterials = filterProducts.flatMap((product) => product.materials ?? [])
+    return Array.from(new Set(allMaterials)).sort()
+  }, [filterProducts])
+
+  const finishOptions = useMemo(() => {
+    const allFinishes = filterProducts.flatMap((product) => product.finishes ?? [])
+    return Array.from(new Set(allFinishes)).sort()
+  }, [filterProducts])
 
   return (
     <div className="mx-auto max-w-7xl space-y-12 px-6 py-16">
@@ -363,21 +377,21 @@ function ProductFilterContent() {
             <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Color</p>
             <div className="mt-4 flex flex-wrap gap-3">
               {colorOptions.map((color) => {
-                const active = colors.includes(color.value)
+                const active = colors.includes(color)
                 return (
                   <button
-                    key={color.value}
+                    key={color}
                     type="button"
-                    onClick={() => setColors((prev) => toggleValue(prev, color.value))}
+                    onClick={() => setColors((prev) => toggleValue(prev, color))}
                     className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
                       active ? 'border-[#7C4E2F] bg-[#7C4E2F]/5 text-[#7C4E2F] ring-1 ring-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                     }`}
+                    title={color}
                   >
                     <span
-                      className="h-4 w-4 rounded-full border shadow-sm"
-                      style={{ backgroundColor: color.value }}
+                      className="h-5 w-5 rounded-full border shadow-sm"
+                      style={{ backgroundColor: color }}
                     />
-                    {color.label}
                   </button>
                 )
               })}

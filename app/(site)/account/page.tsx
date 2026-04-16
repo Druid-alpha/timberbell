@@ -12,6 +12,14 @@ export default function AccountPage() {
   const [status, setStatus] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null)
+  const statusStyles: Record<string, string> = {
+    pending_payment: 'border-amber-200 bg-amber-50 text-amber-700',
+    pending: 'border-orange-200 bg-orange-50 text-orange-700',
+    paid: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    payment_failed: 'border-red-200 bg-red-50 text-red-700',
+    shipped: 'border-sky-200 bg-sky-50 text-sky-700',
+    delivered: 'border-green-200 bg-green-50 text-green-700',
+  }
 
   useEffect(() => {
     let active = true
@@ -168,10 +176,13 @@ export default function AccountPage() {
                             Order {order.id.slice(-6)}
                           </p>
                           <p className="text-[11px] text-[#8C7A6B]">
-                            {new Date(order.createdAt).toLocaleDateString()} • {order.items?.length || 0} items
+                            {new Date(order.createdAt).toLocaleDateString()} - {order.items?.length || 0} items
                           </p>
                         </div>
                         <div className="flex items-center gap-4">
+                          <span className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] ${statusStyles[order.status] || 'border-[#E6D9C8] bg-white text-[#8C7A6B]'}`}>
+                            {String(order.status || 'pending').replace('_', ' ')}
+                          </span>
                           <span className="text-sm font-semibold text-[#2B2119]">
                             ${order.total?.toLocaleString?.() ?? 0}
                           </span>
@@ -212,3 +223,4 @@ export default function AccountPage() {
     </div>
   )
 }
+

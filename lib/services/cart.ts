@@ -75,6 +75,23 @@ export async function clearCart(userId: string) {
   return getCartByUserId(userId)
 }
 
+export async function clearActiveCartItems(userId: string) {
+  const db = await getDb()
+  const existing = await db.collection<CartDoc>('carts').findOne({ userId })
+  const savedItems = (existing?.items || []).filter((item: any) => item.saved)
+
+  await db.collection<CartDoc>('carts').updateOne(
+    { userId },
+    {
+      $setOnInsert: { createdAt: new Date() },
+      $set: { items: savedItems, updatedAt: new Date() },
+    },
+    { upsert: true }
+  )
+
+  return getCartByUserId(userId)
+}
+
 type CartDoc = {
   userId: string
   items: CartItem[]

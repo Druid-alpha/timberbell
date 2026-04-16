@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 
@@ -40,6 +40,7 @@ type Product = {
   materials?: string[]
   finishes?: string[]
   palette?: string[]
+  leadTime?: string
 }
 
 type ProductForm = {
@@ -56,6 +57,37 @@ type ProductForm = {
   badge: string
   materials: string
   finishes: string
+  leadTime: string
+}
+
+type ProductPayload = {
+  name: string
+  slug: string
+  price: number
+  category: string
+  description: string
+  inventoryCount: number | null
+  stockStatus: string
+  discountType: string | null
+  discountValue: number | null
+  compareAt: number | null
+  badge: string | null
+  materials: string[]
+  finishes: string[]
+  leadTime: string | null
+  palette: string[]
+  images: ProductImage[]
+  variants: Array<{
+    id: string
+    name: string
+    sku?: string
+    price?: number
+    stockCount?: number
+    stockStatus?: Variant['stockStatus']
+    color?: string
+    image?: ProductImage | null
+    specifications?: string[]
+  }>
 }
 
 const emptyForm: ProductForm = {
@@ -72,9 +104,29 @@ const emptyForm: ProductForm = {
   badge: '',
   materials: '',
   finishes: '',
+  leadTime: '',
 }
 
 const defaultPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function normalizeTextList(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function deepEqual(left: unknown, right: unknown) {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
 
 function createVariant(): Variant {
   return {
@@ -93,6 +145,13 @@ function createVariant(): Variant {
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<{id:string, slug:string, name:string}[]>([])
+  const [optionSets, setOptionSets] = useState<{ badges: string[]; materials: string[]; finishes: string[]; leadTimes: string[]; colors: string[] }>({
+    badges: [],
+    materials: [],
+    finishes: [],
+    leadTimes: [],
+    colors: [],
+  })
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [images, setImages] = useState<ProductImage[]>([])
@@ -102,19 +161,41 @@ export default function AdminProductsPage() {
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [baselinePayload, setBaselinePayload] = useState<ProductPayload | null>(null)
+  const materialOptions = useMemo(() => optionSets.materials, [optionSets.materials])
+  const finishOptions = useMemo(() => optionSets.finishes, [optionSets.finishes])
+  const badgeOptions = useMemo(() => optionSets.badges, [optionSets.badges])
+  const leadTimeOptions = useMemo(() => optionSets.leadTimes, [optionSets.leadTimes])
+  const colorOptions = useMemo(() => optionSets.colors, [optionSets.colors])
+  const finalPreviewPrice = useMemo(() => {
+    const basePrice = Number(form.price) || 0
+    const compareAt = Number(form.compareAt) || 0
+    const discountValue = Number(form.discountValue) || 0
+    if (form.discountType === 'percentage' && discountValue > 0) {
+      return Math.max(basePrice - (basePrice * discountValue) / 100, 0)
+    }
+    if (form.discountType === 'fixed' && discountValue > 0) {
+      return Math.max(basePrice - discountValue, 0)
+    }
+    return basePrice || compareAt || 0
+  }, [form.compareAt, form.discountType, form.discountValue, form.price])
+  const isSlugSuggested = slugify(form.name) === form.slug
 
   // Load Initial Data
   useEffect(() => {
     async function init() {
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodRes, catRes, optionRes] = await Promise.all([
           fetch('/api/admin/products', { cache: 'no-store' }),
-          fetch('/api/categories', { cache: 'no-store' })
+          fetch('/api/categories', { cache: 'no-store' }),
+          fetch('/api/admin/product-options', { cache: 'no-store' }),
         ])
         const prodData = await prodRes.json()
         const catData = await catRes.json()
+        const optionData = await optionRes.json().catch(() => ({}))
         setProducts(prodData?.products || [])
         setCategories(catData?.categories || [])
+        setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
       } finally {
         setLoading(false)
       }
@@ -154,27 +235,50 @@ export default function AdminProductsPage() {
     }
   }
 
+  function buildPayload(): ProductPayload {
+    return {
+      ...form,
+      slug: form.slug || slugify(form.name),
+      price: Number(form.price),
+      inventoryCount: form.inventoryCount ? Number(form.inventoryCount) : null,
+      discountType: form.discountType || null,
+      discountValue: form.discountValue ? Number(form.discountValue) : null,
+      compareAt: form.compareAt ? Number(form.compareAt) : null,
+      badge: form.badge.trim() || null,
+      materials: normalizeTextList(form.materials),
+      finishes: normalizeTextList(form.finishes),
+      leadTime: form.leadTime.trim() || null,
+      palette: palette.filter(Boolean),
+      images,
+      variants: variants.map((v) => ({
+        ...v,
+        sku: v.sku?.trim() || undefined,
+        price: v.price ? Number(v.price) : undefined,
+        stockCount: v.stockCount ? Number(v.stockCount) : undefined,
+        color: v.color?.trim() || undefined,
+        specifications: (v.specifications || []).filter(Boolean),
+      })),
+    }
+  }
+
   // Submit Logic
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
     setError('')
-    
-    const payload = {
-      ...form,
-      price: Number(form.price),
-      inventoryCount: form.inventoryCount ? Number(form.inventoryCount) : null,
-      discountValue: form.discountValue ? Number(form.discountValue) : null,
-      compareAt: form.compareAt ? Number(form.compareAt) : null,
-      materials: form.materials.split(',').map(m => m.trim()).filter(Boolean),
-      finishes: form.finishes.split(',').map(f => f.trim()).filter(Boolean),
-      palette: palette.filter(Boolean),
-      images,
-      variants: variants.map(v => ({
-        ...v,
-        price: v.price ? Number(v.price) : undefined,
-        stockCount: v.stockCount ? Number(v.stockCount) : undefined,
-      }))
+
+    const nextPayload = buildPayload()
+    const payload =
+      editingId && baselinePayload
+        ? Object.fromEntries(
+            Object.entries(nextPayload).filter(([key, value]) => !deepEqual(value, baselinePayload[key as keyof ProductPayload]))
+          )
+        : nextPayload
+
+    if (editingId && Object.keys(payload).length === 0) {
+      setError('No changes to save yet.')
+      setSaving(false)
+      return
     }
 
     const url = editingId ? `/api/admin/products/${editingId}` : '/api/admin/products'
@@ -192,10 +296,14 @@ export default function AdminProductsPage() {
       setPalette(defaultPalette)
       setVariants([])
       setEditingId(null)
+      setBaselinePayload(null)
       // Reload products
       const prodRes = await fetch('/api/admin/products', { cache: 'no-store' })
       const prodData = await prodRes.json()
       setProducts(prodData?.products || [])
+      const optionRes = await fetch('/api/admin/product-options', { cache: 'no-store' })
+      const optionData = await optionRes.json().catch(() => ({}))
+      setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
     } else {
       setError('Failed to save product. Verify all fields.')
     }
@@ -218,17 +326,45 @@ export default function AdminProductsPage() {
       badge: p.badge || '',
       materials: p.materials?.join(', ') || '',
       finishes: p.finishes?.join(', ') || '',
+      leadTime: p.leadTime || '',
     })
-    setImages(p.images || [])
-    setPalette(p.palette?.length ? p.palette.slice(0, 3) : defaultPalette)
-    setVariants(
-      (p.variants || []).map((variant) => ({
+    const nextImages = p.images || []
+    const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : defaultPalette
+    const nextVariants = (p.variants || []).map((variant) => ({
         ...variant,
         price: variant.price ? String(variant.price) : '',
         stockCount: variant.stockCount ? String(variant.stockCount) : '',
         specifications: variant.specifications || [],
       }))
-    )
+    setImages(nextImages)
+    setPalette(nextPalette)
+    setVariants(nextVariants)
+    setBaselinePayload({
+      name: p.name,
+      slug: p.slug || '',
+      price: Number(p.price),
+      category: p.category,
+      description: p.description || '',
+      inventoryCount: p.inventoryCount ?? null,
+      stockStatus: p.stockStatus || 'in_stock',
+      discountType: p.discountType || null,
+      discountValue: p.discountValue ?? null,
+      compareAt: p.compareAt ?? null,
+      badge: p.badge || null,
+      materials: p.materials || [],
+      finishes: p.finishes || [],
+      leadTime: p.leadTime || null,
+      palette: nextPalette.filter(Boolean),
+      images: nextImages,
+      variants: nextVariants.map((variant) => ({
+        ...variant,
+        sku: variant.sku || undefined,
+        price: variant.price ? Number(variant.price) : undefined,
+        stockCount: variant.stockCount ? Number(variant.stockCount) : undefined,
+        color: variant.color || undefined,
+        specifications: variant.specifications || [],
+      })),
+    })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -238,7 +374,15 @@ export default function AdminProductsPage() {
     setImages([])
     setPalette(defaultPalette)
     setVariants([])
+    setBaselinePayload(null)
     setError('')
+  }
+
+  function toggleTextValue(current: string, nextValue: string) {
+    const values = normalizeTextList(current)
+    return values.includes(nextValue)
+      ? values.filter((value) => value !== nextValue).join(', ')
+      : [...values, nextValue].join(', ')
   }
 
   function updateVariant(id: string, updates: Partial<Variant>) {
@@ -383,12 +527,26 @@ export default function AdminProductsPage() {
                      <button onClick={resetEditor} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Cancel</button>
                   ) : null}
                </div>
+               {editingId ? (
+                  <div className="mb-6 rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-xs text-[#6B594A]">
+                     Only fields you change are saved, so you can refine one detail without rewriting the whole product.
+                  </div>
+               ) : null}
 
                <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-4">
                      <div>
                         <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Design Name</label>
                         <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none transition focus:border-[#C5A070]" />
+                     </div>
+                     <div>
+                        <div className="flex items-center justify-between gap-3">
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Slug</label>
+                           <button type="button" onClick={() => setForm({ ...form, slug: slugify(form.name) })} className="text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">
+                              {isSlugSuggested ? 'Slug Ready' : 'Use Suggested Slug'}
+                           </button>
+                        </div>
+                        <input value={form.slug} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} placeholder="hand-finished-oak-console" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none transition focus:border-[#C5A070]" />
                      </div>
                      <div className="grid gap-4 sm:grid-cols-2">
                         <div>
@@ -413,14 +571,22 @@ export default function AdminProductsPage() {
                            <input type="number" value={form.inventoryCount} onChange={(e) => setForm({ ...form, inventoryCount: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
                         </div>
                         <div>
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Badge</label>
-                           <input value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} placeholder="New, Best Seller, Limited" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                           <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Stock Status</label>
+                           <select value={form.stockStatus} onChange={(e) => setForm({ ...form, stockStatus: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none">
+                              <option value="in_stock">In stock</option>
+                              <option value="low_stock">Low stock</option>
+                              <option value="out_of_stock">Out of stock</option>
+                              <option value="preorder">Preorder</option>
+                           </select>
                         </div>
                      </div>
                   </div>
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
-                     <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount & Pricing</p>
+                     <div className="flex items-center justify-between gap-3">
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount & Pricing</p>
+                        {editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Pricing</button> : null}
+                     </div>
                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
                         <div>
                            <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Type</label>
@@ -435,10 +601,17 @@ export default function AdminProductsPage() {
                            <input type="number" value={form.compareAt} onChange={(e) => setForm({ ...form, compareAt: e.target.value })} placeholder="Original price" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                         </div>
                      </div>
+                     <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Live Selling Price</span>
+                        <span className="font-bold text-[#7C4E2F]">{formatMoney(finalPreviewPrice)}</span>
+                        {Number(form.compareAt) > finalPreviewPrice ? (
+                          <span className="text-xs text-[#8C7A6B] line-through">{formatMoney(Number(form.compareAt))}</span>
+                        ) : null}
+                     </div>
                   </div>
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
-                     <div className="flex items-center justify-between gap-4"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Palette Colors</p><span className="text-[9px] text-[#8C7A6B]">Used in cards and fallback visuals</span></div>
+                     <div className="flex items-center justify-between gap-4"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Palette Colors</p><div className="flex items-center gap-3"><span className="text-[9px] text-[#8C7A6B]">Use 1 to 3 colors</span>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Palette</button> : null}</div></div>
                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
                         {palette.map((color, index) => (
                            <div key={`palette-${index}`} className="rounded-2xl border border-[#E6D9C8] bg-white p-3">
@@ -447,22 +620,114 @@ export default function AdminProductsPage() {
                                  <input type="color" value={color} onChange={(e) => setPalette((current) => current.map((entry, i) => (i === index ? e.target.value : entry)))} className="h-11 w-12 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
                                  <input value={color} onChange={(e) => setPalette((current) => current.map((entry, i) => (i === index ? e.target.value : entry)))} className="h-11 flex-1 rounded-xl border border-[#E6D9C8] px-3 text-sm outline-none" />
                               </div>
+                              {palette.length > 1 ? (
+                                <button type="button" onClick={() => setPalette((current) => current.filter((_, i) => i !== index))} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-red-500">Remove</button>
+                              ) : null}
                            </div>
                         ))}
                      </div>
+                     {palette.length < 3 ? (
+                       <button type="button" onClick={() => setPalette((current) => [...current, '#c59a6b'])} className="mt-4 rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Color</button>
+                     ) : null}
+                     {colorOptions.length > 0 ? (
+                       <div className="mt-4 flex flex-wrap gap-2">
+                          {colorOptions.slice(0, 12).map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              title={color}
+                              onClick={() =>
+                                setPalette((current) => {
+                                  if (current.includes(color)) return current
+                                  if (current.length >= 3) return [current[0], current[1], color].filter(Boolean)
+                                  return [...current, color]
+                                })
+                              }
+                              className="flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#6B594A]"
+                            >
+                              <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
+                              Add
+                            </button>
+                          ))}
+                       </div>
+                     ) : null}
                   </div>
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Visual Assets</p><div className="mt-4 flex flex-wrap gap-2">{images.map((img, i) => (<div key={i} className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={img.url} className="h-full w-full object-cover" /><button type="button" onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-[8px] text-white">x</button></div>))}{images.length < 5 ? (<label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white text-[#C5A070] transition hover:bg-[#C5A070]/5">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>+</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => setImages([...images, img]))} /></label>) : null}</div></div>
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
-                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variants</p><p className="mt-1 text-xs text-[#8C7A6B]">Use variants when a product has selectable options like colorways, finishes, or special pricing.</p></div><button type="button" onClick={() => setVariants((current) => [...current, createVariant()])} className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Variant</button></div>
+                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variants</p><p className="mt-1 text-xs text-[#8C7A6B]">Use variants when a product has selectable options like colorways, finishes, or special pricing.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setVariants((current) => [...current, createVariant()])} className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Variant</button>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Variants</button> : null}</div></div>
                      <div className="mt-4 space-y-4">
                         {variants.length === 0 ? <div className="rounded-2xl border border-dashed border-[#DCCBB7] bg-white/70 p-4 text-sm text-[#8C7A6B]">No variants yet. If the piece has only one standard option, variants are not required.</div> : null}
                         {variants.map((variant, index) => (<div key={variant.id} className="rounded-[28px] border border-[#E6D9C8] bg-white p-4 sm:p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Variant {index + 1}</p><button type="button" onClick={() => setVariants((current) => current.filter((entry) => entry.id !== variant.id))} className="text-[10px] font-bold uppercase tracking-widest text-red-500">Remove</button></div><div className="mt-4 grid gap-4 sm:grid-cols-2"><input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Variant price" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Variant stock" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /></div><div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]"><select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none"><option value="in_stock">In stock</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option><option value="preorder">Preorder</option></select><div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2"><input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" /><input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" /></div></div><div className="mt-4"><label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Specifications</label><input value={(variant.specifications || []).join(', ')} onChange={(e) => updateVariantSpec(variant.id, e.target.value)} placeholder="Walnut finish, boucle upholstery" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /></div></div>))}
                      </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2"><div><label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Materials</label><input value={form.materials} onChange={(e) => setForm({ ...form, materials: e.target.value })} placeholder="Oak, boucle, linen" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" /></div><div><label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Finishes</label><input value={form.finishes} onChange={(e) => setForm({ ...form, finishes: e.target.value })} placeholder="Matte, polished, brushed" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" /></div></div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Product Attributes</p>
+                      {editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Attributes</button> : null}
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Badge</label>
+                      <input list="badge-options" value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} placeholder="New, Best Seller, Limited" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                      {badgeOptions.length > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {badgeOptions.map((badge) => (
+                            <button key={badge} type="button" onClick={() => setForm({ ...form, badge })} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${form.badge === badge ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white text-[#6B594A]'}`}>
+                              {badge}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Materials</label>
+                        <input list="material-options" value={form.materials} onChange={(e) => setForm({ ...form, materials: e.target.value })} placeholder="Oak, boucle, linen" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                        {materialOptions.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {materialOptions.map((material) => (
+                              <button key={material} type="button" onClick={() => setForm({ ...form, materials: toggleTextValue(form.materials, material) })} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${normalizeTextList(form.materials).includes(material) ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white text-[#6B594A]'}`}>
+                                {material}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Finishes</label>
+                        <input list="finish-options" value={form.finishes} onChange={(e) => setForm({ ...form, finishes: e.target.value })} placeholder="Matte, polished, brushed" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                        {finishOptions.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {finishOptions.map((finish) => (
+                              <button key={finish} type="button" onClick={() => setForm({ ...form, finishes: toggleTextValue(form.finishes, finish) })} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${normalizeTextList(form.finishes).includes(finish) ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white text-[#6B594A]'}`}>
+                                {finish}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Lead Time</label>
+                      <input list="leadtime-options" value={form.leadTime} onChange={(e) => setForm({ ...form, leadTime: e.target.value })} placeholder="2-4 weeks" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                      {leadTimeOptions.length > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {leadTimeOptions.map((leadTime) => (
+                            <button key={leadTime} type="button" onClick={() => setForm({ ...form, leadTime })} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${form.leadTime === leadTime ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white text-[#6B594A]'}`}>
+                              {leadTime}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <datalist id="badge-options">{badgeOptions.map((badge) => <option key={badge} value={badge} />)}</datalist>
+                  <datalist id="material-options">{materialOptions.map((material) => <option key={material} value={material} />)}</datalist>
+                  <datalist id="finish-options">{finishOptions.map((finish) => <option key={finish} value={finish} />)}</datalist>
+                  <datalist id="leadtime-options">{leadTimeOptions.map((leadTime) => <option key={leadTime} value={leadTime} />)}</datalist>
 
                   {error ? <p className="text-center text-[10px] font-bold text-red-500">{error}</p> : null}
                   <button disabled={saving} className="h-14 w-full rounded-full bg-[#2B2119] text-[11px] font-bold uppercase tracking-[0.3em] text-[#FDFCFB] shadow-xl shadow-[#2B2119]/20 transition-all hover:scale-[1.02] disabled:opacity-50">{saving ? 'Synchronizing...' : (editingId ? 'Save Piece' : 'Register Piece')}</button>

@@ -91,17 +91,17 @@ export default function ProductCard({
             </span>
           ) : null}
         </Link>
-        <div className="flex-1 space-y-2">
-          <div className="flex items-start justify-between">
-            <div>
+        <div className="flex-1 space-y-3 min-w-0">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 {product.category}
               </p>
-              <h3 className="text-lg font-semibold text-[#2B2119]">
+              <h3 className="text-lg font-semibold leading-snug text-[#2B2119] break-words">
                 <Link href={`/products/${product.id}`}>{product.name}</Link>
               </h3>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right md:whitespace-nowrap">
               <div className="text-lg font-bold text-[#2B2119]">{formatMoney(price)}</div>
               {compareAt && compareAt > price && (
                 <div className="text-[10px] text-[#8C7A6B] line-through">
@@ -113,6 +113,12 @@ export default function ProductCard({
           <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
             {product.description}
           </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {palette.slice(0, 3).map((color, index) => (
+              <span key={`${product.id}-list-${index}`} className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
+            ))}
+            {variants.length ? <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B]">{variants.length} variants</span> : null}
+          </div>
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-1.5">
               <span className="flex items-center gap-0.5">{renderStars(product.rating)}</span>
@@ -134,8 +140,8 @@ export default function ProductCard({
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
-      <Link href={`/products/${product.id}`} className="relative h-64 w-full overflow-hidden block">
+    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
+      <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
         {product.images?.[0]?.url ? (
           <>
             <img
@@ -212,24 +218,31 @@ export default function ProductCard({
         ) : null}
       </Link>
       
-      <div className="flex flex-1 flex-col gap-4 px-5 pb-5 pt-4">
+      <div className="flex flex-1 flex-col gap-4 px-5 pb-5 pt-4 min-w-0">
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-base font-semibold text-[#2B2119] line-clamp-1">
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#2B2119]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
             </h3>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
               {product.category}
             </p>
           </div>
-          <div className="text-right whitespace-nowrap">
+          <div className="text-right whitespace-nowrap shrink-0">
             <div className="text-base font-bold text-[#2B2119]">{formatMoney(price)}</div>
             {compareAt && compareAt > price ? (
               <div className="text-xs text-[#8C7A6B] line-through mt-0.5">{formatMoney(compareAt)}</div>
             ) : null}
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {palette.slice(0, 3).map((color, index) => (
+            <span key={`${product.id}-grid-${index}`} className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
+          ))}
+          {variants.length ? <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B]">{variants.length} variants</span> : null}
         </div>
         
         <div className="mt-auto pt-2 flex items-center justify-between border-t border-[#E6D9C8]/50">

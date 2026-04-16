@@ -58,7 +58,7 @@ export default function CheckoutPage() {
       return
     }
 
-    setStatus('Placing your order...')
+    setStatus('Redirecting you to Paystack...')
     const payload = {
       customer: {
         name: `${form.firstName} ${form.lastName}`.trim(),
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
       notes: form.notes,
     }
 
-    const res = await fetch('/api/orders', {
+    const res = await fetch('/api/payments/paystack/initialize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -78,10 +78,10 @@ export default function CheckoutPage() {
 
     const data = await res.json().catch(() => ({}))
 
-    if (res.ok) {
-      setStatus(`Success! Order Reference: ${data.id}`)
+    if (res.ok && data.authorizationUrl) {
+      window.location.href = data.authorizationUrl
     } else {
-      setStatus(data.message || 'Unable to place order.')
+      setStatus(data.message || 'Unable to start Paystack checkout.')
     }
   }
 
@@ -116,7 +116,7 @@ export default function CheckoutPage() {
         <SectionHeading
           eyebrow={`Step ${step} of 3`}
           title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select white-glove tier' : 'Final Curator Review'}
-          description="Every Timberbell order includes professional white-glove setup as standard."
+          description="Every Timberbell order includes professional white-glove setup, with Paystack used for your payment flow."
         />
       </div>
 
@@ -260,7 +260,7 @@ export default function CheckoutPage() {
                 type="submit"
                 className="flex-1 rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98]"
               >
-                {step === 3 ? 'Confirm & Place Order' : 'Continue to next step'}
+                {step === 3 ? 'Continue To Paystack' : 'Continue to next step'}
               </button>
             </div>
           </form>
@@ -315,7 +315,7 @@ export default function CheckoutPage() {
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Sustainable Packaging</p>
             </div>
-            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By placing your order, you agree to our terms of curated service and white-glove logistics policy.</p>
+            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By confirming your order, you agree to our curated service terms. Paystack checkout is used for payment collection.</p>
           </div>
         </div>
       </div>

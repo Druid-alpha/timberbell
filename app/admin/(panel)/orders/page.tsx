@@ -27,15 +27,17 @@ type Order = {
   items: OrderItem[]
 }
 
-const statusOptions = ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled']
+const statusOptions = ['pending_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'payment_failed']
 
 const statusColors: Record<string, string> = {
+  pending_payment: 'bg-amber-100 text-amber-700 border-amber-200',
   pending: 'bg-orange-100 text-orange-700 border-orange-200',
   paid: 'bg-blue-100 text-blue-700 border-blue-200',
   processing: 'bg-purple-100 text-purple-700 border-purple-200',
   shipped: 'bg-indigo-100 text-indigo-700 border-indigo-200',
   delivered: 'bg-green-100 text-green-700 border-green-200',
   cancelled: 'bg-red-100 text-red-700 border-red-200',
+  payment_failed: 'bg-red-100 text-red-700 border-red-200',
 }
 
 export default function AdminOrdersPage() {
@@ -76,7 +78,7 @@ export default function AdminOrdersPage() {
          </div>
          <div className="flex items-center gap-3">
             <div className="flex flex-wrap rounded-2xl bg-[#FCFAF6] border border-[#E6D9C8] p-1">
-               {['all', 'pending', 'processing', 'shipped'].map((f) => (
+               {['all', 'pending_payment', 'pending', 'paid', 'processing', 'shipped'].map((f) => (
                   <button 
                      key={f}
                      onClick={() => setFilter(f)}

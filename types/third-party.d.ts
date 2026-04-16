@@ -5,5 +5,4 @@ declare module 'nodemailer' {
   export type Transporter = any
   export default nodemailer
 }
-declare module 'stripe'
 declare module 'cloudinary'

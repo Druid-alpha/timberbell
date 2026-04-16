@@ -76,6 +76,6 @@ export type Order = {
   id: string
   items: CartItem[]
   total: number
-  status: 'pending' | 'paid' | 'payment_failed' | 'shipped' | 'delivered'
+  status: 'pending_payment' | 'pending' | 'paid' | 'payment_failed' | 'shipped' | 'delivered'
   createdAt: string
 }

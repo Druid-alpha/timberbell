@@ -8,7 +8,8 @@ type Metrics = {
   products: number
   categories: number
   orders: number
-  showroomVisits: number
+  users: number
+  admins: number
 }
 
 type Order = {
@@ -55,10 +56,10 @@ export default function AdminOverviewPage() {
   if (loading) return <div className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Calibrating studio metrics...</div>
 
   const metrics = [
-    { label: 'Total Catalog', value: data?.metrics.products, trend: '+12%', sub: 'Pieces in circulation' },
-    { label: 'Active Curators', value: 48, trend: '+4%', sub: 'Verified members' },
-    { label: 'Completed Orders', value: data?.metrics.orders, trend: '+28%', sub: 'Fulfilled bundles' },
-    { label: 'Showroom Reach', value: data?.metrics.showroomVisits, trend: '+15%', sub: 'Virtual tour visits' },
+    { label: 'Total Catalog', value: data?.metrics.products ?? 0, sub: 'Pieces in circulation' },
+    { label: 'Active Curators', value: data?.metrics.users ?? 0, sub: 'Registered members' },
+    { label: 'Completed Orders', value: data?.metrics.orders ?? 0, sub: 'Fulfilled bundles' },
+    { label: 'Admins', value: data?.metrics.admins ?? 0, sub: 'Panel access accounts' },
   ]
 
   return (
@@ -74,7 +75,6 @@ export default function AdminOverviewPage() {
               <Sparkline />
             </div>
             <div className="mt-4 flex items-center gap-2">
-               <span className="text-[10px] font-bold text-green-600">{m.trend}</span>
                <span className="text-[10px] text-[#8C7A6B]">{m.sub}</span>
             </div>
           </div>
@@ -157,7 +157,9 @@ export default function AdminOverviewPage() {
                               <div key={i} className={`h-2 w-2 rounded-full ${i < r.rating ? 'bg-[#C5A070]' : 'bg-[#E6D9C8]'}`} />
                            ))}
                         </div>
-                        <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">12m ago</span>
+                        <span className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
+                          {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Recent'}
+                        </span>
                      </div>
                      <p className="text-[11px] font-medium leading-relaxed text-[#2B2119] line-clamp-2">"{r.message}"</p>
                      <p className="mt-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{r.customer}</p>
@@ -175,7 +177,7 @@ export default function AdminOverviewPage() {
                      className="h-full bg-[#C5A070]" 
                   />
                </div>
-               <p className="mt-2 text-[9px] text-white/60">84% Capacity utilized across ateliers</p>
+               <p className="mt-2 text-[9px] text-white/60">{data?.metrics.products ?? 0} products currently tracked in the catalog.</p>
             </div>
          </div>
       </div>

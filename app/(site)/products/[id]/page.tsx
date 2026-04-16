@@ -12,6 +12,7 @@ import RelatedProducts from '@/app/_components/RelatedProducts'
 import { useToast } from '@/app/_components/ToastProvider'
 import { ensureReservationCountdown } from '@/lib/reservation'
 import { parseJsonArray } from '@/lib/utils/safe-json'
+import { getColorName } from '@/lib/utils/color-name'
 
 type ProductReview = {
   id: string
@@ -32,6 +33,7 @@ export default function ProductDetailPage() {
   const [status, setStatus] = useState('')
   const [activeImage, setActiveImage] = useState('')
   const [activeVariantId, setActiveVariantId] = useState<string | null>(null)
+  const [activeColorHex, setActiveColorHex] = useState('')
   const [variantPrice, setVariantPrice] = useState<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [reviews, setReviews] = useState<ProductReview[]>([])
@@ -84,6 +86,7 @@ export default function ProductDetailPage() {
     setActiveImage(fallback)
     setActiveVariantId(product.variants?.[0]?.id ?? null)
     setVariantPrice(product.variants?.[0]?.price ?? null)
+    setActiveColorHex(product.variants?.[0]?.color ?? product.palette?.[0] ?? '#f4e7d2')
   }, [product])
 
   const ratingLabel = useMemo(() => `${(product?.rating ?? 0).toFixed(1)} / 5`, [product?.rating])
@@ -203,6 +206,10 @@ export default function ProductDetailPage() {
   const fallbackPalette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   const price = variantPrice ?? product.finalPrice ?? product.price
   const compareAt = product.compareAt ?? (product.finalPrice ? product.price : undefined)
+  const selectedVariant = product.variants?.find((variant: any) => variant.id === activeVariantId) ?? null
+  const selectedColorHex = selectedVariant?.color || activeColorHex || fallbackPalette[0]
+  const selectedColorName = getColorName(selectedColorHex)
+  const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
@@ -290,6 +297,7 @@ export default function ProductDetailPage() {
                         setActiveVariantId(v.id)
                         if (v.image?.url) setActiveImage(v.image.url)
                         if (v.price) setVariantPrice(v.price)
+                        setActiveColorHex(v.color || fallbackPalette[0])
                       }}
                       className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.2em] transition-all ${activeVariantId === v.id ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white shadow-md' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                     >
@@ -297,6 +305,32 @@ export default function ProductDetailPage() {
                       {v.name}
                     </button>
                   ))}
+                </div>
+                <p className="text-xs text-[#6B594A]">Selected color: <span className="font-semibold text-[#2B2119]">{selectedColorName}</span>{selectedVariant?.name ? <span className="text-[#8C7A6B]"> ({selectedVariant.name})</span> : null}</p>
+              </div>
+            )}
+
+            {!product.variants?.length && paletteChoices.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Available colors</p>
+                <div className="flex flex-wrap gap-3">
+                  {paletteChoices.map((color: string) => {
+                    const isActive = selectedColorHex === color
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => {
+                          setActiveColorHex(color)
+                          setActiveImage(product.images?.[0]?.url || '')
+                        }}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.2em] transition-all ${isActive ? 'border-[#7C4E2F] bg-white text-[#2B2119]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A]'}`}
+                      >
+                        <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: color }} />
+                        {getColorName(color)}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -308,7 +342,7 @@ export default function ProductDetailPage() {
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="flex h-10 w-10 items-center justify-center rounded-full text-[#7C4E2F] transition hover:bg-[#F4EEE4]"
                   >
-                    –
+                    -
                   </button>
                   <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
                   <button
@@ -329,7 +363,7 @@ export default function ProductDetailPage() {
               <div className="flex flex-col gap-3 px-2">
                  <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
                   <div className={`h-1.5 w-1.5 rounded-full ${(!product.inventoryCount || product.inventoryCount > 5) ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
-                  {(!product.inventoryCount || product.inventoryCount > 5) ? 'In stock and ready to ship' : `Only ${product.inventoryCount} left — items in cart are reserved for 10 min`}
+                  {(!product.inventoryCount || product.inventoryCount > 5) ? 'In stock and ready to ship' : `Only ${product.inventoryCount} left - items in cart are reserved for 10 min`}
                 </div>
                 
                 {/* Nigeria specific ETAs */}
@@ -364,6 +398,14 @@ export default function ProductDetailPage() {
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Materials</p>
               <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.materials?.join(', ') || 'Natural wood & organic fabric'}</p>
+            </div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Color</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{selectedColorName}</p>
+            </div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Lead Time</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.leadTime || '2-4 weeks'}</p>
             </div>
           </div>
         </div>
@@ -457,3 +499,4 @@ export default function ProductDetailPage() {
     </div>
   )
 }
+

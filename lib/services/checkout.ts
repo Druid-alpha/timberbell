@@ -1,30 +1,27 @@
-import { NextRequest } from 'next/server'
+import 'server-only'
 import { ObjectId } from 'mongodb'
-import { getUserFromRequest } from '@/lib/authServer'
-import { getCartByUserId } from '@/lib/services/cart'
-import { getStripe } from '@/lib/stripe'
+import { getDb } from '@/lib/db'
+import { getCartByUserId, clearActiveCartItems } from '@/lib/services/cart'
 import { computeFinalPrice } from '@/lib/utils/pricing'
 
-const currency = process.env.STRIPE_CURRENCY || 'usd'
+type CheckoutInput = {
+  userId: string
+  customer?: unknown
+  notes?: string
+  couponCode?: string
+}
 
-export async function POST(request: NextRequest) {
-  const user = getUserFromRequest(request)
+export async function buildOrderDraft(input: CheckoutInput) {
+  const couponCodeRaw = String(input.couponCode || '').trim()
+  const cart = await getCartByUserId(input.userId)
+  const activeItems = (cart?.items || []).filter((item: any) => !item.saved)
 
-  if (!user) {
-    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  if (!activeItems.length) {
+    throw new Error('Cart is empty')
   }
 
-  const body = await request.json().catch(() => ({}))
-  const couponCodeRaw = String(body?.couponCode || '').trim()
-
-  const cart = await getCartByUserId(user.id)
-  if (!cart || cart.items.length === 0) {
-    return Response.json({ message: 'Cart is empty' }, { status: 400 })
-  }
-
-  const db = await (await import('@/lib/db')).getDb()
-  const productIds = cart.items.map((item) => item.productId)
-
+  const db = await getDb()
+  const productIds = activeItems.map((item) => item.productId)
   const products = await db
     .collection('products')
     .find({
@@ -44,7 +41,7 @@ export async function POST(request: NextRequest) {
   })
 
   let subtotal = 0
-  const normalizedItems = cart.items.map((item) => {
+  const normalizedItems = activeItems.map((item: any) => {
     const product = priceMap.get(item.productId)
     const unitPrice = product
       ? computeFinalPrice({
@@ -56,7 +53,9 @@ export async function POST(request: NextRequest) {
           saleEndAt: product.saleEndAt,
         })
       : 0
+
     subtotal += unitPrice * item.quantity
+
     return {
       ...item,
       price: unitPrice,
@@ -69,14 +68,17 @@ export async function POST(request: NextRequest) {
 
   let coupon = null
   let discountTotal = 0
+
   if (couponCodeRaw) {
     const code = couponCodeRaw.toUpperCase()
     const now = new Date()
     const found = await db.collection('coupons').findOne({ code })
+
     if (found && found.isActive !== false) {
       if ((!found.startsAt || new Date(found.startsAt) <= now) && (!found.endsAt || new Date(found.endsAt) >= now)) {
         if (!found.maxUses || found.usedCount < found.maxUses) {
           const eligibleIds = Array.isArray(found.productIds) ? found.productIds.map(String) : []
+
           if (eligibleIds.length) {
             const discountType = found.discountType || 'percentage'
             const discountValue = Number(found.discountValue || 0)
@@ -86,15 +88,19 @@ export async function POST(request: NextRequest) {
               if (!product) return
               const matches = eligibleIds.includes(String(product._id)) || (product.slug && eligibleIds.includes(String(product.slug)))
               if (!matches) return
+
               const lineTotal = (item.price || 0) * item.quantity
               let discount = 0
+
               if (discountType === 'percentage') {
                 discount = Math.round(lineTotal * (discountValue / 100))
               } else {
                 discount = Math.round(discountValue * item.quantity)
               }
+
               discountTotal += Math.min(discount, lineTotal)
             })
+
             if (discountTotal > 0) {
               coupon = found
             }
@@ -106,49 +112,44 @@ export async function POST(request: NextRequest) {
 
   const total = Math.max(0, subtotal - discountTotal)
 
-  if (total <= 0) {
-    return Response.json({ message: 'Invalid cart total' }, { status: 400 })
-  }
-
-  const orderResult = await db.collection('orders').insertOne({
-    userId: user.id,
+  return {
+    db,
+    cart,
     items: normalizedItems,
     subtotal,
     discountTotal,
-    couponCode: coupon?.code || null,
     total,
-    status: 'pending',
-    paymentStatus: 'requires_payment',
-    createdAt: new Date(),
-  })
+    customer: input.customer ?? null,
+    notes: input.notes ?? '',
+    coupon,
+  }
+}
 
-  if (coupon?.code) {
-    await db.collection('coupons').updateOne(
-      { _id: coupon._id },
-      { $inc: { usedCount: 1 } }
-    )
+export async function incrementCouponUsage(coupon: any) {
+  if (!coupon?._id) return
+  const db = await getDb()
+  await db.collection('coupons').updateOne({ _id: coupon._id }, { $inc: { usedCount: 1 } })
+}
+
+export async function fulfillPaidOrder(order: any) {
+  if (!order?._id || order.fulfillmentApplied) return
+
+  const db = await getDb()
+  const items = Array.isArray(order.items) ? order.items : []
+
+  for (const item of items) {
+    if (!item.productId) continue
+    const query = ObjectId.isValid(item.productId)
+      ? { _id: new ObjectId(item.productId) }
+      : { slug: item.productId }
+
+    await db.collection('products').updateOne(query, { $inc: { inventoryCount: -item.quantity } })
   }
 
-  const orderId = orderResult.insertedId.toString()
-
-  const stripe = getStripe()
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(total * 100),
-    currency,
-    automatic_payment_methods: { enabled: true },
-    metadata: {
-      orderId,
-      userId: user.id,
-    },
-  })
+  await clearActiveCartItems(order.userId)
 
   await db.collection('orders').updateOne(
-    { _id: new ObjectId(orderId) },
-    { $set: { paymentIntentId: paymentIntent.id, updatedAt: new Date() } }
+    { _id: order._id },
+    { $set: { fulfillmentApplied: true, fulfillmentAppliedAt: new Date(), updatedAt: new Date() } }
   )
-
-  return Response.json({
-    clientSecret: paymentIntent.client_secret,
-    orderId,
-  })
 }
