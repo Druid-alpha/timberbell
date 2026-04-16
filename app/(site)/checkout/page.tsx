@@ -11,7 +11,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
   const [step, setStep] = useState(1)
-  
+
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -37,13 +37,16 @@ export default function CheckoutPage() {
       setLoading(false)
     }
     load()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [])
 
-  const subtotal = cart?.items?.reduce(
+  const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
+  const subtotal = activeItems.reduce(
     (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
     0
-  ) ?? 0
+  )
   const delivery = subtotal > 0 ? 140 : 0
   const total = subtotal + delivery
 
@@ -64,7 +67,7 @@ export default function CheckoutPage() {
         city: form.city,
         postal: form.postal,
       },
-      notes: form.notes
+      notes: form.notes,
     }
 
     const res = await fetch('/api/orders', {
@@ -83,25 +86,31 @@ export default function CheckoutPage() {
   }
 
   const StepIndicator = ({ current }: { current: number }) => (
-    <div className="flex items-center gap-4 mb-8">
+    <div className="mb-8 flex flex-wrap items-center gap-3 sm:gap-4">
       {[1, 2, 3].map((s) => (
         <div key={s} className="flex items-center gap-2">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${current === s ? 'bg-[#7C4E2F] text-white' : current > s ? 'bg-[#2A3320] text-white' : 'bg-[#E6D9C8] text-[#8C7A6B]'}`}>
-            {current > s ? '✓' : s}
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${current === s ? 'bg-[#7C4E2F] text-white' : current > s ? 'bg-[#2A3320] text-white' : 'bg-[#E6D9C8] text-[#8C7A6B]'}`}
+          >
+            {current > s ? 'OK' : s}
           </div>
-          <span className={`text-[10px] uppercase tracking-[0.2em] font-bold ${current === s ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}>
+          <span
+            className={`text-[10px] font-bold uppercase tracking-[0.2em] ${current === s ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}
+          >
             {s === 1 ? 'Shipping' : s === 2 ? 'Method' : 'Order'}
           </span>
-          {s < 3 && <div className="h-px w-8 bg-[#E6D9C8]" />}
+          {s < 3 && <div className="hidden h-px w-8 bg-[#E6D9C8] sm:block" />}
         </div>
       ))}
     </div>
   )
 
-  if (loading) return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">Initializing studio checkout...</div>
+  if (loading) {
+    return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">Initializing studio checkout...</div>
+  }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-6 py-16">
+    <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
       <div className="flex flex-col gap-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
         <SectionHeading
@@ -114,8 +123,8 @@ export default function CheckoutPage() {
       <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           <StepIndicator current={step} />
-          
-          <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-8 shadow-sm">
+
+          <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-5 shadow-sm sm:p-8">
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div
@@ -128,14 +137,14 @@ export default function CheckoutPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <input
                       placeholder="First name"
-                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.firstName}
                       onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                       required
                     />
                     <input
                       placeholder="Last name"
-                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.lastName}
                       onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                       required
@@ -143,14 +152,14 @@ export default function CheckoutPage() {
                   </div>
                   <input
                     placeholder="Email address"
-                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
                   />
                   <input
                     placeholder="Delivery address"
-                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     required
@@ -158,14 +167,14 @@ export default function CheckoutPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <input
                       placeholder="City"
-                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
                       required
                     />
                     <input
                       placeholder="Postal code"
-                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.postal}
                       onChange={(e) => setForm({ ...form, postal: e.target.value })}
                       required
@@ -183,21 +192,21 @@ export default function CheckoutPage() {
                   className="space-y-6"
                 >
                   <div className="rounded-3xl border-2 border-[#7C4E2F] bg-white p-6">
-                    <div className="flex items-center justify-between">
-                       <div className="space-y-1">
-                          <p className="font-bold text-[#2B2119]">White Glove Delivery</p>
-                          <p className="text-xs text-[#8C7A6B]">In-home placement, assembly, and debris removal.</p>
-                       </div>
-                       <div className="text-sm font-bold text-[#7C4E2F]">$140.00</div>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="space-y-1">
+                        <p className="font-bold text-[#2B2119]">White Glove Delivery</p>
+                        <p className="text-xs text-[#8C7A6B]">In-home placement, assembly, and debris removal.</p>
+                      </div>
+                      <div className="text-sm font-bold text-[#7C4E2F]">$140.00</div>
                     </div>
                   </div>
                   <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 opacity-60">
-                    <div className="flex items-center justify-between">
-                       <div className="space-y-1">
-                          <p className="font-bold text-[#2B2119]">Express Installation</p>
-                          <p className="text-xs text-[#8C7A6B]">Priority scheduling within 7 days of arrival.</p>
-                       </div>
-                       <div className="text-sm font-bold text-[#8C7A6B]">Coming Soon</div>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="space-y-1">
+                        <p className="font-bold text-[#2B2119]">Express Installation</p>
+                        <p className="text-xs text-[#8C7A6B]">Priority scheduling within 7 days of arrival.</p>
+                      </div>
+                      <div className="text-sm font-bold text-[#8C7A6B]">Coming Soon</div>
                     </div>
                   </div>
                 </motion.div>
@@ -211,23 +220,25 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div className="rounded-3xl border border-[#E6D9C8] bg-white p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                       <div>
-                          <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B] font-bold">Delivery Contact</p>
-                          <p className="mt-1 text-sm font-medium">{form.firstName} {form.lastName}</p>
-                          <p className="text-xs text-[#8C7A6B]">{form.email}</p>
-                       </div>
-                       <button type="button" onClick={() => setStep(1)} className="text-[10px] uppercase border-b border-[#7C4E2F] text-[#7C4E2F] font-bold">Edit</button>
+                  <div className="space-y-4 rounded-3xl border border-[#E6D9C8] bg-white p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Delivery Contact</p>
+                        <p className="mt-1 text-sm font-medium">{form.firstName} {form.lastName}</p>
+                        <p className="text-xs text-[#8C7A6B]">{form.email}</p>
+                      </div>
+                      <button type="button" onClick={() => setStep(1)} className="w-fit border-b border-[#7C4E2F] text-[10px] font-bold uppercase text-[#7C4E2F]">
+                        Edit
+                      </button>
                     </div>
-                    <div className="pt-4 border-t border-[#F4EEE4]">
-                        <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B] font-bold">Shipping Address</p>
-                        <p className="mt-1 text-sm font-medium">{form.address}, {form.city} {form.postal}</p>
+                    <div className="border-t border-[#F4EEE4] pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Shipping Address</p>
+                      <p className="mt-1 text-sm font-medium">{form.address}, {form.city} {form.postal}</p>
                     </div>
                   </div>
                   <textarea
                     placeholder="Delivery notes (optional)..."
-                    className="h-28 w-full rounded-[24px] border border-[#E6D9C8] bg-white px-5 py-4 text-sm focus:border-[#7C4E2F] outline-none transition-all"
+                    className="h-28 w-full rounded-[24px] border border-[#E6D9C8] bg-white px-5 py-4 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   />
@@ -235,7 +246,7 @@ export default function CheckoutPage() {
               )}
             </AnimatePresence>
 
-            <div className="flex items-center gap-4 pt-4 border-t border-[#E6D9C8]">
+            <div className="flex flex-col gap-3 border-t border-[#E6D9C8] pt-4 sm:flex-row sm:items-center">
               {step > 1 && (
                 <button
                   type="button"
@@ -256,35 +267,35 @@ export default function CheckoutPage() {
           {status && <p className="mt-6 text-center text-xs font-bold text-[#7C4E2F] animate-pulse">{status}</p>}
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-8 text-sm text-[#6B594A]">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-bold mb-6">Order Detail</div>
-            {cart?.items?.length ? (
+        <div className="space-y-6 lg:sticky lg:top-28">
+          <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A] sm:p-8">
+            <div className="mb-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Order Detail</div>
+            {activeItems.length ? (
               <div className="space-y-6">
-                <div className="space-y-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  {cart.items.map((item: any) => (
+                <div className="custom-scrollbar max-h-60 space-y-4 overflow-y-auto pr-2">
+                  {activeItems.map((item: any) => (
                     <div key={item.id} className="flex gap-4">
-                      <div className="h-16 w-16 shrink-0 rounded-xl overflow-hidden bg-white border border-[#E6D9C8]">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E6D9C8] bg-white">
                         <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-full w-full object-cover" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-[#2B2119] leading-tight line-clamp-1">{item.product?.name}</p>
+                        <p className="line-clamp-1 font-bold leading-tight text-[#2B2119]">{item.product?.name}</p>
                         <p className="text-[10px] text-[#8C7A6B]">Qty: {item.quantity}</p>
                       </div>
                       <p className="font-bold text-[#2B2119]">${(item.product?.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
-                <div className="space-y-3 pt-6 border-t border-[#E6D9C8]">
+                <div className="space-y-3 border-t border-[#E6D9C8] pt-6">
                   <div className="flex justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-widest">Subtotal</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Subtotal</span>
                     <span className="font-bold text-[#2B2119]">${subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[10px] uppercase font-bold tracking-widest">White Glove</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">White Glove</span>
                     <span className="font-bold text-[#2B2119]">${delivery.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between pt-3 border-t border-[#E6D9C8] text-lg font-display text-[#7C4E2F]">
+                  <div className="flex justify-between border-t border-[#E6D9C8] pt-3 font-display text-lg text-[#7C4E2F]">
                     <span>Total</span>
                     <span>{formatMoney(total)}</span>
                   </div>
@@ -294,17 +305,17 @@ export default function CheckoutPage() {
               <p>No items in cart.</p>
             )}
           </div>
-          
-          <div className="rounded-[40px] border border-[#E6D9C8] p-8 space-y-4">
-             <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-white">✓</div>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-bold">Studio Insured Delivery</p>
-             </div>
-             <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-white">✓</div>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-bold">Sustainable Packaging</p>
-             </div>
-             <p className="text-[10px] text-[#8C7A6B] leading-relaxed">By placing your order, you agree to our terms of curated service and white-glove logistics policy.</p>
+
+          <div className="space-y-4 rounded-[40px] border border-[#E6D9C8] p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Studio Insured Delivery</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Sustainable Packaging</p>
+            </div>
+            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By placing your order, you agree to our terms of curated service and white-glove logistics policy.</p>
           </div>
         </div>
       </div>

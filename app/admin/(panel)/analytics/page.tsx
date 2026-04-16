@@ -67,7 +67,7 @@ export default function AdminAnalyticsPage() {
       <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
         <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Analytics</p>
         <h2 className="mt-3 font-display text-2xl text-[#2B2119]">Executive overview</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-4">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             { label: 'Revenue', value: summary?.totals.revenue ?? 0, currency: true },
             { label: 'Orders', value: summary?.totals.orders ?? 0 },
@@ -89,7 +89,7 @@ export default function AdminAnalyticsPage() {
             </div>
           ))}
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-4">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             { label: 'Users', value: summary?.totals.users ?? 0 },
             { label: 'New users', value: summary?.totals.newUsers ?? 0 },
@@ -111,7 +111,7 @@ export default function AdminAnalyticsPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Revenue</p>
               <h3 className="mt-3 font-display text-xl text-[#2B2119]">Daily revenue</h3>
@@ -134,7 +134,7 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
-          <div className="flex items-end justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Orders</p>
               <h3 className="mt-3 font-display text-xl text-[#2B2119]">Order volume</h3>
@@ -158,7 +158,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       <div className="rounded-[2rem] border border-[#E6D9C8] bg-white/70 p-6">
-        <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Top products</p>
             <h3 className="mt-3 font-display text-xl text-[#2B2119]">Best performers</h3>

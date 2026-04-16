@@ -46,7 +46,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
          <div>
             <h1 className="font-display text-4xl text-[#2B2119]">Curator Vault</h1>
             <p className="mt-1 text-sm text-[#8C7A6B]">Manage atelier members and verify executive access.</p>
@@ -59,7 +59,49 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-xl shadow-[#C5A070]/5">
-         <table className="w-full text-left">
+         <div className="grid gap-4 p-4 md:hidden">
+            {users.map((u) => (
+               <div key={u.id} className="rounded-[28px] border border-[#F4EEE4] bg-[#FCFAF6] p-4">
+                  <div className="flex items-center gap-4">
+                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2B2119] p-0.5 shadow-md">
+                        {u.avatarUrl ? (
+                           <img src={u.avatarUrl} className="h-full w-full rounded-full object-cover" />
+                        ) : (
+                           <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#7C4E2F]">
+                              {(u.name || 'U').slice(0, 1).toUpperCase()}
+                           </div>
+                        )}
+                     </div>
+                     <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-[#2B2119]">{u.name || 'Anonymous Client'}</p>
+                        <p className="truncate text-[10px] text-[#8C7A6B]">{u.email}</p>
+                     </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-4">
+                     <select
+                        value={u.role || 'user'}
+                        onChange={(e) => updateRole(u.id, e.target.value)}
+                        className={`rounded-full border border-[#E6D9C8] bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${u.role === 'admin' ? 'border-[#C5A070]/30 text-[#C5A070]' : 'text-[#8C7A6B]'}`}
+                     >
+                        <option value="user">Member</option>
+                        <option value="admin">Executive</option>
+                     </select>
+                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">{u.ordersCount || 0} Bundles</span>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-4 border-t border-[#F4EEE4] pt-4">
+                     <p className="text-[10px] font-bold text-[#8C7A6B]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '--'}</p>
+                     <button
+                        onClick={() => handleDelete(u.id)}
+                        className="rounded-full border border-red-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-400 transition hover:bg-red-50 hover:text-red-600"
+                     >
+                        Purge
+                     </button>
+                  </div>
+               </div>
+            ))}
+         </div>
+         <div className="overflow-x-auto">
+         <table className="hidden min-w-[760px] w-full text-left md:table">
             <thead className="bg-[#FCFAF6] border-b border-[#E6D9C8]">
                <tr>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Curator</th>
@@ -130,6 +172,7 @@ export default function AdminUsersPage() {
                </AnimatePresence>
             </tbody>
          </table>
+         </div>
       </div>
     </div>
   )

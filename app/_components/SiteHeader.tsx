@@ -1,11 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks'
 import { setUser, clearUser } from '@/lib/redux/userSlice'
 import { syncCart } from '@/lib/redux/cartSlice'
+import {
+  clearReservationCountdown,
+  getReservationTimeLeft,
+  subscribeToReservationUpdates,
+} from '@/lib/reservation'
 
 const baseLinks = [
   { href: '/', label: 'Home' },
@@ -19,13 +24,16 @@ export default function SiteHeader() {
   const router = useRouter()
   const dispatch = useAppDispatch()
   const cartCount = useAppSelector((state) => state.cart.cartCount)
+  const cartItems = useAppSelector((state) => state.cart.items)
   const user = useAppSelector((state) => state.user)
+  const isExpiringReservation = useRef(false)
 
   const [open, setOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState<{ id: string; name: string; category: string }[]>([])
+  const [reservationTimeLeft, setReservationTimeLeft] = useState(0)
 
   // Load user profile once and save to Redux (so it persists across renders)
   useEffect(() => {
@@ -59,8 +67,8 @@ export default function SiteHeader() {
       if (!active || !res.ok) return
       const data = await res.json().catch(() => ({}))
       if (!active) return
-      const items = Array.isArray(data?.items)
-        ? data.items.map((item: any) => ({
+      const serverItems = Array.isArray(data?.cart?.items) ? data.cart.items : []
+      const items = serverItems.map((item: any) => ({
             productId: item.productId ?? item.product?._id ?? '',
             name: item.name ?? item.product?.name ?? '',
             price: item.price ?? item.product?.price ?? 0,
@@ -68,13 +76,25 @@ export default function SiteHeader() {
             imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
             variantId: item.variantId ?? undefined,
             variantName: item.variantName ?? undefined,
+            saved: item.saved ?? false,
           }))
-        : []
       dispatch(syncCart(items))
     }
     loadCart()
     return () => { active = false }
   }, [user.isLoggedIn, dispatch])
+
+  useEffect(() => {
+    const syncReservation = () => setReservationTimeLeft(getReservationTimeLeft())
+    syncReservation()
+    const timer = setInterval(syncReservation, 1000)
+    const unsubscribe = subscribeToReservationUpdates(syncReservation)
+
+    return () => {
+      clearInterval(timer)
+      unsubscribe()
+    }
+  }, [])
 
   // Search
   useEffect(() => {
@@ -104,12 +124,69 @@ export default function SiteHeader() {
     const seed = user.name || user.email || ''
     return seed.slice(0, 2).toUpperCase() || '??'
   })()
+  const hasActiveReservation = reservationTimeLeft > 0 && cartCount > 0
+  const reservationMinutes = Math.floor(reservationTimeLeft / 60)
+  const reservationSeconds = String(reservationTimeLeft % 60).padStart(2, '0')
 
   const navLinks = isAdmin ? [...baseLinks, { href: '/admin', label: 'Admin' }] : baseLinks
+
+  useEffect(() => {
+    async function expireReservation() {
+      if (!user.isLoggedIn) return
+      if (reservationTimeLeft > 0) {
+        isExpiringReservation.current = false
+        return
+      }
+
+      const activeItems = cartItems.filter((item) => !item.saved && item.quantity > 0)
+      if (!activeItems.length || isExpiringReservation.current) return
+
+      isExpiringReservation.current = true
+
+      const updatedItems = cartItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        saved: item.saved ? true : item.quantity > 0,
+      }))
+
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: updatedItems }),
+        })
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}))
+          const serverItems = Array.isArray(data?.cart?.items) ? data.cart.items : []
+          dispatch(
+            syncCart(
+              serverItems.map((item: any) => ({
+                productId: item.productId ?? item.product?._id ?? '',
+                name: item.name ?? item.product?.name ?? '',
+                price: item.price ?? item.product?.price ?? 0,
+                quantity: item.quantity ?? 1,
+                imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
+                variantId: item.variantId ?? undefined,
+                variantName: item.variantName ?? undefined,
+                saved: item.saved ?? false,
+              }))
+            )
+          )
+        }
+      } finally {
+        clearReservationCountdown()
+        isExpiringReservation.current = false
+      }
+    }
+
+    expireReservation()
+  }, [cartItems, dispatch, reservationTimeLeft, user.isLoggedIn])
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => {})
     await fetch('/api/auth/me', { method: 'DELETE' }).catch(() => {})
+    clearReservationCountdown()
     dispatch(clearUser())
     router.push('/')
     router.refresh()
@@ -240,6 +317,15 @@ export default function SiteHeader() {
               </span>
             )}
           </Link>
+          {hasActiveReservation && (
+            <Link
+              href="/cart"
+              className="hidden items-center gap-2 rounded-full border border-[#D7C1A8] bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#7C4E2F] shadow-sm transition hover:border-[#7C4E2F] lg:inline-flex"
+            >
+              <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-[#7C4E2F]" />
+              <span>Hold {reservationMinutes}:{reservationSeconds}</span>
+            </Link>
+          )}
 
           {/* Auth: logged in → avatar/profile; logged out → Login + Sign Up */}
           {isLoggedIn ? (
@@ -362,6 +448,16 @@ export default function SiteHeader() {
           className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-screen' : 'max-h-0'}`}
         >
           <div className="flex flex-col gap-4 border-t border-[#E6D9C8] bg-[#F4EEE4] px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+            {hasActiveReservation && (
+              <Link
+                href="/cart"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between rounded-2xl border border-[#D7C1A8] bg-white px-4 py-3 text-[10px] font-bold tracking-[0.22em] text-[#7C4E2F]"
+              >
+                <span>Reservation Hold</span>
+                <span>{reservationMinutes}:{reservationSeconds}</span>
+              </Link>
+            )}
             {navLinks.map((link) => (
               <Link
                 key={link.href}

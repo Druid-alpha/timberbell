@@ -10,6 +10,7 @@ import { addItem } from '@/lib/redux/cartSlice'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import RelatedProducts from '@/app/_components/RelatedProducts'
 import { useToast } from '@/app/_components/ToastProvider'
+import { ensureReservationCountdown } from '@/lib/reservation'
 
 type ProductReview = {
   id: string
@@ -111,6 +112,7 @@ export default function ProductDetailPage() {
     })
 
     if (res.ok) {
+      ensureReservationCountdown()
       dispatch(
         addItem({
           productId: product.id,

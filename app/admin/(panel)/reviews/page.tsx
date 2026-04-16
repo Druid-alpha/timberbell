@@ -53,7 +53,7 @@ export default function AdminReviewsPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
          <div>
             <h1 className="font-display text-4xl text-[#2B2119]">Community Notes</h1>
             <p className="mt-1 text-sm text-[#8C7A6B]">Moderate and curate client observations across the collection.</p>
@@ -74,10 +74,10 @@ export default function AdminReviewsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
                >
                   <div>
-                     <div className="flex items-center justify-between mb-6">
+                     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex gap-1">
                            {Array.from({ length: 5 }).map((_, i) => (
                               <div key={i} className={`h-2.5 w-2.5 rounded-full ${i < r.rating ? 'bg-[#C5A070]' : 'bg-[#E6D9C8]'}`} />

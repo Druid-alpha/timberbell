@@ -69,13 +69,13 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col gap-4 px-2 xl:flex-row xl:items-center xl:justify-between">
          <div>
             <h1 className="font-display text-4xl text-[#2B2119]">Fulfillment Engine</h1>
             <p className="mt-1 text-sm text-[#8C7A6B]">Audit atelier orders and logistics timelines.</p>
          </div>
          <div className="flex items-center gap-3">
-            <div className="flex rounded-2xl bg-[#FCFAF6] border border-[#E6D9C8] p-1">
+            <div className="flex flex-wrap rounded-2xl bg-[#FCFAF6] border border-[#E6D9C8] p-1">
                {['all', 'pending', 'processing', 'shipped'].map((f) => (
                   <button 
                      key={f}
@@ -90,7 +90,42 @@ export default function AdminOrdersPage() {
       </div>
 
       <div className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-xl shadow-[#C5A070]/5">
-         <table className="w-full text-left">
+         <div className="grid gap-4 p-4 md:hidden">
+            {filteredOrders.map((o) => (
+               <div key={o.id} className="rounded-[28px] border border-[#F4EEE4] bg-[#FCFAF6] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                     <div>
+                        <p className="text-xs font-bold text-[#2B2119]">Reference #{o.id.slice(-8).toUpperCase()}</p>
+                        <p className="text-[10px] text-[#8C7A6B]">{new Date(o.createdAt).toLocaleDateString()}</p>
+                     </div>
+                     <button
+                        onClick={() => setSelected(o)}
+                        className="rounded-full border border-[#E6D9C8] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white"
+                     >
+                        Details
+                     </button>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                     <div>
+                        <p className="text-xs font-bold text-[#2B2119]">{o.customer.name}</p>
+                        <p className="text-[10px] text-[#8C7A6B]">{o.customer.email}</p>
+                     </div>
+                     <div className="flex items-center justify-between gap-4">
+                        <select
+                           value={o.status}
+                           onChange={(e) => updateStatus(o.id, e.target.value)}
+                           className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
+                        >
+                           {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <span className="text-sm font-bold text-[#2B2119]">{formatMoney(o.total)}</span>
+                     </div>
+                  </div>
+               </div>
+            ))}
+         </div>
+         <div className="overflow-x-auto">
+         <table className="hidden min-w-[760px] w-full text-left md:table">
             <thead className="bg-[#FCFAF6] border-b border-[#E6D9C8]">
                <tr>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Reference</th>
@@ -150,6 +185,7 @@ export default function AdminOrdersPage() {
                </AnimatePresence>
             </tbody>
          </table>
+         </div>
          {filteredOrders.length === 0 && (
             <div className="py-20 text-center">
                <p className="text-sm text-[#8C7A6B] italic font-display">No orders awaiting fulfillment in this vault.</p>
@@ -170,10 +206,10 @@ export default function AdminOrdersPage() {
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  className="relative w-full max-w-4xl overflow-hidden rounded-[48px] border border-[#E6D9C8] bg-[#FDFCFB] shadow-2xl"
+                  className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[48px] border border-[#E6D9C8] bg-[#FDFCFB] shadow-2xl"
                >
                   <div className="grid lg:grid-cols-[1fr_350px]">
-                     <div className="p-10">
+                     <div className="p-6 sm:p-10">
                         <div className="flex items-center justify-between border-b border-[#F4EEE4] pb-6">
                            <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">Order Manifest</p>
@@ -217,7 +253,7 @@ export default function AdminOrdersPage() {
                         </div>
                      </div>
 
-                     <div className="border-l border-[#F4EEE4] bg-[#FCFAF6] p-10">
+                     <div className="bg-[#FCFAF6] p-6 sm:border-l sm:border-[#F4EEE4] sm:p-10">
                         <div className="mb-10 text-right">
                            <button onClick={() => setSelected(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] hover:text-[#2B2119] transition-colors">Close Manifest</button>
                         </div>

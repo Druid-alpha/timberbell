@@ -83,7 +83,7 @@ export default function AdminOverviewPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_0.4fr]">
          <div className="space-y-6">
-            <div className="flex items-center justify-between px-2">
+            <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
                <h2 className="font-display text-2xl text-[#2B2119]">Live Pulse</h2>
                <div className="flex items-center gap-2 rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">
                   Real-time activity
@@ -91,7 +91,27 @@ export default function AdminOverviewPage() {
             </div>
             
             <div className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-sm">
-               <table className="w-full text-left">
+               <div className="grid gap-4 p-4 md:hidden">
+                  {data?.recentOrders?.map((o: Order) => (
+                     <div key={o.id} className="rounded-[28px] border border-[#F4EEE4] bg-[#FCFAF6] p-4">
+                        <div className="flex items-start justify-between gap-3">
+                           <div>
+                              <p className="text-xs font-bold text-[#2B2119]">Order #{o.id.slice(-6).toUpperCase()}</p>
+                              <p className="text-[10px] text-[#8C7A6B]">{new Date(o.createdAt).toLocaleDateString()}</p>
+                           </div>
+                           <span className={`inline-block rounded-full px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
+                              {o.status}
+                           </span>
+                        </div>
+                        <div className="mt-4 space-y-1 text-[11px] text-[#6B594A]">
+                           <p>{o.customer}</p>
+                           <p className="font-bold text-[#7C4E2F]">{formatMoney(o.total)}</p>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+               <div className="overflow-x-auto">
+               <table className="hidden min-w-[680px] w-full text-left md:table">
                   <thead className="bg-[#FCFAF6] border-b border-[#E6D9C8]">
                      <tr>
                         <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Fulfillment</th>
@@ -122,6 +142,7 @@ export default function AdminOverviewPage() {
                      ))}
                   </tbody>
                </table>
+               </div>
             </div>
          </div>
 

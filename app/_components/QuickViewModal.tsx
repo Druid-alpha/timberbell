@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { formatMoney } from '@/lib/utils/format'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { addItem } from '@/lib/redux/cartSlice'
+import { ensureReservationCountdown } from '@/lib/reservation'
 
 type Product = {
   id: string
@@ -46,6 +47,7 @@ export default function QuickViewModal({ product }: { product: Product }) {
     })
 
     if (res.ok) {
+      ensureReservationCountdown()
       dispatch(addItem({
         productId: product.id,
         name: product.name,

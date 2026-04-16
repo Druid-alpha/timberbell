@@ -211,7 +211,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
          <div>
             <h1 className="font-display text-4xl text-[#2B2119]">Design Catalog</h1>
             <p className="mt-1 text-sm text-[#8C7A6B]">Manage your studio's curated pieces and material variants.</p>
@@ -223,7 +223,7 @@ export default function AdminProductsPage() {
          </div>
       </div>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_450px]">
+      <div className="grid gap-10 lg:grid-cols-[1fr_minmax(320px,450px)]">
          {/* Catalog Feed */}
          <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-[#E6D9C8] pb-4">
@@ -293,7 +293,7 @@ export default function AdminProductsPage() {
          </div>
 
          {/* Command Sidebar Form */}
-         <div className="sticky top-10 space-y-6">
+         <div className="space-y-6 lg:sticky lg:top-10">
             <div className="rounded-[40px] border border-[#E6D9C8] bg-white p-8 shadow-2xl shadow-[#C5A070]/5">
                <div className="mb-8 flex items-center justify-between">
                   <h2 className="font-display text-2xl text-[#2B2119]">{editingId ? 'Refine Piece' : 'New Entry'}</h2>
@@ -313,7 +313,7 @@ export default function AdminProductsPage() {
                            className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm focus:border-[#C5A070] outline-none transition" 
                         />
                      </div>
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                            <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Category</label>
                            <select 
