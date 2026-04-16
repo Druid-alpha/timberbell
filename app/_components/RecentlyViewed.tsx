@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { formatMoney } from '@/lib/utils/format'
 import SectionHeading from './SectionHeading'
+import { parseJsonArray } from '@/lib/utils/safe-json'
 
 export default function RecentlyViewed() {
   const [items, setItems] = useState<any[]>([])
 
   useEffect(() => {
-    const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[])')
+    const viewed = parseJsonArray(localStorage.getItem('recentlyViewed'))
     setItems(viewed)
   }, [])
 

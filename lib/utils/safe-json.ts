@@ -1,0 +1,10 @@
+export function parseJsonArray<T>(value: string | null, fallback: T[] = []) {
+  if (!value) return fallback
+
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback
+  } catch {
+    return fallback
+  }
+}

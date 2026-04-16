@@ -11,6 +11,7 @@ import Breadcrumb from '@/app/_components/Breadcrumb'
 import RelatedProducts from '@/app/_components/RelatedProducts'
 import { useToast } from '@/app/_components/ToastProvider'
 import { ensureReservationCountdown } from '@/lib/reservation'
+import { parseJsonArray } from '@/lib/utils/safe-json'
 
 type ProductReview = {
   id: string
@@ -51,7 +52,7 @@ export default function ProductDetailPage() {
         
         // Track recently viewed
         if (res.ok && data) {
-          const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
+          const viewed = parseJsonArray<any>(localStorage.getItem('recentlyViewed'))
           const newItem = {
             id: data.id,
             name: data.name,
