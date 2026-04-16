@@ -4,25 +4,25 @@ const footerLinks = [
   {
     title: 'Showroom',
     links: [
-      { label: 'Appointments', href: '/contact' },
-      { label: 'Virtual tours', href: '/contact' },
-      { label: 'Delivery zones', href: '/shipping' },
+      { label: 'Appointments', href: '/showroom' },
+      { label: 'Virtual tours', href: '/virtual-tour' },
+      { label: 'Delivery zones', href: '/delivery' },
     ],
   },
   {
     title: 'Support',
     links: [
-      { label: 'Care guide', href: '/about' },
+      { label: 'Care guide', href: '/care-guide' },
       { label: 'Returns', href: '/returns' },
-      { label: 'Trade program', href: '/contact' },
+      { label: 'Trade program', href: '/trade' },
     ],
   },
   {
     title: 'Company',
     links: [
       { label: 'About Timberbell', href: '/about' },
-      { label: 'Journal', href: '/about' },
-      { label: 'Careers', href: '/contact' },
+      { label: 'Journal', href: '/journal' },
+      { label: 'Careers', href: '/careers' },
     ],
   },
 ]

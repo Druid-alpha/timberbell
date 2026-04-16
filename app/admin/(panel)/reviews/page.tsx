@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { formatMoney } from '@/lib/utils/format'
+import { motion, AnimatePresence } from 'framer-motion'
 
 type Review = {
   id: string
@@ -24,26 +24,23 @@ export default function AdminReviewsPage() {
     const res = await fetch('/api/reviews')
     const data = await res.json()
     
-    // Enrich reviews with product names
     const productsRes = await fetch('/api/products?limit=100')
     const productsData = await productsRes.json()
     const productMap = new Map(productsData.products.map((p: any) => [p.id, p.name]))
 
     const enriched = (data.reviews || []).map((r: Review) => ({
       ...r,
-      productName: productMap.get(r.productId) || 'Unknown Product'
+      productName: productMap.get(r.productId) || 'Unknown Piece'
     }))
 
     setReviews(enriched)
     setLoading(false)
   }
 
-  useEffect(() => {
-    load()
-  }, [])
+  useEffect(() => { load() }, [])
 
   async function handleDelete(id: string) {
-    if (!confirm('Are you sure you want to remove this community note?')) return
+    if (!confirm('Permanently remove this community note?')) return
     setDeletingId(id)
     const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' })
     if (res.ok) {
@@ -52,78 +49,74 @@ export default function AdminReviewsPage() {
     setDeletingId(null)
   }
 
-  if (loading) return <div className="p-8 text-center text-xs uppercase tracking-widest text-[#8C7A6B]">Auditing community notes...</div>
+  if (loading) return <div className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Auditing curator feedback...</div>
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex items-end justify-between">
-        <div className="space-y-1">
-          <h2 className="font-display text-4xl text-[#2B2119]">Community Notes</h2>
-          <p className="text-sm text-[#6B594A]">Monitor and manage curator feedback across all pieces.</p>
-        </div>
-        <div className="text-[10px] uppercase tracking-widest font-bold text-[#8C7A6B]">
-          {reviews.length} total notes
-        </div>
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between px-2">
+         <div>
+            <h1 className="font-display text-4xl text-[#2B2119]">Community Notes</h1>
+            <p className="mt-1 text-sm text-[#8C7A6B]">Moderate and curate client observations across the collection.</p>
+         </div>
+         <div className="flex items-center gap-3">
+            <span className="rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F]">
+               {reviews.length} Verified Notes
+            </span>
+         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white shadow-sm">
-        <table className="w-full border-collapse text-left">
-          <thead>
-            <tr className="bg-[#F4EEE4]/50 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
-              <th className="px-6 py-4 font-bold">Curator</th>
-              <th className="px-6 py-4 font-bold">Piece</th>
-              <th className="px-6 py-4 font-bold">Rating</th>
-              <th className="px-6 py-4 font-bold">Message</th>
-              <th className="px-6 py-4 font-bold">Date</th>
-              <th className="px-6 py-4 font-bold text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#E6D9C8]/50 text-sm">
-            {reviews.map((review) => (
-              <tr key={review.id} className="group transition hover:bg-[#F4EEE4]/30">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2B2119] text-[10px] font-bold text-white">
-                      {review.customer[0].toUpperCase()}
-                    </div>
-                    <span className="font-semibold text-[#2B2119]">{review.customer}</span>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+         <AnimatePresence mode="popLayout">
+            {reviews.map((r) => (
+               <motion.div 
+                  layout
+                  key={r.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
+               >
+                  <div>
+                     <div className="flex items-center justify-between mb-6">
+                        <div className="flex gap-1">
+                           {Array.from({ length: 5 }).map((_, i) => (
+                              <div key={i} className={`h-2.5 w-2.5 rounded-full ${i < r.rating ? 'bg-[#C5A070]' : 'bg-[#E6D9C8]'}`} />
+                           ))}
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest font-bold text-[#8C7A6B]">Audit ID: {r.id.slice(-4).toUpperCase()}</span>
+                     </div>
+                     <p className="text-sm font-medium leading-relaxed italic text-[#2B2119]">"{r.message}"</p>
                   </div>
-                </td>
-                <td className="px-6 py-4">
-                  <Link href={`/products/${review.productId}`} className="text-[#7C4E2F] hover:underline font-medium">
-                    {review.productName}
-                  </Link>
-                </td>
-                <td className="px-6 py-4">
-                   <div className="flex gap-0.5">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <div key={i} className={`h-2 w-2 rounded-full ${i < review.rating ? 'bg-[#7C4E2F]' : 'bg-[#E6D9C8]'}`} />
-                      ))}
-                   </div>
-                </td>
-                <td className="px-6 py-4 max-w-xs">
-                  <p className="line-clamp-2 text-[#6B594A] text-xs leading-relaxed italic">"{review.message}"</p>
-                </td>
-                <td className="px-6 py-4 text-[10px] text-[#8C7A6B]">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button
-                    onClick={() => handleDelete(review.id)}
-                    disabled={deletingId === review.id}
-                    className="rounded-full border border-red-200 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-red-800 transition hover:bg-red-50 disabled:opacity-50"
-                  >
-                    {deletingId === review.id ? 'Removing...' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
+
+                  <div className="mt-8 pt-6 border-t border-[#F4EEE4]">
+                     <div className="flex items-center justify-between">
+                        <div>
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">{r.customer}</p>
+                           <Link href={`/products/${r.productId}`} className="mt-1 block text-[10px] uppercase tracking-widest font-medium text-[#8C7A6B] hover:text-[#2B2119] transition-colors">
+                              {r.productName}
+                           </Link>
+                        </div>
+                        <button 
+                           onClick={() => handleDelete(r.id)}
+                           disabled={deletingId === r.id}
+                           className="rounded-full border border-red-50 p-2.5 text-red-400 transition hover:bg-red-50 hover:text-red-600"
+                        >
+                           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>
+                        </button>
+                     </div>
+                  </div>
+               </motion.div>
             ))}
-          </tbody>
-        </table>
-        {reviews.length === 0 && (
-          <div className="p-12 text-center text-sm text-[#6B594A]">No community notes found.</div>
-        )}
+         </AnimatePresence>
       </div>
+
+      {reviews.length === 0 && (
+         <div className="py-20 text-center">
+            <p className="text-sm text-[#8C7A6B] italic font-display">The community vault is currently empty.</p>
+         </div>
+      )}
     </div>
   )
 }

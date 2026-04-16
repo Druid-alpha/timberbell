@@ -9,9 +9,9 @@ import { syncCart } from '@/lib/redux/cartSlice'
 
 const baseLinks = [
   { href: '/', label: 'Home' },
-  { href: '/about', label: 'About us' },
-  { href: '/collections', label: 'Collection' },
+  { href: '/about', label: 'About' },
   { href: '/productfilter', label: 'Shop' },
+  { href: '/journal', label: 'Journal' },
   { href: '/contact', label: 'Contact' },
 ]
 
@@ -373,19 +373,6 @@ export default function SiteHeader() {
               </Link>
             ))}
             <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                aria-label="Search"
-                onClick={() => {
-                  setSearchOpen(true)
-                  setOpen(false)
-                }}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119]"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm8 2-4.35-4.35" strokeLinecap="round" />
-                </svg>
-              </button>
               <Link
                 href="/wishlist"
                 onClick={() => setOpen(false)}

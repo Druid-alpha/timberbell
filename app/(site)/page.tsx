@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
+import RecentlyViewed from '@/app/_components/RecentlyViewed'
 
 type Category = {
   id: string
@@ -79,6 +80,10 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSlide, setActiveSlide] = useState(0)
+
+  const { scrollY } = useScroll()
+  const y1 = useTransform(scrollY, [0, 500], [0, 150])
+  const y2 = useTransform(scrollY, [0, 2000], [0, 300])
 
   useEffect(() => {
     let active = true
@@ -169,7 +174,7 @@ export default function HomePage() {
                       Shop Collection
                     </Link>
                     <Link
-                      href="/productfilter"
+                      href="/journal"
                       className="rounded-full border border-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] hover:bg-white/50 transition-all"
                     >
                       View the Lookbook
@@ -189,6 +194,7 @@ export default function HomePage() {
 
                 <div className="relative aspect-square">
                   <motion.div 
+                    style={{ y: y1 }}
                     initial={{ opacity: 0, scale: 1.1, rotate: 2 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     transition={{ duration: 1, ease: 'easeOut' }}
@@ -278,13 +284,14 @@ export default function HomePage() {
               key={banner.title}
               className="group relative h-[500px] overflow-hidden rounded-[48px] border border-[#E6D9C8] bg-[#F4EEE4]"
             >
-              <div
-                className="absolute inset-0 transition-transform duration-[1.5s] ease-out group-hover:scale-110"
-                style={{
+              <motion.div
+                style={{ 
+                  y: y1,
                   backgroundImage: `url(${banner.image})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
+                className="absolute inset-0 transition-transform duration-[1.5s] ease-out group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-[#2B2119]/60 via-transparent to-transparent" />
               <div className="relative flex h-full flex-col justify-end p-12 text-white">
@@ -306,6 +313,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <RecentlyViewed />
     </div>
   )
 }

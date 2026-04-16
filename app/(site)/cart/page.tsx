@@ -15,9 +15,24 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState(600) // 10 minutes in seconds
 
   const dispatch = useAppDispatch()
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (timeLeft <= 0) return
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [timeLeft])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   async function load() {
     const res = await fetch('/api/cart')
@@ -97,6 +112,27 @@ export default function CartPage() {
 
       <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-8">
+          {activeItems.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between rounded-3xl bg-[#2B2119] px-6 py-4 text-white shadow-xl"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#7C4E2F] text-[10px] animate-pulse">
+                   ⏳
+                </div>
+                <div className="space-y-0.5">
+                   <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">Atelier Reserve</p>
+                   <p className="text-xs font-medium">Pieces in your bundle are held for your review</p>
+                </div>
+              </div>
+              <div className="text-right">
+                 <p className="font-display text-2xl text-[#CBB9A2] tabular-nums">{formatTime(timeLeft)}</p>
+              </div>
+            </motion.div>
+          )}
+
           {activeItems.length > 0 ? (
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">

@@ -137,14 +137,23 @@ export default function ProductCard({
     <article className="group flex h-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
       <Link href={`/products/${product.id}`} className="relative h-64 w-full overflow-hidden block">
         {product.images?.[0]?.url ? (
-          <img
-            src={product.images[0].url}
-            alt={product.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
+          <>
+            <img
+              src={product.images[0].url}
+              alt={product.name}
+              className={`h-full w-full object-cover transition duration-700 ${product.images.length > 1 ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
+            />
+            {product.images.length > 1 && (
+              <img
+                src={product.images[1].url}
+                alt={product.name}
+                className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:opacity-100 group-hover:scale-105"
+              />
+            )}
+          </>
         ) : (
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 transition-transform duration-700 group-hover:scale-105"
             style={{
               backgroundImage: `linear-gradient(135deg, ${palette[0]}, ${palette[1]}, ${palette[2]})`,
             }}
@@ -164,6 +173,9 @@ export default function ProductCard({
               {discountPercent}% OFF
             </span>
           ) : null}
+          <span className="rounded-full bg-[#F4EEE4]/80 backdrop-blur-sm border border-[#E6D9C8] px-3 py-1 text-[8px] uppercase tracking-[0.25em] text-[#7C4E2F] font-bold">
+            Nigeria: 3-7 Days
+          </span>
         </div>
 
         <div className="absolute right-4 top-4 z-10">

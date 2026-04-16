@@ -47,6 +47,20 @@ export default function ProductDetailPage() {
       if (active) {
         setProduct(res.ok ? data : null)
         setLoading(false)
+        
+        // Track recently viewed
+        if (res.ok && data) {
+          const viewed = JSON.parse(localStorage.getItem('recentlyViewed') || '[]')
+          const newItem = {
+            id: data.id,
+            name: data.name,
+            price: data.finalPrice || data.price,
+            category: data.category,
+            imageUrl: data.images?.[0]?.url
+          }
+          const filtered = viewed.filter((item: any) => item.id !== data.id)
+          localStorage.setItem('recentlyViewed', JSON.stringify([newItem, ...filtered].slice(0, 10)))
+        }
       }
     }
 
@@ -309,12 +323,28 @@ export default function ProductDetailPage() {
                 </button>
               </div>
               
-              <div className="flex items-center justify-between px-2">
+              <div className="flex flex-col gap-3 px-2">
                  <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
                   <div className={`h-1.5 w-1.5 rounded-full ${(!product.inventoryCount || product.inventoryCount > 5) ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
                   {(!product.inventoryCount || product.inventoryCount > 5) ? 'In stock and ready to ship' : `Only ${product.inventoryCount} left — items in cart are reserved for 10 min`}
                 </div>
-                <span className="text-[10px] text-[#8C7A6B]">Lead time: {product.leadTime || '2-4 weeks'}</span>
+                
+                {/* Nigeria specific ETAs */}
+                <div className="grid grid-cols-2 gap-4 rounded-2xl bg-white/40 p-3 border border-[#E6D9C8]/50">
+                    <div className="space-y-0.5">
+                        <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B] font-bold">Lagos Delivery</p>
+                        <p className="text-[10px] text-[#2B2119]">3 - 5 Business Days</p>
+                    </div>
+                    <div className="space-y-0.5 border-l border-[#E6D9C8] pl-4">
+                        <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B] font-bold">Abuja / PH</p>
+                        <p className="text-[10px] text-[#2B2119]">5 - 9 Business Days</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] text-[#8C7A6B]">
+                  <span>Premium White-Glove Care Included</span>
+                  <span>Lead time: {product.leadTime || '2-4 weeks'}</span>
+                </div>
               </div>
             </div>
             
