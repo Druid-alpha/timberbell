@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const productId = searchParams.get('productId')
+  const user = getUserFromRequest(request)
 
   const db = await getDb()
   const filter = productId ? { productId } : {}
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest) {
 
   return Response.json({
     count: reviews.length,
+    currentUserId: user?.id ?? null,
     reviews: reviews.map((review) => ({
       id: review._id.toString(),
       ...review,
@@ -32,6 +34,15 @@ export async function POST(request: NextRequest) {
   }
 
   const db = await getDb()
+  const existing = await db.collection('reviews').findOne({
+    productId: body.productId,
+    userId: user.id,
+  })
+
+  if (existing) {
+    return Response.json({ message: 'You have already reviewed this product. Please edit your existing note.' }, { status: 409 })
+  }
+
   const result = await db.collection('reviews').insertOne({
     productId: body.productId,
     userId: user.id,

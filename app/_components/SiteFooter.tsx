@@ -40,12 +40,11 @@ export default function SiteFooter() {
             </div>
           </div>
           <p className="text-sm text-[#E6D9C8]">
-            Crafting heirloom pieces for modern rituals. Designed in the Pacific Northwest and
-            delivered with white glove care.
+            Crafting heirloom pieces for modern rituals, with delivery coordinated across Nigeria.
           </p>
           <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-[#CBB9A2]">
             <span>hello@timberbell.com</span>
-            <span>+1 (206) 555-0139</span>
+            <span>+234 800 TIMBERBELL</span>
           </div>
         </div>
         <div className="grid gap-8 sm:grid-cols-3">

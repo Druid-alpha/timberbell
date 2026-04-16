@@ -153,3 +153,58 @@ export async function fulfillPaidOrder(order: any) {
     { $set: { fulfillmentApplied: true, fulfillmentAppliedAt: new Date(), updatedAt: new Date() } }
   )
 }
+
+export async function markOrderPaymentFailed(input: {
+  orderId: any
+  paymentStatus: string
+  gatewayResponse?: string | null
+  failureReason?: string | null
+}) {
+  const db = await getDb()
+  await db.collection('orders').updateOne(
+    { _id: input.orderId },
+    {
+      $set: {
+        status: 'payment_failed',
+        paymentStatus: input.paymentStatus,
+        paymentGatewayResponse: input.gatewayResponse || null,
+        paymentFailureReason: input.failureReason || null,
+        updatedAt: new Date(),
+      },
+    }
+  )
+}
+
+export async function markOrderPaid(input: {
+  order: any
+  paidAt?: string | Date
+  gatewayResponse?: string | null
+  channel?: string | null
+}) {
+  const db = await getDb()
+
+  await db.collection('orders').updateOne(
+    { _id: input.order._id },
+    {
+      $set: {
+        status: 'paid',
+        paymentStatus: 'paid',
+        paidAt: input.paidAt ? new Date(input.paidAt) : new Date(),
+        paymentGatewayResponse: input.gatewayResponse || null,
+        paymentChannel: input.channel || null,
+        updatedAt: new Date(),
+      },
+    }
+  )
+
+  if (input.order.couponCode && !input.order.couponUsageAppliedAt) {
+    const coupon = await db.collection('coupons').findOne({ code: input.order.couponCode })
+    await incrementCouponUsage(coupon)
+    await db.collection('orders').updateOne(
+      { _id: input.order._id },
+      { $set: { couponUsageAppliedAt: new Date(), updatedAt: new Date() } }
+    )
+  }
+
+  await fulfillPaidOrder({ ...input.order, paymentStatus: 'paid' })
+}

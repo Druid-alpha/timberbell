@@ -16,6 +16,7 @@ import { getColorName } from '@/lib/utils/color-name'
 
 type ProductReview = {
   id: string
+  userId?: string
   customer: string
   rating: number
   message: string
@@ -37,7 +38,9 @@ export default function ProductDetailPage() {
   const [variantPrice, setVariantPrice] = useState<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [reviews, setReviews] = useState<ProductReview[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isAddingReview, setIsAddingReview] = useState(false)
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
   const [newReview, setNewReview] = useState({ rating: 5, message: '' })
 
   useEffect(() => {
@@ -71,7 +74,10 @@ export default function ProductDetailPage() {
     async function loadReviews() {
       const res = await fetch(`/api/reviews?productId=${params.id}`)
       const data = await res.json()
-      if (active && res.ok) setReviews(data.reviews)
+      if (active && res.ok) {
+        setReviews(data.reviews)
+        setCurrentUserId(data.currentUserId ?? null)
+      }
     }
 
     load()
@@ -89,16 +95,20 @@ export default function ProductDetailPage() {
     setActiveColorHex(product.variants?.[0]?.color ?? product.palette?.[0] ?? '#f4e7d2')
   }, [product])
 
-  const ratingLabel = useMemo(() => `${(product?.rating ?? 0).toFixed(1)} / 5`, [product?.rating])
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return 0
+    return reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length
+  }, [reviews])
+  const ratingLabel = useMemo(() => `${averageRating.toFixed(1)} / 5`, [averageRating])
   const stars = useMemo(() => {
-    const safeRating = Math.round((product?.rating ?? 0) * 2) / 2
+    const safeRating = Math.round(averageRating * 2) / 2
     return Array.from({ length: 5 }).map((_, index) => {
       const starNumber = index + 1
       if (safeRating >= starNumber) return 'full'
       if (safeRating + 0.5 === starNumber) return 'half'
       return 'empty'
     })
-  }, [product?.rating])
+  }, [averageRating])
 
   const handleAddToCart = async () => {
     if (!product) return
@@ -137,8 +147,8 @@ export default function ProductDetailPage() {
   const submitReview = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newReview.message.trim()) return
-    const res = await fetch('/api/reviews', {
-      method: 'POST',
+    const res = await fetch(editingReviewId ? `/api/reviews/${editingReviewId}` : '/api/reviews', {
+      method: editingReviewId ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         productId: product.id,
@@ -149,11 +159,36 @@ export default function ProductDetailPage() {
     if (res.ok) {
       const refreshReviews = await fetch(`/api/reviews?productId=${product.id}`)
       const newData = await refreshReviews.json()
-      if (refreshReviews.ok) setReviews(newData.reviews)
+      if (refreshReviews.ok) {
+        setReviews(newData.reviews)
+        setCurrentUserId(newData.currentUserId ?? null)
+      }
       setNewReview({ rating: 5, message: '' })
       setIsAddingReview(false)
+      setEditingReviewId(null)
     } else if (res.status === 401) {
       setStatus('Please sign in to leave a review.')
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setStatus(data.message || 'Unable to save your review.')
+    }
+  }
+
+  const myReview = reviews.find((review) => review.userId === currentUserId) ?? null
+
+  async function deleteReview(id: string) {
+    const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setStatus(data.message || 'Unable to delete your review.')
+      return
+    }
+    const remaining = reviews.filter((review) => review.id !== id)
+    setReviews(remaining)
+    if (editingReviewId === id) {
+      setEditingReviewId(null)
+      setIsAddingReview(false)
+      setNewReview({ rating: 5, message: '' })
     }
   }
 
@@ -212,7 +247,7 @@ export default function ProductDetailPage() {
   const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 px-6 py-16">
+    <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-16 sm:px-6">
       <div className="flex flex-col gap-6">
         <Breadcrumb
           items={[
@@ -379,7 +414,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="flex items-center justify-between text-[10px] text-[#8C7A6B]">
-                  <span>Premium White-Glove Care Included</span>
+                  <span>Secure Nigeria logistics available</span>
                   <span>Lead time: {product.leadTime || '2-4 weeks'}</span>
                 </div>
               </div>
@@ -420,10 +455,19 @@ export default function ProductDetailPage() {
             <p className="text-sm text-[#6B594A]">Honest thoughts from fellow curators.</p>
           </div>
           <button 
-            onClick={() => setIsAddingReview(!isAddingReview)}
+            onClick={() => {
+              if (myReview) {
+                setEditingReviewId(myReview.id)
+                setNewReview({ rating: myReview.rating, message: myReview.message })
+              } else {
+                setEditingReviewId(null)
+                setNewReview({ rating: 5, message: '' })
+              }
+              setIsAddingReview(!isAddingReview)
+            }}
             className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white transition-all shadow-sm"
           >
-            {isAddingReview ? 'Cancel' : 'Write a note'}
+            {isAddingReview ? 'Cancel' : myReview ? 'Edit your note' : 'Write a note'}
           </button>
         </div>
 
@@ -455,7 +499,7 @@ export default function ProductDetailPage() {
               type="submit"
               className="rounded-full bg-[#7C4E2F] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_-10px_rgba(124,78,47,0.5)] hover:shadow-lg transition-all active:scale-[0.97]"
             >
-              Post community note
+              {editingReviewId ? 'Update community note' : 'Post community note'}
             </button>
           </form>
         )}
@@ -484,6 +528,28 @@ export default function ProductDetailPage() {
                     <p className="text-[9px] uppercase tracking-[0.1em] text-[#8C7A6B]">Verified Curator</p>
                   </div>
                 </div>
+                {review.userId === currentUserId ? (
+                  <div className="flex flex-wrap gap-4 border-t border-[#F4EEE4] pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingReviewId(review.id)
+                        setNewReview({ rating: review.rating, message: review.message })
+                        setIsAddingReview(true)
+                      }}
+                      className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteReview(review.id)}
+                      className="text-[10px] font-bold uppercase tracking-widest text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ))
           ) : (

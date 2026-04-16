@@ -11,7 +11,7 @@ export default function AboutPage() {
         <SectionHeading
           eyebrow="Our Story"
           title="Architectural furniture for modern rituals"
-          description="Born in Seattle, built for generations. We believe in the quiet power of natural materials."
+          description="Built for generations, with a focus on calm spaces, honest materials, and thoughtful craftsmanship."
         />
       </div>
 

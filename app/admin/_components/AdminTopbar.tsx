@@ -45,7 +45,10 @@ export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void
       <div className="flex items-center gap-4 self-end sm:self-auto">
         <button
           type="button"
-          onClick={() => router.refresh()}
+          onClick={() => {
+            router.refresh()
+            router.replace(pathname)
+          }}
           title="Refresh admin data"
           className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] transition hover:bg-white"
         >

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { verifyPaystackTransaction } from '@/lib/paystack'
 import { getDb } from '@/lib/db'
-import { fulfillPaidOrder, incrementCouponUsage } from '@/lib/services/checkout'
+import { markOrderPaid, markOrderPaymentFailed } from '@/lib/services/checkout'
 
 export async function GET(request: NextRequest) {
   const reference = request.nextUrl.searchParams.get('reference')
@@ -22,45 +22,21 @@ export async function GET(request: NextRequest) {
     const paymentStatus = paystack.data.status
 
     if (paymentStatus !== 'success') {
-      await db.collection('orders').updateOne(
-        { _id: order._id },
-        {
-          $set: {
-            status: 'payment_failed',
-            paymentStatus,
-            paymentGatewayResponse: paystack.data.gateway_response || null,
-            updatedAt: new Date(),
-          },
-        }
-      )
+      await markOrderPaymentFailed({
+        orderId: order._id,
+        paymentStatus,
+        gatewayResponse: paystack.data.gateway_response || null,
+      })
 
       return Response.json({ ok: false, status: paymentStatus, message: paystack.message }, { status: 400 })
     }
 
-    await db.collection('orders').updateOne(
-      { _id: order._id },
-      {
-        $set: {
-          status: 'paid',
-          paymentStatus: 'paid',
-          paidAt: paystack.data.paid_at ? new Date(paystack.data.paid_at) : new Date(),
-          paymentGatewayResponse: paystack.data.gateway_response || null,
-          paymentChannel: paystack.data.channel || null,
-          updatedAt: new Date(),
-        },
-      }
-    )
-
-    if (order.couponCode && !order.couponUsageAppliedAt) {
-      const coupon = await db.collection('coupons').findOne({ code: order.couponCode })
-      await incrementCouponUsage(coupon)
-      await db.collection('orders').updateOne(
-        { _id: order._id },
-        { $set: { couponUsageAppliedAt: new Date(), updatedAt: new Date() } }
-      )
-    }
-
-    await fulfillPaidOrder({ ...order, paymentStatus: 'paid' })
+    await markOrderPaid({
+      order,
+      paidAt: paystack.data.paid_at,
+      gatewayResponse: paystack.data.gateway_response || null,
+      channel: paystack.data.channel || null,
+    })
 
     return Response.json({
       ok: true,
@@ -69,17 +45,11 @@ export async function GET(request: NextRequest) {
       status: 'paid',
     })
   } catch (error: any) {
-    await db.collection('orders').updateOne(
-      { _id: order._id },
-      {
-        $set: {
-          status: 'payment_failed',
-          paymentStatus: 'failed',
-          paymentFailureReason: error?.message || 'Payment verification failed',
-          updatedAt: new Date(),
-        },
-      }
-    )
+    await markOrderPaymentFailed({
+      orderId: order._id,
+      paymentStatus: 'failed',
+      failureReason: error?.message || 'Payment verification failed',
+    })
 
     return Response.json({ message: error?.message || 'Payment verification failed' }, { status: 500 })
   }

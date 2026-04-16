@@ -1,4 +1,5 @@
 import 'server-only'
+import crypto from 'crypto'
 
 const PAYSTACK_BASE_URL = 'https://api.paystack.co'
 
@@ -16,6 +17,16 @@ export function getPaystackPublicKey() {
 
 export function getPaystackCurrency() {
   return process.env.PAYSTACK_CURRENCY || 'NGN'
+}
+
+export function verifyPaystackSignature(payload: string, signature?: string | null) {
+  if (!signature) return false
+  const expected = crypto
+    .createHmac('sha512', getSecretKey())
+    .update(payload, 'utf8')
+    .digest('hex')
+
+  return expected === signature
 }
 
 async function paystackRequest<T>(path: string, init?: RequestInit) {

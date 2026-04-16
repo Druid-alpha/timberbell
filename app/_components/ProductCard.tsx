@@ -179,9 +179,6 @@ export default function ProductCard({
               {discountPercent}% OFF
             </span>
           ) : null}
-          <span className="rounded-full bg-[#F4EEE4]/80 backdrop-blur-sm border border-[#E6D9C8] px-3 py-1 text-[8px] uppercase tracking-[0.25em] text-[#7C4E2F] font-bold">
-            Nigeria: 3-7 Days
-          </span>
         </div>
 
         <div className="absolute right-4 top-4 z-10">

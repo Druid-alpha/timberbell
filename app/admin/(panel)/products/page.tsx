@@ -289,6 +289,7 @@ export default function AdminProductsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
+    const data = await res.json().catch(() => ({}))
 
     if (res.ok) {
       setForm(emptyForm)
@@ -305,7 +306,7 @@ export default function AdminProductsPage() {
       const optionData = await optionRes.json().catch(() => ({}))
       setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
     } else {
-      setError('Failed to save product. Verify all fields.')
+      setError(data?.message || 'Failed to save product. Verify all fields.')
     }
     setSaving(false)
   }
@@ -429,7 +430,7 @@ export default function AdminProductsPage() {
                <p className="max-w-xl text-xs text-[#8C7A6B]">Long names, descriptions, discount states, and variant counts now stay readable instead of crushing the card layout.</p>
             </div>
 
-            <div className="grid gap-5 2xl:grid-cols-2">
+            <div className="grid gap-5 pr-1 sm:pr-0 2xl:grid-cols-2">
                <AnimatePresence mode="popLayout">
                   {products.map((p) => (
                      <motion.div 
@@ -438,7 +439,7 @@ export default function AdminProductsPage() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="group relative overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-5 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
+                        className="group relative overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-5 pr-6 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
                      >
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                            <div className="flex items-start gap-4 lg:w-full">

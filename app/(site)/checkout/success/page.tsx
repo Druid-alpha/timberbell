@@ -55,7 +55,7 @@ export default function CheckoutSuccessPage() {
         <SectionHeading
           eyebrow="Checkout"
           title={status === 'success' ? 'Payment Confirmed' : status === 'error' ? 'Verification Needed' : 'Confirming Payment'}
-          description="We’re checking your Paystack payment and syncing your order details."
+          description="We're checking your Paystack payment and syncing your order details."
         />
       </div>
 
@@ -89,3 +89,4 @@ export default function CheckoutSuccessPage() {
     </div>
   )
 }
+

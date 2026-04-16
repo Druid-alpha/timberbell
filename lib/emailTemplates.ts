@@ -103,16 +103,12 @@ const baseHtml = (title: string, body: string, btnText?: string, btnUrl?: string
         </div>
         <div class="content">
           ${body}
-          ${
-            btnText && btnUrl
-              ? `<div class="btn-container"><a href="${btnUrl}" class="btn">${btnText}</a></div>`
-              : ''
-          }
+          ${btnText && btnUrl ? `<div class="btn-container"><a href="${btnUrl}" class="btn">${btnText}</a></div>` : ''}
         </div>
       </div>
       <div class="footer">
-        <p>© ${new Date().getFullYear()} Timberbell Furniture. All rights reserved.</p>
-        <p>123 Design Avenue, Portland, OR 97205</p>
+        <p>&copy; ${new Date().getFullYear()} Timberbell Furniture. All rights reserved.</p>
+        <p>Lagos, Nigeria</p>
       </div>
     </div>
   </body>
@@ -122,8 +118,8 @@ const baseHtml = (title: string, body: string, btnText?: string, btnUrl?: string
 export function welcomeEmailTemplate(name: string) {
   const body = `
     <h1>Welcome to Timberbell, ${name}</h1>
-    <p>We are thrilled to welcome you to our community. At Timberbell, we believe that furniture should do more than fill a space—it should ground your home in natural beauty and calm.</p>
-    <p>Explore our curated collections of premium, sustainably-sourced pieces designed to create a layered and welcoming environment.</p>
+    <p>We are thrilled to welcome you to our community. At Timberbell, we believe that furniture should do more than fill a space - it should ground your home in natural beauty and calm.</p>
+    <p>Explore our curated collections of premium, sustainably sourced pieces designed to create a layered and welcoming environment.</p>
   `
   return baseHtml('Welcome to Timberbell', body, 'Discover Collections', `${process.env.NEXT_PUBLIC_APP_URL}/collections`)
 }
@@ -141,8 +137,19 @@ export function resetEmailTemplate(resetUrl: string) {
   const body = `
     <h1>Reset your password</h1>
     <p>We received a request to reset the password for your Timberbell account. If you made this request, please click the button below to set a new password.</p>
-    <p>If you didn't request a password reset, you can safely ignore this email. Your current password will remain unchanged.</p>
+    <p>If you did not request a password reset, you can safely ignore this email. Your current password will remain unchanged.</p>
     <p style="font-size: 13px; color: ${secondaryTextColor};">This link will expire in 30 minutes.</p>
   `
   return baseHtml('Reset your Timberbell password', body, 'Reset Password', resetUrl)
+}
+
+export function refundStatusEmailTemplate(input: { customerName: string; orderId: string; status: string; adminMessage?: string }) {
+  const statusLabel = input.status.charAt(0).toUpperCase() + input.status.slice(1)
+  const body = `
+    <h1>Refund request update</h1>
+    <p>Hello ${input.customerName},</p>
+    <p>Your refund request for order <strong>${input.orderId.slice(-6).toUpperCase()}</strong> has been updated to <strong>${statusLabel}</strong>.</p>
+    ${input.adminMessage ? `<p><strong>Message from Timberbell:</strong><br/>${input.adminMessage.replace(/\n/g, '<br/>')}</p>` : '<p>Our team has reviewed your request and recorded the latest update on your account.</p>'}
+  `
+  return baseHtml('Your Timberbell refund update', body, 'View Account', `${process.env.APP_URL || 'http://localhost:3000'}/account`)
 }

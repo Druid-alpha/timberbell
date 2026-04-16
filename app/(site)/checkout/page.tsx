@@ -6,6 +6,8 @@ import Breadcrumb from '@/app/_components/Breadcrumb'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 
+const CHECKOUT_DETAILS_KEY = 'timberbell_checkout_details'
+
 export default function CheckoutPage() {
   const [cart, setCart] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -23,6 +25,12 @@ export default function CheckoutPage() {
   })
 
   useEffect(() => {
+    const savedForm = localStorage.getItem(CHECKOUT_DETAILS_KEY)
+    if (savedForm) {
+      const parsed = JSON.parse(savedForm)
+      setForm((current) => ({ ...current, ...parsed }))
+    }
+
     let active = true
     async function load() {
       const res = await fetch('/api/cart')
@@ -42,12 +50,16 @@ export default function CheckoutPage() {
     }
   }, [])
 
+  useEffect(() => {
+    localStorage.setItem(CHECKOUT_DETAILS_KEY, JSON.stringify(form))
+  }, [form])
+
   const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
   const subtotal = activeItems.reduce(
     (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
     0
   )
-  const delivery = subtotal > 0 ? 140 : 0
+  const delivery = subtotal > 0 ? 14000 : 0
   const total = subtotal + delivery
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -115,8 +127,8 @@ export default function CheckoutPage() {
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
         <SectionHeading
           eyebrow={`Step ${step} of 3`}
-          title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select white-glove tier' : 'Final Curator Review'}
-          description="Every Timberbell order includes professional white-glove setup, with Paystack used for your payment flow."
+          title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select delivery plan' : 'Final Order Review'}
+          description="Every Timberbell order uses Nigeria delivery logistics, with Paystack used for your payment flow."
         />
       </div>
 
@@ -194,17 +206,17 @@ export default function CheckoutPage() {
                   <div className="rounded-3xl border-2 border-[#7C4E2F] bg-white p-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
-                        <p className="font-bold text-[#2B2119]">White Glove Delivery</p>
-                        <p className="text-xs text-[#8C7A6B]">In-home placement, assembly, and debris removal.</p>
+                        <p className="font-bold text-[#2B2119]">Standard Delivery</p>
+                        <p className="text-xs text-[#8C7A6B]">Secure nationwide logistics across Nigeria.</p>
                       </div>
-                      <div className="text-sm font-bold text-[#7C4E2F]">$140.00</div>
+                      <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(delivery)}</div>
                     </div>
                   </div>
                   <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 opacity-60">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
-                        <p className="font-bold text-[#2B2119]">Express Installation</p>
-                        <p className="text-xs text-[#8C7A6B]">Priority scheduling within 7 days of arrival.</p>
+                        <p className="font-bold text-[#2B2119]">Priority Dispatch</p>
+                        <p className="text-xs text-[#8C7A6B]">Expanded regional delivery options coming soon.</p>
                       </div>
                       <div className="text-sm font-bold text-[#8C7A6B]">Coming Soon</div>
                     </div>
@@ -292,8 +304,8 @@ export default function CheckoutPage() {
                     <span className="font-bold text-[#2B2119]">${subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest">White Glove</span>
-                    <span className="font-bold text-[#2B2119]">${delivery.toLocaleString()}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Delivery</span>
+                    <span className="font-bold text-[#2B2119]">{formatMoney(delivery)}</span>
                   </div>
                   <div className="flex justify-between border-t border-[#E6D9C8] pt-3 font-display text-lg text-[#7C4E2F]">
                     <span>Total</span>
@@ -307,15 +319,15 @@ export default function CheckoutPage() {
           </div>
 
           <div className="space-y-4 rounded-[40px] border border-[#E6D9C8] p-6 sm:p-8">
-            <div className="flex items-center gap-3">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Studio Insured Delivery</p>
+              <div className="flex items-center gap-3">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Insured Nigeria Delivery</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Sustainable Packaging</p>
             </div>
-            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By confirming your order, you agree to our curated service terms. Paystack checkout is used for payment collection.</p>
+            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By confirming your order, you agree to our service terms. Paystack checkout is used for payment collection.</p>
           </div>
         </div>
       </div>

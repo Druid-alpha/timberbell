@@ -146,7 +146,7 @@ export default function CartPage() {
     (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
     0
   )
-  const delivery = subtotal > 0 ? 140 : 0
+  const delivery = subtotal > 0 ? 14000 : 0
   const total = subtotal + delivery
 
   if (loading) {
@@ -158,7 +158,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 px-4 py-10 sm:px-6 sm:py-16">
+    <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
       <div className="flex flex-col gap-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
         <SectionHeading
@@ -213,9 +213,9 @@ export default function CartPage() {
                     <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#F4EEE4]">
                       <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-full w-full object-cover" />
                     </div>
-                    <div className="flex-1">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">{item.product?.category}</p>
-                      <h3 className="text-lg font-display text-[#2B2119]">{item.product?.name}</h3>
+                      <h3 className="break-words text-lg font-display text-[#2B2119]">{item.product?.name}</h3>
                       <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney(item.product?.price)}</p>
                     </div>
                     <div className="flex flex-col gap-3 sm:items-end">
@@ -276,11 +276,11 @@ export default function CartPage() {
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
-                <span className="font-bold text-[#2B2119]">${subtotal.toLocaleString()}</span>
+                <span className="font-bold text-[#2B2119]">{formatMoney(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span>White-Glove Tier</span>
-                <span className="font-bold text-[#2B2119]">${delivery.toLocaleString()}</span>
+                <span>Delivery</span>
+                <span className="font-bold text-[#2B2119]">{formatMoney(delivery)}</span>
               </div>
               <div className="flex items-end justify-between border-t border-[#E6D9C8] pt-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Total cost</span>
@@ -291,13 +291,13 @@ export default function CartPage() {
                 className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white transition-all ${activeItems.length > 0 ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'cursor-not-allowed bg-[#D8C7B3]'}`}
                 onClick={(e) => activeItems.length === 0 && e.preventDefault()}
               >
-                Proceed to delivery
+                Proceed to checkout
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-3 px-2 text-[10px] uppercase tracking-widest text-[#8C7A6B] sm:px-8">
             <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2A3320] text-[9px] font-bold text-white">OK</div>
-            <span>Insured for transit</span>
+            <span>Insured Nigeria logistics</span>
           </div>
         </div>
       </div>
