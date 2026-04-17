@@ -1,0 +1,78 @@
+import { NextRequest } from 'next/server'
+import { getUserFromRequest } from '@/lib/authServer'
+import { buildOrderDraft, fulfillPaidOrder, incrementCouponUsage } from '@/lib/services/checkout'
+
+export async function GET(request: NextRequest) {
+  const user = getUserFromRequest(request)
+
+  if (!user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const db = await (await import('@/lib/db')).getDb()
+  const orders = await db
+    .collection('orders')
+    .find({ userId: user.id })
+    .sort({ createdAt: -1 })
+    .toArray()
+
+  return Response.json({
+    orders: orders.map((order) => ({
+      id: order._id.toString(),
+      ...order,
+      _id: undefined,
+    })),
+  })
+}
+
+export async function POST(request: NextRequest) {
+  const user = getUserFromRequest(request)
+
+  if (!user) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const body = await request.json().catch(() => ({}))
+  let draft
+  try {
+    draft = await buildOrderDraft({
+      userId: user.id,
+      customer: body.customer,
+      notes: body.notes,
+      couponCode: body.couponCode,
+    })
+  } catch (error: any) {
+    return Response.json({ message: error?.message || 'Cart is empty' }, { status: 400 })
+  }
+
+  const result = await draft.db.collection('orders').insertOne({
+    userId: user.id,
+    items: draft.items,
+    subtotal: draft.subtotal,
+    discountTotal: draft.discountTotal,
+    couponCode: draft.coupon?.code || null,
+    total: draft.total,
+    status: 'pending',
+    paymentProvider: 'manual',
+    paymentStatus: 'unpaid',
+    customer: draft.customer,
+    notes: draft.notes,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  })
+
+  const order = await draft.db.collection('orders').findOne({ _id: result.insertedId })
+  await incrementCouponUsage(draft.coupon)
+  if (draft.coupon) {
+    await draft.db.collection('orders').updateOne(
+      { _id: result.insertedId },
+      { $set: { couponUsageAppliedAt: new Date(), updatedAt: new Date() } }
+    )
+  }
+  await fulfillPaidOrder({
+    ...order,
+    userId: user.id,
+  })
+
+  return Response.json({ id: result.insertedId.toString(), total: draft.total }, { status: 201 })
+}
