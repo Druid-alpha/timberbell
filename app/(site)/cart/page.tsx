@@ -25,13 +25,10 @@ export default function CartPage() {
 
   const dispatch = useAppDispatch()
   const { toast } = useToast()
-<<<<<<< HEAD
   const getItemKey = (item: any) => `${item.productId}::${item.variantId || 'base'}`
   const getItemUnitPrice = (item: any) => item.product?.finalPrice ?? item.price ?? item.product?.price ?? 0
   const getItemImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
   const getItemLabel = (item: any) => item.variantName || item.selectedVariant?.name || null
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -74,18 +71,12 @@ export default function CartPage() {
       const reduxItems = data.cart.items.map((item: any) => ({
         productId: item.productId,
         name: item.product?.name,
-<<<<<<< HEAD
         price: item.product?.finalPrice ?? item.product?.price,
         quantity: item.quantity,
         imageUrl: item.selectedVariant?.image?.url || item.product?.images?.[0]?.url,
         variantId: item.variantId ?? undefined,
         variantName: item.variantName ?? item.selectedVariant?.name ?? undefined,
         color: item.color ?? item.selectedVariant?.color ?? undefined,
-=======
-        price: item.product?.price,
-        quantity: item.quantity,
-        imageUrl: item.product?.images?.[0]?.url,
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
         saved: item.saved,
       }))
       dispatch(syncCart(reduxItems))
@@ -97,17 +88,10 @@ export default function CartPage() {
     load()
   }, [])
 
-<<<<<<< HEAD
   async function updateItem(itemKey: string, updates: any) {
     setUpdatingId(itemKey)
     const updatedItems = cart.items.map((item: any) =>
       getItemKey(item) === itemKey ? { ...item, ...updates } : item
-=======
-  async function updateItem(productId: string, updates: any) {
-    setUpdatingId(productId)
-    const updatedItems = cart.items.map((item: any) =>
-      item.productId === productId ? { ...item, ...updates } : item
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
     )
 
     const finalItems = updatedItems.filter((item: any) => item.quantity > 0)
@@ -118,12 +102,9 @@ export default function CartPage() {
       body: JSON.stringify({
         items: finalItems.map((it: any) => ({
           productId: it.productId,
-<<<<<<< HEAD
           variantId: it.variantId,
           variantName: it.variantName,
           color: it.color,
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
           quantity: it.quantity,
           saved: it.saved,
         })),
@@ -156,12 +137,9 @@ export default function CartPage() {
       body: JSON.stringify({
         items: releasedItems.map((item: any) => ({
           productId: item.productId,
-<<<<<<< HEAD
           variantId: item.variantId,
           variantName: item.variantName,
           color: item.color,
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
           quantity: item.quantity,
           saved: item.saved,
         })),
@@ -178,11 +156,7 @@ export default function CartPage() {
   }
 
   const subtotal = activeItems.reduce(
-<<<<<<< HEAD
     (sum: number, item: any) => sum + getItemUnitPrice(item) * item.quantity,
-=======
-    (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
     0
   )
   const delivery = subtotal > 0 ? 14000 : 0
@@ -242,31 +216,19 @@ export default function CartPage() {
               <AnimatePresence mode="popLayout">
                 {activeItems.map((item: any) => (
                   <motion.div
-<<<<<<< HEAD
                     key={getItemKey(item)}
-=======
-                    key={item.productId}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-<<<<<<< HEAD
                     className={`flex flex-col gap-6 rounded-[32px] border border-[#E6D9C8] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6 ${updatingId === getItemKey(item) || updatingId === 'reservation' ? 'opacity-50' : 'opacity-100'}`}
                   >
                     <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#F4EEE4]">
                       <img src={getItemImage(item)} alt="" className="h-full w-full object-cover" />
-=======
-                    className={`flex flex-col gap-6 rounded-[32px] border border-[#E6D9C8] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6 ${updatingId === item.productId || updatingId === 'reservation' ? 'opacity-50' : 'opacity-100'}`}
-                  >
-                    <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#F4EEE4]">
-                      <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-full w-full object-cover" />
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">{item.product?.category}</p>
                       <h3 className="break-words text-lg font-display text-[#2B2119]">{item.product?.name}</h3>
-<<<<<<< HEAD
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {getItemLabel(item) ? (
                           <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
@@ -295,19 +257,6 @@ export default function CartPage() {
                       <div className="flex flex-wrap gap-4 sm:justify-end">
                         <button onClick={() => updateItem(getItemKey(item), { saved: true })} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] transition-colors hover:text-[#7C4E2F]">Save for later</button>
                         <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[10px] font-bold uppercase tracking-widest text-red-800 hover:underline">Remove</button>
-=======
-                      <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney(item.product?.price)}</p>
-                    </div>
-                    <div className="flex flex-col gap-3 sm:items-end">
-                      <div className="flex items-center gap-3 rounded-full border border-[#E6D9C8] p-1">
-                        <button onClick={() => updateItem(item.productId, { quantity: item.quantity - 1 })} className="h-8 w-8 rounded-full bg-[#F4EEE4] transition hover:bg-[#E6D9C8]">-</button>
-                        <span className="w-6 text-center text-sm font-bold">{item.quantity}</span>
-                        <button onClick={() => updateItem(item.productId, { quantity: item.quantity + 1 })} className="h-8 w-8 rounded-full bg-[#F4EEE4] transition hover:bg-[#E6D9C8]">+</button>
-                      </div>
-                      <div className="flex flex-wrap gap-4 sm:justify-end">
-                        <button onClick={() => updateItem(item.productId, { saved: true })} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] transition-colors hover:text-[#7C4E2F]">Save for later</button>
-                        <button onClick={() => updateItem(item.productId, { quantity: 0 })} className="text-[10px] font-bold uppercase tracking-widest text-red-800 hover:underline">Remove</button>
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                       </div>
                     </div>
                   </motion.div>
@@ -331,29 +280,18 @@ export default function CartPage() {
                 <AnimatePresence>
                   {savedItems.map((item: any) => (
                     <motion.div
-<<<<<<< HEAD
                       key={getItemKey(item)}
-=======
-                      key={item.productId}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                       layout
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       className="group flex gap-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4]/30 p-4 transition hover:bg-white"
                     >
-<<<<<<< HEAD
                       <img src={getItemImage(item)} alt="" className="h-16 w-16 rounded-xl object-cover grayscale transition-all group-hover:grayscale-0" />
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-[#2B2119]">{item.product?.name}</h4>
                         {getItemLabel(item) ? <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">{getItemLabel(item)}</p> : null}
                         <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="mt-2 border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
-=======
-                      <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-16 w-16 rounded-xl object-cover grayscale transition-all group-hover:grayscale-0" />
-                      <div className="flex-1">
-                        <h4 className="text-sm font-bold text-[#2B2119]">{item.product?.name}</h4>
-                        <button onClick={() => updateItem(item.productId, { saved: false })} className="mt-2 border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                       </div>
                     </motion.div>
                   ))}

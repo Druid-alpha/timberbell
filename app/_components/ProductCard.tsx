@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 'use client'
 
 import { useMemo, useState } from 'react'
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 import Link from 'next/link'
 import type { Product } from '@/types/catalog'
 import { formatMoney } from '@/lib/utils/format'
@@ -49,10 +46,7 @@ export default function ProductCard({
   variant?: 'grid' | 'list'
 }) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
-<<<<<<< HEAD
   const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null)
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   let price = product.price
 
   if (product.discountValue) {
@@ -69,15 +63,12 @@ export default function ProductCard({
 
   const discountPercent = product.price > price ? Math.round(((product.price - price) / product.price) * 100) : null
   const variants = product.variants ?? []
-<<<<<<< HEAD
   const hoveredVariant = useMemo(
     () => variants.find((entry) => entry.id === hoveredVariantId) ?? null,
     [hoveredVariantId, variants]
   )
   const primaryImage = hoveredVariant?.image?.url || product.images?.[0]?.url
   const secondaryImage = hoveredVariant ? hoveredVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
   if (variant === 'list') {
     return (
@@ -86,13 +77,8 @@ export default function ProductCard({
           href={`/products/${product.id}`}
           className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:w-48"
         >
-<<<<<<< HEAD
           {primaryImage ? (
             <img src={primaryImage} alt={product.name} className="h-full w-full object-cover" />
-=======
-          {product.images?.[0]?.url ? (
-            <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
           ) : (
             <div
               className="absolute inset-0"
@@ -153,29 +139,16 @@ export default function ProductCard({
   return (
     <article className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
       <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
-<<<<<<< HEAD
         {primaryImage ? (
           <>
             <img
               src={primaryImage}
               alt={product.name}
-              className={`h-full w-full object-cover transition duration-700 ${(secondaryImage && secondaryImage !== primaryImage) ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
+              className={`h-full w-full object-cover transition duration-700 ${secondaryImage && secondaryImage !== primaryImage ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
             />
             {secondaryImage && secondaryImage !== primaryImage && (
               <img
                 src={secondaryImage}
-=======
-        {product.images?.[0]?.url ? (
-          <>
-            <img
-              src={product.images[0].url}
-              alt={product.name}
-              className={`h-full w-full object-cover transition duration-700 ${product.images.length > 1 ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
-            />
-            {product.images.length > 1 && (
-              <img
-                src={product.images[1].url}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 alt={product.name}
                 className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:opacity-100 group-hover:scale-105"
               />
@@ -190,8 +163,7 @@ export default function ProductCard({
           />
         )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.3),transparent_60%)] pointer-events-none" />
-        
-        {/* Badges */}
+
         <div className="absolute left-4 top-4 flex flex-col gap-2">
           {product.badge ? (
             <span className="rounded-full bg-[#2B2119] px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white">
@@ -209,23 +181,19 @@ export default function ProductCard({
           <WishlistButton productId={product.id} />
         </div>
 
-        {/* Quick View Button Hover overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none group-hover:opacity-100">
           <div className="rounded-full bg-white/90 px-6 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] shadow-lg backdrop-blur-sm pointer-events-auto">
             Quick View
           </div>
         </div>
-        
+
         {variants.length > 0 ? (
           <div className="absolute inset-x-3 bottom-3 hidden gap-2 rounded-2xl bg-white/90 p-2 backdrop-blur-sm transition group-hover:flex">
             {variants.slice(0, 4).map((variant) => (
               <div
                 key={variant.id}
-<<<<<<< HEAD
                 onMouseEnter={() => setHoveredVariantId(variant.id)}
                 onMouseLeave={() => setHoveredVariantId(null)}
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 className="flex items-center gap-1.5 rounded-full border border-[#E6D9C8] bg-white px-2 py-1 text-[9px] uppercase tracking-[0.25em] text-[#6B594A]"
               >
                 <span
@@ -243,7 +211,7 @@ export default function ProductCard({
           </div>
         ) : null}
       </Link>
-      
+
       <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-5 pt-4 sm:px-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -267,8 +235,8 @@ export default function ProductCard({
           ))}
           {variants.length ? <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B]">{variants.length} variants</span> : null}
         </div>
-        
-        <div className="mt-auto pt-2 flex items-center justify-between border-t border-[#E6D9C8]/50">
+
+        <div className="mt-auto flex items-center justify-between border-t border-[#E6D9C8]/50 pt-2">
           <div className="flex items-center gap-1.5">
             <span className="flex items-center gap-0.5">{renderStars(product.rating)}</span>
             <span className="text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>

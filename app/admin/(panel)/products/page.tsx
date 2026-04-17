@@ -148,7 +148,6 @@ function deepEqual(left: unknown, right: unknown) {
   return JSON.stringify(left) === JSON.stringify(right)
 }
 
-<<<<<<< HEAD
 function dedupeImages(items: ProductImage[]) {
   const seen = new Set<string>()
   return items.filter((item) => {
@@ -158,9 +157,6 @@ function dedupeImages(items: ProductImage[]) {
     return true
   })
 }
-
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 function createVariant(): Variant {
   return {
     id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -302,21 +298,14 @@ export default function AdminProductsPage() {
       finishes: normalizeTextList(form.finishes),
       leadTime: form.leadTime.trim() || null,
       palette: palette.filter(Boolean),
-<<<<<<< HEAD
       images: dedupeImages(images),
-=======
-      images,
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
       variants: variants.map((v) => ({
         ...v,
         sku: v.sku?.trim() || undefined,
         price: v.price ? Number(v.price) : undefined,
         stockCount: v.stockCount ? Number(v.stockCount) : undefined,
         color: v.color?.trim() || undefined,
-<<<<<<< HEAD
         image: v.image || null,
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
         materials: (v.materials || []).filter(Boolean),
         finishes: (v.finishes || []).filter(Boolean),
         specifications: (v.specifications || []).filter(Boolean),
@@ -389,11 +378,7 @@ export default function AdminProductsPage() {
       finishes: p.finishes?.join(', ') || '',
       leadTime: p.leadTime || '',
     })
-<<<<<<< HEAD
     const nextImages = dedupeImages(p.images || [])
-=======
-    const nextImages = p.images || []
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
     const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : defaultPalette
     const nextVariants = (p.variants || []).map((variant) => ({
         ...variant,
@@ -454,7 +439,6 @@ export default function AdminProductsPage() {
   }
 
   function updateVariant(id: string, updates: Partial<Variant>) {
-<<<<<<< HEAD
     setVariants((current) =>
       current.map((variant) =>
         variant.id === id
@@ -479,9 +463,6 @@ export default function AdminProductsPage() {
 
   function addGalleryImage(image: ProductImage) {
     setImages((current) => dedupeImages([...current, image]))
-=======
-    setVariants((current) => current.map((variant) => (variant.id === id ? { ...variant, ...updates } : variant)))
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   }
 
   function updateVariantSpec(id: string, value: string) {
@@ -896,7 +877,6 @@ export default function AdminProductsPage() {
                      ) : null}
                   </div>
 
-<<<<<<< HEAD
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Visual Assets</p>
@@ -924,9 +904,6 @@ export default function AdminProductsPage() {
                       ) : null}
                     </div>
                   </div>
-=======
-                  <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Visual Assets</p><div className="mt-4 flex flex-wrap gap-2">{images.map((img, i) => (<div key={i} className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={img.url} className="h-full w-full object-cover" /><button type="button" onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-[8px] text-white">x</button></div>))}{images.length < 5 ? (<label className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white text-[#C5A070] transition hover:bg-[#C5A070]/5">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>+</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => setImages([...images, img]))} /></label>) : null}</div></div>
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variants</p><p className="mt-1 text-xs text-[#8C7A6B]">Use variants when a product has selectable options like colorways, finishes, or special pricing.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setVariants((current) => [...current, createVariant()])} className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Variant</button>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Variants</button> : null}</div></div>
@@ -985,11 +962,8 @@ export default function AdminProductsPage() {
                               <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
                               <div className="mt-3 flex items-center gap-3">
                                 {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={variant.image.url} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
-<<<<<<< HEAD
                                 <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
-=======
-                                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>+</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
+                                <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
                               </div>
                             </div>
 

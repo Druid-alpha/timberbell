@@ -43,7 +43,6 @@ export default function ProductDetailPage() {
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
   const [newReview, setNewReview] = useState({ rating: 5, message: '' })
 
-<<<<<<< HEAD
   const computeDisplayPrice = (basePrice?: number | null) => {
     const priceValue = Number(basePrice || 0)
     if (!priceValue) return 0
@@ -55,9 +54,6 @@ export default function ProductDetailPage() {
     }
     return priceValue
   }
-
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   useEffect(() => {
     if (!params?.id) return
     let active = true
@@ -262,11 +258,8 @@ export default function ProductDetailPage() {
   const price = variantPrice ?? product.finalPrice ?? product.price
   const selectedVariant = product.variants?.find((variant: any) => variant.id === activeVariantId) ?? null
   const galleryImages = Array.from(new Set([selectedVariant?.image?.url, ...images].filter(Boolean))) as string[]
-<<<<<<< HEAD
   const variantBasePrice = selectedVariant?.price ?? product.price
   const variantDisplayPrice = computeDisplayPrice(variantBasePrice)
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   const selectedColorHex = selectedVariant?.color || activeColorHex || fallbackPalette[0]
   const selectedColorName = getColorName(selectedColorHex)
   const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
@@ -275,10 +268,7 @@ export default function ProductDetailPage() {
   const displayMaterials = selectedVariant?.materials?.length ? selectedVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
   const displayFinishes = selectedVariant?.finishes?.length ? selectedVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Hand-finished studio treatment'
   const displayLeadTime = selectedVariant?.stockStatus === 'preorder' ? `Preorder · ${product.leadTime || '2-4 weeks'}` : product.leadTime || '2-4 weeks'
-<<<<<<< HEAD
   const selectedTitle = selectedVariant?.name ? `${product.name} · ${selectedVariant.name}` : product.name
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-16 sm:px-6">
@@ -292,11 +282,7 @@ export default function ProductDetailPage() {
         />
         <SectionHeading
           eyebrow="Timberbell Atelier"
-<<<<<<< HEAD
           title={selectedTitle}
-=======
-          title={product.name}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
           description="Refined proportions and honest materials, built for generations."
         />
       </div>
@@ -348,15 +334,12 @@ export default function ProductDetailPage() {
               <WishlistButton productId={product.id} />
             </div>
 
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
-<<<<<<< HEAD
-              {variantBasePrice > variantDisplayPrice ? (
-                <span className="text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span>
-              ) : null}
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
-            </div>
+          <div className="flex items-baseline gap-3">
+            <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
+            {variantBasePrice > variantDisplayPrice ? (
+              <span className="text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span>
+            ) : null}
+          </div>
 
             <p className="text-sm leading-relaxed text-[#6B594A]">{product.description}</p>
           </div>
@@ -365,11 +348,7 @@ export default function ProductDetailPage() {
             {product.variants?.length > 0 && (
               <div className="space-y-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Select configuration</p>
-<<<<<<< HEAD
                 <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-=======
-                <div className="flex flex-wrap gap-2">
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                   {product.variants.map((v: any) => (
                     <button
                       key={v.id}
@@ -380,7 +359,6 @@ export default function ProductDetailPage() {
                         setActiveColorHex(v.color || fallbackPalette[0])
                         setQuantity(1)
                       }}
-<<<<<<< HEAD
                       className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left transition-all ${activeVariantId === v.id ? 'border-[#7C4E2F] bg-[#2B2119] text-white shadow-md' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                     >
                       <div className="min-w-0">
@@ -444,27 +422,13 @@ export default function ProductDetailPage() {
                     </div>
                   </div>
                 ) : null}
-=======
-                      className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.2em] transition-all ${activeVariantId === v.id ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white shadow-md' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
-                    >
-                      <div className="h-3 w-3 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: v.color || '#D8C7B3' }} />
-                      {v.name}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-xs text-[#6B594A]">Selected color: <span className="font-semibold text-[#2B2119]">{selectedColorName}</span>{selectedVariant?.name ? <span className="text-[#8C7A6B]"> ({selectedVariant.name})</span> : null}</p>
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
               </div>
             )}
 
             {!product.variants?.length && paletteChoices.length > 0 && (
               <div className="space-y-3">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Available colors</p>
-<<<<<<< HEAD
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-=======
-                <div className="flex flex-wrap gap-3">
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                   {paletteChoices.map((color: string) => {
                     const isActive = selectedColorHex === color
                     return (
@@ -475,7 +439,6 @@ export default function ProductDetailPage() {
                           setActiveColorHex(color)
                           setActiveImage(product.images?.[0]?.url || '')
                         }}
-<<<<<<< HEAD
                         className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left text-[10px] uppercase tracking-[0.2em] transition-all ${isActive ? 'border-[#7C4E2F] bg-white text-[#2B2119]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A]'}`}
                       >
                         <span className="inline-flex items-center gap-2">
@@ -483,12 +446,6 @@ export default function ProductDetailPage() {
                           {getColorName(color)}
                         </span>
                         <span className="text-[#8C7A6B]">Main</span>
-=======
-                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.2em] transition-all ${isActive ? 'border-[#7C4E2F] bg-white text-[#2B2119]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A]'}`}
-                      >
-                        <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: color }} />
-                        {getColorName(color)}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                       </button>
                     )
                   })}

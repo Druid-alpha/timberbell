@@ -1,20 +1,13 @@
 'use client'
 
-<<<<<<< HEAD
 import { useEffect, useMemo, useState } from 'react'
-=======
-import { useEffect, useState } from 'react'
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatMoney } from '@/lib/utils/format'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { addItem } from '@/lib/redux/cartSlice'
 import { ensureReservationCountdown } from '@/lib/reservation'
-<<<<<<< HEAD
 import { getColorName } from '@/lib/utils/color-name'
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
 type Product = {
   id: string
@@ -22,7 +15,6 @@ type Product = {
   price: number
   category: string
   description: string
-<<<<<<< HEAD
   discountType?: 'percentage' | 'fixed'
   discountValue?: number
   finalPrice?: number
@@ -39,17 +31,11 @@ type Product = {
     finishes?: string[]
     specifications?: string[]
   }>
-=======
-  images?: { url: string }[]
-  variants?: any[]
-  compareAt?: number
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 }
 
 export default function QuickViewModal({ product }: { product: Product }) {
   const router = useRouter()
   const dispatch = useAppDispatch()
-<<<<<<< HEAD
   const [activeVariantId, setActiveVariantId] = useState<string | null>(product.variants?.[0]?.id ?? null)
   const [activeImage, setActiveImage] = useState(product.variants?.[0]?.image?.url || product.images?.[0]?.url || '')
   const [mounted, setMounted] = useState(false)
@@ -77,11 +63,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const availableStock = selectedVariant?.stockCount ?? null
   const selectedColor = selectedVariant?.color ? getColorName(selectedVariant.color) : null
 
-=======
-  const [activeImage, setActiveImage] = useState(product.images?.[0]?.url || '')
-  const [mounted, setMounted] = useState(false)
-
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   useEffect(() => {
     setMounted(true)
     document.body.style.overflow = 'hidden'
@@ -96,7 +77,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
   }
 
   async function handleAddToCart() {
-<<<<<<< HEAD
     const res = await fetch('/api/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -107,20 +87,12 @@ export default function QuickViewModal({ product }: { product: Product }) {
         color: selectedVariant?.color ?? null,
         quantity: 1,
       }),
-=======
-    // Server sync
-    const res = await fetch('/api/cart', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ productId: product.id, quantity: 1 }),
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
     })
 
     if (res.ok) {
       ensureReservationCountdown()
       dispatch(addItem({
         productId: product.id,
-<<<<<<< HEAD
         variantId: selectedVariant?.id,
         name: product.name,
         price: displayPrice,
@@ -128,12 +100,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
         imageUrl: selectedVariant?.image?.url || product.images?.[0]?.url,
         variantName: selectedVariant?.name,
         color: selectedVariant?.color,
-=======
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        imageUrl: product.images?.[0]?.url
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
       }))
       close()
       setTimeout(() => router.push('/cart'), 300)
@@ -144,13 +110,11 @@ export default function QuickViewModal({ product }: { product: Product }) {
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
     >
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-[#2B2119]/40 backdrop-blur-sm"
         onClick={close}
       />
 
-      {/* Modal Container */}
       <div
         className={`relative w-full max-w-4xl overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-[0_40px_100px_-40px_rgba(55,32,15,0.7)] transition-all duration-500 ${mounted ? 'translate-y-0 scale-100' : 'translate-y-10 scale-95'}`}
       >
@@ -164,7 +128,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
         </button>
 
         <div className="grid lg:grid-cols-2">
-          {/* Left: Images */}
           <div className="bg-[#F4EEE4] p-8 lg:p-12">
             <div className="aspect-square w-full overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white shadow-sm">
               {activeImage ? (
@@ -179,7 +142,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
                 </div>
               )}
             </div>
-<<<<<<< HEAD
             {galleryImages.length > 1 && (
               <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
                 {galleryImages.slice(0, 4).map((img) => (
@@ -189,24 +151,12 @@ export default function QuickViewModal({ product }: { product: Product }) {
                     className={`h-16 w-16 flex-shrink-0 rounded-2xl border-2 transition ${activeImage === img ? 'border-[#7C4E2F]' : 'border-transparent'}`}
                   >
                     <img src={img} alt="" className="h-full w-full rounded-xl object-cover" />
-=======
-            {product.images && product.images.length > 1 && (
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-                {product.images.slice(0, 4).map((img) => (
-                  <button
-                    key={img.url}
-                    onClick={() => setActiveImage(img.url)}
-                    className={`h-16 w-16 flex-shrink-0 rounded-2xl border-2 transition ${activeImage === img.url ? 'border-[#7C4E2F]' : 'border-transparent'}`}
-                  >
-                    <img src={img.url} alt="" className="h-full w-full rounded-xl object-cover" />
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Right: Content */}
           <div className="flex flex-col justify-center p-8 lg:p-12">
             <div className="space-y-6">
               <div>
@@ -214,34 +164,21 @@ export default function QuickViewModal({ product }: { product: Product }) {
                   {product.category}
                 </p>
                 <h2 className="mt-3 font-display text-3xl text-[#2B2119] lg:text-4xl">
-<<<<<<< HEAD
                   {selectedVariant?.name ? `${product.name} · ${selectedVariant.name}` : product.name}
-=======
-                  {product.name}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 </h2>
               </div>
 
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-semibold text-[#2B2119]">
-<<<<<<< HEAD
                   {formatMoney(displayPrice)}
                 </span>
                 {basePrice > displayPrice && (
                   <span className="text-sm text-[#8C7A6B] line-through">
                     {formatMoney(basePrice)}
-=======
-                  {formatMoney(product.price)}
-                </span>
-                {product.compareAt && product.compareAt > product.price && (
-                  <span className="text-sm text-[#8C7A6B] line-through">
-                    {formatMoney(product.compareAt)}
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                   </span>
                 )}
               </div>
 
-<<<<<<< HEAD
               {product.variants?.length ? (
                 <div className="space-y-3 rounded-[28px] border border-[#E6D9C8] bg-[#FCFAF6] p-4">
                   <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#8C7A6B]">Choose Variant</p>
@@ -271,13 +208,10 @@ export default function QuickViewModal({ product }: { product: Product }) {
                 </div>
               ) : null}
 
-=======
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
               <p className="text-sm leading-relaxed text-[#6B594A] line-clamp-4">
                 {product.description}
               </p>
 
-<<<<<<< HEAD
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
                   <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Color</p>
@@ -300,22 +234,16 @@ export default function QuickViewModal({ product }: { product: Product }) {
                   className="w-full rounded-full bg-[#7C4E2F] py-4 text-xs font-bold uppercase tracking-[0.3em] text-white transition hover:bg-[#6A3F24]"
                 >
                   {selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of Stock' : 'Quick Add to Cart'}
-=======
-              <div className="space-y-3 pt-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full rounded-full bg-[#7C4E2F] py-4 text-xs font-bold uppercase tracking-[0.3em] text-white transition hover:bg-[#6A3F24]"
-                >
-                  Quick Add to Cart
->>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 </button>
-                <a
+                <Link
                   href={`/products/${product.id}`}
-                  onClick={() => document.body.style.overflow = 'unset'}
+                  onClick={() => {
+                    document.body.style.overflow = 'unset'
+                  }}
                   className="flex w-full items-center justify-center rounded-full border border-[#E6D9C8] py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] transition hover:bg-[#F4EEE4]"
                 >
                   View Full Details
-                </a>
+                </Link>
               </div>
             </div>
           </div>
