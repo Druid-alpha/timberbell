@@ -15,6 +15,8 @@ type OrderItem = {
 type Order = {
   id: string
   status: string
+  paymentStatus?: string
+  paymentProvider?: string
   total: number
   subtotal: number
   discountTotal: number
@@ -113,13 +115,18 @@ export default function AdminOrdersPage() {
                         <p className="text-[10px] text-[#8C7A6B]">{o.customer.email}</p>
                      </div>
                      <div className="flex items-center justify-between gap-4">
-                        <select
-                           value={o.status}
-                           onChange={(e) => updateStatus(o.id, e.target.value)}
-                           className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
-                        >
-                           {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                        <div className="space-y-2">
+                           <select
+                              value={o.status}
+                              onChange={(e) => updateStatus(o.id, e.target.value)}
+                              className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
+                           >
+                              {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                           <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
+                              Payment: {String(o.paymentStatus || 'unpaid').replace('_', ' ')}
+                           </p>
+                        </div>
                         <span className="text-sm font-bold text-[#2B2119]">{formatMoney(o.total)}</span>
                      </div>
                   </div>
@@ -133,6 +140,7 @@ export default function AdminOrdersPage() {
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Reference</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Client</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Fulfillment</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Payment</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Investment</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Action</th>
                </tr>
@@ -170,6 +178,14 @@ export default function AdminOrdersPage() {
                            >
                               {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                            </select>
+                        </td>
+                        <td className="px-8 py-6">
+                           <div className="space-y-1">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">
+                                 {String(o.paymentStatus || 'unpaid').replace('_', ' ')}
+                              </p>
+                              <p className="text-[10px] text-[#8C7A6B]">{o.paymentProvider || 'paystack'}</p>
+                           </div>
                         </td>
                         <td className="px-8 py-6 text-xs font-bold text-[#2B2119]">
                            {formatMoney(o.total)}
@@ -216,6 +232,9 @@ export default function AdminOrdersPage() {
                            <div>
                               <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">Order Manifest</p>
                               <h2 className="mt-1 font-display text-3xl text-[#2B2119]">Logistics Flow</h2>
+                              <p className="mt-2 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                                 Payment: {String(selected.paymentStatus || 'unpaid').replace('_', ' ')}
+                              </p>
                            </div>
                            <div className={`rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest ${statusColors[selected.status]}`}>
                               {selected.status}

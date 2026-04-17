@@ -7,6 +7,7 @@ import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ProductSkeleton from '@/app/_components/ProductSkeleton'
+import { getColorFamily, getColorFamilySwatch } from '@/lib/utils/color-name'
 
 type Category = {
   id: string
@@ -59,8 +60,6 @@ function ProductFilterContent() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
-  const [suggestions, setSuggestions] = useState<Product[]>([])
-  const [suggestOpen, setSuggestOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filterProducts, setFilterProducts] = useState<Product[]>([])
 
@@ -116,21 +115,6 @@ function ProductFilterContent() {
     setPage(Number(pageParam) || 1)
   }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, finishesParam, sortParam, pageParam])
 
-  useEffect(() => {
-    if (!search || search.trim().length < 2) {
-      setSuggestions([])
-      setSuggestOpen(false)
-      return
-    }
-    const handle = setTimeout(async () => {
-      const res = await fetch(`/api/products?q=${encodeURIComponent(search)}&limit=5`)
-      const json = await res.json().catch(() => ({}))
-      setSuggestions(json?.products ?? [])
-      setSuggestOpen(true)
-    }, 250)
-    return () => clearTimeout(handle)
-  }, [search])
-
   function toggleValue(list: string[], value: string) {
     return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
   }
@@ -168,16 +152,22 @@ function ProductFilterContent() {
       ...(product.palette ?? []),
       ...((product.variants ?? []).map((variant) => variant.color).filter(Boolean) as string[]),
     ])
-    return Array.from(new Set(allColors)).slice(0, 12)
+    return Array.from(new Set(allColors.map((color) => getColorFamily(color)))).slice(0, 8)
   }, [filterProducts])
 
   const materialOptions = useMemo(() => {
-    const allMaterials = filterProducts.flatMap((product) => product.materials ?? [])
+    const allMaterials = filterProducts.flatMap((product) => [
+      ...(product.materials ?? []),
+      ...((product.variants ?? []).flatMap((variant: any) => variant.materials ?? [])),
+    ])
     return Array.from(new Set(allMaterials)).sort()
   }, [filterProducts])
 
   const finishOptions = useMemo(() => {
-    const allFinishes = filterProducts.flatMap((product) => product.finishes ?? [])
+    const allFinishes = filterProducts.flatMap((product) => [
+      ...(product.finishes ?? []),
+      ...((product.variants ?? []).flatMap((variant: any) => variant.finishes ?? [])),
+    ])
     return Array.from(new Set(allFinishes)).sort()
   }, [filterProducts])
 
@@ -250,27 +240,6 @@ function ProductFilterContent() {
                 Go
               </button>
             </div>
-            {suggestOpen && suggestions.length ? (
-              <div className="mt-2 rounded-2xl border border-[#E6D9C8] bg-white p-2 shadow-lg">
-                {suggestions.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setSearch(item.name)
-                      setSuggestOpen(false)
-                      applyFilters()
-                    }}
-                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-[#2B2119] transition hover:bg-[#F4EEE4]"
-                  >
-                    <span>{item.name}</span>
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-                      {item.category}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           <div>
@@ -332,9 +301,10 @@ function ProductFilterContent() {
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Price range</p>
             <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between text-sm text-[#6B594A]">
-                <span>${minPrice}</span>
-                <span>${maxPrice}</span>
+              <div className="flex items-center justify-between rounded-full border border-[#E6D9C8] bg-white px-4 py-3 text-sm text-[#6B594A]">
+                <span>₦{Number(minPrice || 0).toLocaleString()}</span>
+                <span className="text-[#C5A070]">to</span>
+                <span>₦{Number(maxPrice || 0).toLocaleString()}</span>
               </div>
               <input
                 type="range"
@@ -354,43 +324,27 @@ function ProductFilterContent() {
                 onChange={(e) => setMaxPrice(e.target.value)}
                 className="w-full"
               />
-              <div className="grid gap-2 sm:grid-cols-2">
-                <input
-                  type="number"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  placeholder="Min"
-                  className="h-10 rounded-full border border-[#E6D9C8] bg-white px-3 text-sm"
-                />
-                <input
-                  type="number"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  placeholder="Max"
-                  className="h-10 rounded-full border border-[#E6D9C8] bg-white px-3 text-sm"
-                />
-              </div>
             </div>
           </div>
 
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Color</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {colorOptions.map((color) => {
-                const active = colors.includes(color)
+              {colorOptions.map((family) => {
+                const active = colors.includes(family)
                 return (
                   <button
-                    key={color}
+                    key={family}
                     type="button"
-                    onClick={() => setColors((prev) => toggleValue(prev, color))}
+                    onClick={() => setColors((prev) => toggleValue(prev, family))}
                     className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
                       active ? 'border-[#7C4E2F] bg-[#7C4E2F]/5 text-[#7C4E2F] ring-1 ring-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                     }`}
-                    title={color}
+                    title={family}
                   >
                     <span
                       className="h-5 w-5 rounded-full border shadow-sm"
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: getColorFamilySwatch(family) }}
                     />
                   </button>
                 )

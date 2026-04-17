@@ -43,9 +43,12 @@ export async function buildOrderDraft(input: CheckoutInput) {
   let subtotal = 0
   const normalizedItems = activeItems.map((item: any) => {
     const product = priceMap.get(item.productId)
+    const selectedVariant = Array.isArray(product?.variants)
+      ? product.variants.find((variant: any) => variant.id === item.variantId)
+      : null
     const unitPrice = product
       ? computeFinalPrice({
-          price: product.price,
+          price: typeof selectedVariant?.price === 'number' ? selectedVariant.price : product.price,
           discountType: product.discountType,
           discountValue: product.discountValue,
           saleDiscount: product.saleDiscount,
@@ -59,10 +62,13 @@ export async function buildOrderDraft(input: CheckoutInput) {
     return {
       ...item,
       price: unitPrice,
-      name: product?.name ?? 'Product',
+      name: selectedVariant?.name ? `${product?.name ?? 'Product'} - ${selectedVariant.name}` : product?.name ?? 'Product',
       slug: product?.slug ?? null,
       category: product?.category ?? null,
-      image: product?.images?.[0]?.url ?? null,
+      image: selectedVariant?.image?.url ?? product?.images?.[0]?.url ?? null,
+      variantName: item.variantName ?? selectedVariant?.name ?? null,
+      color: item.color ?? selectedVariant?.color ?? null,
+      variantId: item.variantId ?? null,
     }
   })
 
@@ -142,8 +148,39 @@ export async function fulfillPaidOrder(order: any) {
     const query = ObjectId.isValid(item.productId)
       ? { _id: new ObjectId(item.productId) }
       : { slug: item.productId }
+    const product = await db.collection('products').findOne(query)
+    if (!product) continue
 
-    await db.collection('products').updateOne(query, { $inc: { inventoryCount: -item.quantity } })
+    if (item.variantId && Array.isArray(product.variants)) {
+      const variantIndex = product.variants.findIndex((variant: any) => variant.id === item.variantId)
+      if (variantIndex >= 0) {
+        const currentCount = Number(product.variants[variantIndex]?.stockCount || 0)
+        const nextCount = Math.max(0, currentCount - item.quantity)
+        const nextVariants = [...product.variants]
+        nextVariants[variantIndex] = {
+          ...nextVariants[variantIndex],
+          stockCount: nextCount,
+          stockStatus:
+            nextCount <= 0
+              ? 'out_of_stock'
+              : nextCount <= 3
+                ? 'low_stock'
+                : nextVariants[variantIndex]?.stockStatus || 'in_stock',
+        }
+        await db.collection('products').updateOne(query, { $set: { variants: nextVariants, updatedAt: new Date() } })
+        continue
+      }
+    }
+
+    const currentInventory = Number(product.inventoryCount || 0)
+    const nextInventory = Math.max(0, currentInventory - item.quantity)
+    await db.collection('products').updateOne(query, {
+      $set: {
+        inventoryCount: nextInventory,
+        stockStatus: nextInventory <= 0 ? 'out_of_stock' : nextInventory <= 3 ? 'low_stock' : product.stockStatus || 'in_stock',
+        updatedAt: new Date(),
+      },
+    })
   }
 
   await clearActiveCartItems(order.userId)

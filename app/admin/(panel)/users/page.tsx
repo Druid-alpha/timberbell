@@ -89,7 +89,10 @@ export default function AdminUsersPage() {
                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">{u.ordersCount || 0} Bundles</span>
                   </div>
                   <div className="mt-4 flex items-center justify-between gap-4 border-t border-[#F4EEE4] pt-4">
-                     <p className="text-[10px] font-bold text-[#8C7A6B]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '--'}</p>
+                     <div>
+                        <p className="text-[10px] font-bold text-[#8C7A6B]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '--'}</p>
+                        <p className="mt-1 text-[9px] text-[#8C7A6B]">Last login: {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never'}</p>
+                     </div>
                      <button
                         onClick={() => handleDelete(u.id)}
                         className="rounded-full border border-red-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-400 transition hover:bg-red-50 hover:text-red-600"
@@ -108,6 +111,7 @@ export default function AdminUsersPage() {
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Access Level</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Engagement</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Established</th>
+                  <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Last Login</th>
                   <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B] text-right">Control</th>
                </tr>
             </thead>
@@ -157,7 +161,10 @@ export default function AdminUsersPage() {
                            </div>
                         </td>
                         <td className="px-8 py-6">
-                           <p className="text-[10px] font-bold text-[#8C7A6B]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—'}</p>
+                           <p className="text-[10px] font-bold text-[#8C7A6B]">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '--'}</p>
+                        </td>
+                        <td className="px-8 py-6">
+                           <p className="text-[10px] font-bold text-[#8C7A6B]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never'}</p>
                         </td>
                         <td className="px-8 py-6 text-right">
                            <button 

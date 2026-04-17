@@ -30,9 +30,29 @@ export async function createCartForUser(userId: string) {
 
 export async function addCartItemForUser(userId: string, item: CartItem) {
   const db = await getDb()
+  const matchByVariant =
+    item.variantId != null
+      ? {
+          userId,
+          items: {
+            $elemMatch: {
+              productId: item.productId,
+              variantId: item.variantId,
+            },
+          },
+        }
+      : {
+          userId,
+          items: {
+            $elemMatch: {
+              productId: item.productId,
+              $or: [{ variantId: { $exists: false } }, { variantId: null }],
+            },
+          },
+        }
 
   const updateExisting = await db.collection<CartDoc>('carts').updateOne(
-    { userId, 'items.productId': item.productId },
+    matchByVariant,
     { $inc: { 'items.$.quantity': item.quantity }, $set: { updatedAt: new Date() } }
   )
 

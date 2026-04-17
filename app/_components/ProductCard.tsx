@@ -43,13 +43,9 @@ export default function ProductCard({
   variant?: 'grid' | 'list'
 }) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
-  // Final price logic if discount exists
   let price = product.price
-  let compareAt = product.compareAt
 
-  // Calculate discount dynamically if discountValue exists
   if (product.discountValue) {
-    if (!compareAt) compareAt = product.price
     if (product.discountType === 'percentage') {
       price = product.price * (1 - product.discountValue / 100)
     } else if (product.discountType === 'fixed') {
@@ -57,20 +53,16 @@ export default function ProductCard({
     }
   }
 
-  // Use the pre-computed finalPrice if provided by backend
   if (product.finalPrice !== undefined) {
     price = product.finalPrice
-    if (!compareAt && product.price > product.finalPrice) {
-      compareAt = product.price
-    }
   }
 
-  const discountPercent = compareAt ? Math.round(((compareAt - price) / compareAt) * 100) : null
+  const discountPercent = product.price > price ? Math.round(((product.price - price) / product.price) * 100) : null
   const variants = product.variants ?? []
 
   if (variant === 'list') {
     return (
-      <article className="group flex flex-col gap-6 rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-4 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
+      <article className="group mx-auto flex w-full max-w-full flex-col gap-6 rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-4 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
         <Link
           href={`/products/${product.id}`}
           className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:w-48"
@@ -103,11 +95,6 @@ export default function ProductCard({
             </div>
             <div className="text-left md:text-right md:whitespace-nowrap">
               <div className="text-lg font-bold text-[#2B2119]">{formatMoney(price)}</div>
-              {compareAt && compareAt > price && (
-                <div className="text-[10px] text-[#8C7A6B] line-through">
-                  {formatMoney(compareAt)}
-                </div>
-              )}
             </div>
           </div>
           <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
@@ -140,7 +127,7 @@ export default function ProductCard({
   }
 
   return (
-    <article className="group flex h-full min-w-0 flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
+    <article className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
       <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
         {product.images?.[0]?.url ? (
           <>
@@ -215,7 +202,7 @@ export default function ProductCard({
         ) : null}
       </Link>
       
-      <div className="flex flex-1 flex-col gap-4 px-5 pb-5 pt-4 min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-5 pt-4 sm:px-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#2B2119]">
@@ -229,9 +216,6 @@ export default function ProductCard({
           </div>
           <div className="text-right whitespace-nowrap shrink-0">
             <div className="text-base font-bold text-[#2B2119]">{formatMoney(price)}</div>
-            {compareAt && compareAt > price ? (
-              <div className="text-xs text-[#8C7A6B] line-through mt-0.5">{formatMoney(compareAt)}</div>
-            ) : null}
           </div>
         </div>
 

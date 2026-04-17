@@ -35,8 +35,18 @@ export async function GET(request: NextRequest) {
   return Response.json({
     options: {
       badges: uniqueStrings(products.map((product) => product.badge)),
-      materials: uniqueStrings(products.map((product) => product.materials)),
-      finishes: uniqueStrings(products.map((product) => product.finishes)),
+      materials: uniqueStrings([
+        ...products.map((product) => product.materials),
+        ...products.flatMap((product) =>
+          Array.isArray(product.variants) ? product.variants.map((variant: any) => variant?.materials) : []
+        ),
+      ]),
+      finishes: uniqueStrings([
+        ...products.map((product) => product.finishes),
+        ...products.flatMap((product) =>
+          Array.isArray(product.variants) ? product.variants.map((variant: any) => variant?.finishes) : []
+        ),
+      ]),
       leadTimes: uniqueStrings(products.map((product) => product.leadTime)),
       colors,
     },

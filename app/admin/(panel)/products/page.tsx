@@ -18,6 +18,8 @@ type Variant = {
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
   color?: string
   image?: ProductImage | null
+  materials?: string[]
+  finishes?: string[]
   specifications?: string[]
 }
 
@@ -35,12 +37,31 @@ type Product = {
   createdAt?: string
   discountType?: string
   discountValue?: number
-  compareAt?: number
   badge?: string
   materials?: string[]
   finishes?: string[]
   palette?: string[]
   leadTime?: string
+  finalPrice?: number
+}
+
+type QuickUpdateState = {
+  id: string
+  name: string
+  price: string
+  inventoryCount: string
+  discountType: string
+  discountValue: string
+}
+
+type VariantQuickUpdateState = {
+  productId: string
+  variantId: string
+  productName: string
+  name: string
+  price: string
+  stockCount: string
+  stockStatus: NonNullable<Variant['stockStatus']>
 }
 
 type ProductForm = {
@@ -53,7 +74,6 @@ type ProductForm = {
   stockStatus: string
   discountType: string
   discountValue: string
-  compareAt: string
   badge: string
   materials: string
   finishes: string
@@ -70,7 +90,6 @@ type ProductPayload = {
   stockStatus: string
   discountType: string | null
   discountValue: number | null
-  compareAt: number | null
   badge: string | null
   materials: string[]
   finishes: string[]
@@ -86,6 +105,8 @@ type ProductPayload = {
     stockStatus?: Variant['stockStatus']
     color?: string
     image?: ProductImage | null
+    materials?: string[]
+    finishes?: string[]
     specifications?: string[]
   }>
 }
@@ -100,7 +121,6 @@ const emptyForm: ProductForm = {
   stockStatus: 'in_stock',
   discountType: '',
   discountValue: '',
-  compareAt: '',
   badge: '',
   materials: '',
   finishes: '',
@@ -138,12 +158,18 @@ function createVariant(): Variant {
     stockStatus: 'in_stock',
     color: '#c59a6b',
     image: null,
+    materials: [],
+    finishes: [],
     specifications: [],
   }
 }
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [categories, setCategories] = useState<{id:string, slug:string, name:string}[]>([])
   const [optionSets, setOptionSets] = useState<{ badges: string[]; materials: string[]; finishes: string[]; leadTimes: string[]; colors: string[] }>({
     badges: [],
@@ -162,6 +188,9 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [baselinePayload, setBaselinePayload] = useState<ProductPayload | null>(null)
+  const [quickUpdate, setQuickUpdate] = useState<QuickUpdateState | null>(null)
+  const [variantQuickUpdate, setVariantQuickUpdate] = useState<VariantQuickUpdateState | null>(null)
+  const [quickSaving, setQuickSaving] = useState(false)
   const materialOptions = useMemo(() => optionSets.materials, [optionSets.materials])
   const finishOptions = useMemo(() => optionSets.finishes, [optionSets.finishes])
   const badgeOptions = useMemo(() => optionSets.badges, [optionSets.badges])
@@ -169,7 +198,6 @@ export default function AdminProductsPage() {
   const colorOptions = useMemo(() => optionSets.colors, [optionSets.colors])
   const finalPreviewPrice = useMemo(() => {
     const basePrice = Number(form.price) || 0
-    const compareAt = Number(form.compareAt) || 0
     const discountValue = Number(form.discountValue) || 0
     if (form.discountType === 'percentage' && discountValue > 0) {
       return Math.max(basePrice - (basePrice * discountValue) / 100, 0)
@@ -177,25 +205,38 @@ export default function AdminProductsPage() {
     if (form.discountType === 'fixed' && discountValue > 0) {
       return Math.max(basePrice - discountValue, 0)
     }
-    return basePrice || compareAt || 0
-  }, [form.compareAt, form.discountType, form.discountValue, form.price])
+    return basePrice || 0
+  }, [form.discountType, form.discountValue, form.price])
   const isSlugSuggested = slugify(form.name) === form.slug
+  const totalPages = Math.max(1, Math.ceil(total / 12))
+
+  async function loadProducts(next?: { page?: number; search?: string; category?: string }) {
+    const targetPage = next?.page ?? page
+    const targetSearch = next?.search ?? search
+    const targetCategory = next?.category ?? categoryFilter
+    const params = new URLSearchParams({ limit: '12', page: String(targetPage) })
+    if (targetSearch.trim()) params.set('q', targetSearch.trim())
+    if (targetCategory) params.set('category', targetCategory)
+    const prodRes = await fetch(`/api/admin/products?${params.toString()}`, { cache: 'no-store' })
+    const prodData = await prodRes.json().catch(() => ({}))
+    setProducts(prodData?.products || [])
+    setTotal(prodData?.total || 0)
+    setPage(prodData?.page || targetPage)
+  }
 
   // Load Initial Data
   useEffect(() => {
     async function init() {
       try {
-        const [prodRes, catRes, optionRes] = await Promise.all([
-          fetch('/api/admin/products', { cache: 'no-store' }),
+        const [catRes, optionRes] = await Promise.all([
           fetch('/api/categories', { cache: 'no-store' }),
           fetch('/api/admin/product-options', { cache: 'no-store' }),
         ])
-        const prodData = await prodRes.json()
         const catData = await catRes.json()
         const optionData = await optionRes.json().catch(() => ({}))
-        setProducts(prodData?.products || [])
         setCategories(catData?.categories || [])
         setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
+        await loadProducts({ page: 1, search: '', category: '' })
       } finally {
         setLoading(false)
       }
@@ -243,7 +284,6 @@ export default function AdminProductsPage() {
       inventoryCount: form.inventoryCount ? Number(form.inventoryCount) : null,
       discountType: form.discountType || null,
       discountValue: form.discountValue ? Number(form.discountValue) : null,
-      compareAt: form.compareAt ? Number(form.compareAt) : null,
       badge: form.badge.trim() || null,
       materials: normalizeTextList(form.materials),
       finishes: normalizeTextList(form.finishes),
@@ -256,6 +296,8 @@ export default function AdminProductsPage() {
         price: v.price ? Number(v.price) : undefined,
         stockCount: v.stockCount ? Number(v.stockCount) : undefined,
         color: v.color?.trim() || undefined,
+        materials: (v.materials || []).filter(Boolean),
+        finishes: (v.finishes || []).filter(Boolean),
         specifications: (v.specifications || []).filter(Boolean),
       })),
     }
@@ -299,9 +341,7 @@ export default function AdminProductsPage() {
       setEditingId(null)
       setBaselinePayload(null)
       // Reload products
-      const prodRes = await fetch('/api/admin/products', { cache: 'no-store' })
-      const prodData = await prodRes.json()
-      setProducts(prodData?.products || [])
+      await loadProducts({ page, search, category: categoryFilter })
       const optionRes = await fetch('/api/admin/product-options', { cache: 'no-store' })
       const optionData = await optionRes.json().catch(() => ({}))
       setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
@@ -323,7 +363,6 @@ export default function AdminProductsPage() {
       stockStatus: p.stockStatus || 'in_stock',
       discountType: p.discountType || '',
       discountValue: p.discountValue ? String(p.discountValue) : '',
-      compareAt: p.compareAt ? String(p.compareAt) : '',
       badge: p.badge || '',
       materials: p.materials?.join(', ') || '',
       finishes: p.finishes?.join(', ') || '',
@@ -335,6 +374,8 @@ export default function AdminProductsPage() {
         ...variant,
         price: variant.price ? String(variant.price) : '',
         stockCount: variant.stockCount ? String(variant.stockCount) : '',
+        materials: variant.materials || [],
+        finishes: variant.finishes || [],
         specifications: variant.specifications || [],
       }))
     setImages(nextImages)
@@ -350,7 +391,6 @@ export default function AdminProductsPage() {
       stockStatus: p.stockStatus || 'in_stock',
       discountType: p.discountType || null,
       discountValue: p.discountValue ?? null,
-      compareAt: p.compareAt ?? null,
       badge: p.badge || null,
       materials: p.materials || [],
       finishes: p.finishes || [],
@@ -363,6 +403,8 @@ export default function AdminProductsPage() {
         price: variant.price ? Number(variant.price) : undefined,
         stockCount: variant.stockCount ? Number(variant.stockCount) : undefined,
         color: variant.color || undefined,
+        materials: variant.materials || [],
+        finishes: variant.finishes || [],
         specifications: variant.specifications || [],
       })),
     })
@@ -398,10 +440,128 @@ export default function AdminProductsPage() {
     updateVariant(id, { specifications })
   }
 
+  function updateVariantTextList(id: string, key: 'materials' | 'finishes', value: string) {
+    updateVariant(
+      id,
+      {
+        [key]: value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      } as Partial<Variant>
+    )
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Permanently remove this piece from the catalog?')) return
     await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
     setProducts(prev => prev.filter(p => p.id !== id))
+  }
+
+  function openVariantQuickUpdate(product: Product, variant: Variant) {
+    setVariantQuickUpdate({
+      productId: product.id,
+      variantId: variant.id,
+      productName: product.name,
+      name: variant.name,
+      price: variant.price || '',
+      stockCount: variant.stockCount || '',
+      stockStatus: variant.stockStatus || 'in_stock',
+    })
+  }
+
+  async function saveVariantQuickUpdate() {
+    if (!variantQuickUpdate) return
+    setQuickSaving(true)
+    setError('')
+    const product = products.find((entry) => entry.id === variantQuickUpdate.productId)
+    if (!product) {
+      setError('Parent product not found for this variant.')
+      setQuickSaving(false)
+      return
+    }
+
+    const nextVariants = (product.variants || []).map((variant) =>
+      variant.id === variantQuickUpdate.variantId
+        ? {
+            ...variant,
+            price: variantQuickUpdate.price ? Number(variantQuickUpdate.price) : undefined,
+            stockCount: variantQuickUpdate.stockCount ? Number(variantQuickUpdate.stockCount) : undefined,
+            stockStatus: variantQuickUpdate.stockStatus,
+          }
+        : variant
+    )
+
+    const res = await fetch(`/api/admin/products/${variantQuickUpdate.productId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variants: nextVariants }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(data?.message || 'Unable to update this variant quickly.')
+      setQuickSaving(false)
+      return
+    }
+
+    setProducts((current) =>
+      current.map((entry) =>
+        entry.id === variantQuickUpdate.productId
+          ? { ...entry, variants: nextVariants as Variant[] }
+          : entry
+      )
+    )
+    setVariants((current) =>
+      current.map((variant) =>
+        variant.id === variantQuickUpdate.variantId
+          ? {
+              ...variant,
+              price: variantQuickUpdate.price,
+              stockCount: variantQuickUpdate.stockCount,
+              stockStatus: variantQuickUpdate.stockStatus,
+            }
+          : variant
+      )
+    )
+    setVariantQuickUpdate(null)
+    setQuickSaving(false)
+  }
+
+  function openQuickUpdate(product: Product) {
+    setQuickUpdate({
+      id: product.id,
+      name: product.name,
+      price: String(product.price ?? ''),
+      inventoryCount: String(product.inventoryCount ?? ''),
+      discountType: product.discountType || '',
+      discountValue: product.discountValue ? String(product.discountValue) : '',
+    })
+  }
+
+  async function saveQuickUpdate() {
+    if (!quickUpdate) return
+    setQuickSaving(true)
+    setError('')
+    const payload = {
+      price: Number(quickUpdate.price) || 0,
+      inventoryCount: quickUpdate.inventoryCount ? Number(quickUpdate.inventoryCount) : null,
+      discountType: quickUpdate.discountType || null,
+      discountValue: quickUpdate.discountValue ? Number(quickUpdate.discountValue) : null,
+    }
+    const res = await fetch(`/api/admin/products/${quickUpdate.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(data?.message || 'Unable to update this product quickly.')
+      setQuickSaving(false)
+      return
+    }
+    setQuickUpdate(null)
+    await loadProducts({ page, search, category: categoryFilter })
+    setQuickSaving(false)
   }
 
   if (loading) {
@@ -425,12 +585,38 @@ export default function AdminProductsPage() {
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,460px)]">
          {/* Catalog Feed */}
          <div className="space-y-6">
-            <div className="flex flex-col gap-3 border-b border-[#E6D9C8] pb-4 sm:flex-row sm:items-center sm:justify-between">
-               <h2 className="font-display text-xl text-[#2B2119]">Active Portfolio</h2>
-               <p className="max-w-xl text-xs text-[#8C7A6B]">Long names, descriptions, discount states, and variant counts now stay readable instead of crushing the card layout.</p>
+            <div className="flex flex-col gap-4 border-b border-[#E6D9C8] pb-4">
+               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="font-display text-xl text-[#2B2119]">Active Portfolio</h2>
+                  <p className="max-w-xl text-xs text-[#8C7A6B]">Long names, descriptions, discount states, and variant counts now stay readable instead of crushing the card layout.</p>
+               </div>
+               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                  <div className="flex flex-1 items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-4 py-3">
+                     <input
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            loadProducts({ page: 1, search: e.currentTarget.value, category: categoryFilter })
+                          }
+                        }}
+                        placeholder="Search by product name or slug"
+                        className="w-full bg-transparent text-sm outline-none"
+                     />
+                     <button type="button" onClick={() => loadProducts({ page: 1, search, category: categoryFilter })} className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Search</button>
+                  </div>
+                  <div className="flex gap-2">
+                     <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); loadProducts({ page: 1, search, category: e.target.value }) }} className="h-11 rounded-full border border-[#E6D9C8] bg-white px-4 text-sm outline-none">
+                        <option value="">All categories</option>
+                        {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
+                     </select>
+                     <button type="button" onClick={() => { setSearch(''); setCategoryFilter(''); loadProducts({ page: 1, search: '', category: '' }) }} className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Reset</button>
+                  </div>
+               </div>
             </div>
 
-            <div className="grid gap-5 pr-1 sm:pr-0 2xl:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-2">
                <AnimatePresence mode="popLayout">
                   {products.map((p) => (
                      <motion.div 
@@ -439,7 +625,7 @@ export default function AdminProductsPage() {
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
-                        className="group relative overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-5 pr-6 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
+                        className="group relative mx-auto w-full max-w-full overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-5 transition-all hover:shadow-xl hover:shadow-[#C5A070]/5"
                      >
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                            <div className="flex items-start gap-4 lg:w-full">
@@ -458,8 +644,8 @@ export default function AdminProductsPage() {
                                  </div>
                                  <div className="text-left sm:text-right">
                                     <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney(p.price)}</p>
-                                    {p.compareAt && p.compareAt > p.price ? (
-                                      <p className="text-xs text-[#8C7A6B] line-through">{formatMoney(p.compareAt)}</p>
+                                    {p.discountType && p.discountValue ? (
+                                      <p className="text-xs text-[#8C7A6B]">Selling at {formatMoney(p.discountType === 'percentage' ? Math.max(p.price - (p.price * p.discountValue) / 100, 0) : Math.max(p.price - p.discountValue, 0))}</p>
                                     ) : null}
                                  </div>
                               </div>
@@ -499,6 +685,12 @@ export default function AdminProductsPage() {
                               </div>
                               <div className="flex gap-2">
                                  <button 
+                                    onClick={() => openQuickUpdate(p)}
+                                    className="rounded-full border border-[#C5A070] px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#F8F1E8]"
+                                 >
+                                    Quick Update
+                                 </button>
+                                 <button 
                                     onClick={() => beginEdit(p)}
                                     className="flex-1 rounded-full border border-[#E6D9C8] py-2 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-[#F4EEE4]"
                                  >
@@ -516,6 +708,11 @@ export default function AdminProductsPage() {
                      </motion.div>
                   ))}
                </AnimatePresence>
+            </div>
+            <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+               <button type="button" onClick={() => loadProducts({ page: Math.max(1, page - 1), search, category: categoryFilter })} disabled={page <= 1} className="rounded-full border border-[#E6D9C8] px-4 py-2 disabled:opacity-40">Prev</button>
+               <span>Page {page} / {totalPages}</span>
+               <button type="button" onClick={() => loadProducts({ page: Math.min(totalPages, page + 1), search, category: categoryFilter })} disabled={page >= totalPages} className="rounded-full border border-[#E6D9C8] px-4 py-2 disabled:opacity-40">Next</button>
             </div>
          </div>
 
@@ -588,7 +785,7 @@ export default function AdminProductsPage() {
                         <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount & Pricing</p>
                         {editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Pricing</button> : null}
                      </div>
-                     <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>
                            <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Type</label>
                            <select value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none"><option value="">None</option><option value="percentage">Percentage</option><option value="fixed">Fixed amount</option></select>
@@ -597,17 +794,10 @@ export default function AdminProductsPage() {
                            <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Value</label>
                            <input type="number" value={form.discountValue} onChange={(e) => setForm({ ...form, discountValue: e.target.value })} placeholder={form.discountType === 'percentage' ? '10' : '5000'} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                         </div>
-                        <div>
-                           <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Compare At</label>
-                           <input type="number" value={form.compareAt} onChange={(e) => setForm({ ...form, compareAt: e.target.value })} placeholder="Original price" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
-                        </div>
                      </div>
                      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Live Selling Price</span>
                         <span className="font-bold text-[#7C4E2F]">{formatMoney(finalPreviewPrice)}</span>
-                        {Number(form.compareAt) > finalPreviewPrice ? (
-                          <span className="text-xs text-[#8C7A6B] line-through">{formatMoney(Number(form.compareAt))}</span>
-                        ) : null}
                      </div>
                   </div>
 
@@ -660,7 +850,80 @@ export default function AdminProductsPage() {
                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variants</p><p className="mt-1 text-xs text-[#8C7A6B]">Use variants when a product has selectable options like colorways, finishes, or special pricing.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setVariants((current) => [...current, createVariant()])} className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Variant</button>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Variants</button> : null}</div></div>
                      <div className="mt-4 space-y-4">
                         {variants.length === 0 ? <div className="rounded-2xl border border-dashed border-[#DCCBB7] bg-white/70 p-4 text-sm text-[#8C7A6B]">No variants yet. If the piece has only one standard option, variants are not required.</div> : null}
-                        {variants.map((variant, index) => (<div key={variant.id} className="rounded-[28px] border border-[#E6D9C8] bg-white p-4 sm:p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Variant {index + 1}</p><button type="button" onClick={() => setVariants((current) => current.filter((entry) => entry.id !== variant.id))} className="text-[10px] font-bold uppercase tracking-widest text-red-500">Remove</button></div><div className="mt-4 grid gap-4 sm:grid-cols-2"><input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Variant price" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /><input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Variant stock" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /></div><div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]"><select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none"><option value="in_stock">In stock</option><option value="low_stock">Low stock</option><option value="out_of_stock">Out of stock</option><option value="preorder">Preorder</option></select><div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2"><input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" /><input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" /></div></div><div className="mt-4"><label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Specifications</label><input value={(variant.specifications || []).join(', ')} onChange={(e) => updateVariantSpec(variant.id, e.target.value)} placeholder="Walnut finish, boucle upholstery" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" /></div></div>))}
+                        {variants.map((variant, index) => (
+                          <div key={variant.id} className="rounded-[28px] border border-[#E6D9C8] bg-white p-4 sm:p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Variant {index + 1}</p>
+                              <div className="flex flex-wrap items-center gap-3">
+                                {editingId ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openVariantQuickUpdate(
+                                        {
+                                          id: editingId,
+                                          name: form.name,
+                                          price: Number(form.price) || 0,
+                                          category: form.category,
+                                          variants,
+                                        } as Product,
+                                        variant
+                                      )
+                                    }
+                                    className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]"
+                                  >
+                                    Quick Update
+                                  </button>
+                                ) : null}
+                                <button type="button" onClick={() => setVariants((current) => current.filter((entry) => entry.id !== variant.id))} className="text-[10px] font-bold uppercase tracking-widest text-red-500">Remove</button>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                              <input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              <input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              <input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Variant price" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              <input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Variant stock" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                            </div>
+
+                            <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
+                              <select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none">
+                                <option value="in_stock">In stock</option>
+                                <option value="low_stock">Low stock</option>
+                                <option value="out_of_stock">Out of stock</option>
+                                <option value="preorder">Preorder</option>
+                              </select>
+                              <div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2">
+                                <input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
+                                <input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" />
+                              </div>
+                            </div>
+
+                            <div className="mt-4 rounded-2xl border border-[#E6D9C8] p-3">
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
+                              <div className="mt-3 flex items-center gap-3">
+                                {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={variant.image.url} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
+                                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>+</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                              <div>
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Materials</label>
+                                <input value={(variant.materials || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'materials', e.target.value)} placeholder="Oak, boucle, linen" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              </div>
+                              <div>
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Finishes</label>
+                                <input value={(variant.finishes || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'finishes', e.target.value)} placeholder="Oiled, matte, brushed" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              </div>
+                            </div>
+
+                            <div className="mt-4">
+                              <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Specifications</label>
+                              <input value={(variant.specifications || []).join(', ')} onChange={(e) => updateVariantSpec(variant.id, e.target.value)} placeholder="Deep seat, brass feet, soft-close drawers" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                            </div>
+                          </div>
+                        ))}
                      </div>
                   </div>
 
@@ -736,6 +999,135 @@ export default function AdminProductsPage() {
             </div>
          </div>
       </div>
+
+      <AnimatePresence>
+         {quickUpdate ? (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+               <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-[#2B2119]/55 backdrop-blur-sm"
+                  onClick={() => !quickSaving && setQuickUpdate(null)}
+               />
+               <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                  className="relative w-full max-w-xl rounded-[36px] border border-[#E6D9C8] bg-white p-6 shadow-2xl sm:p-8"
+               >
+                  <div className="flex items-start justify-between gap-4">
+                     <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Quick Update</p>
+                        <h3 className="mt-1 font-display text-2xl text-[#2B2119]">{quickUpdate.name}</h3>
+                        <p className="mt-2 text-xs text-[#6B594A]">Update stock and discount without opening the full refine form.</p>
+                     </div>
+                     <button type="button" onClick={() => setQuickUpdate(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Close</button>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Base Price</label>
+                        <input type="number" value={quickUpdate.price} onChange={(e) => setQuickUpdate({ ...quickUpdate, price: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Inventory</label>
+                        <input type="number" value={quickUpdate.inventoryCount} onChange={(e) => setQuickUpdate({ ...quickUpdate, inventoryCount: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Type</label>
+                        <select value={quickUpdate.discountType} onChange={(e) => setQuickUpdate({ ...quickUpdate, discountType: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none">
+                           <option value="">None</option>
+                           <option value="percentage">Percentage</option>
+                           <option value="fixed">Fixed amount</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Value</label>
+                        <input type="number" value={quickUpdate.discountValue} onChange={(e) => setQuickUpdate({ ...quickUpdate, discountValue: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                  </div>
+
+                  <div className="mt-6 rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3 text-sm">
+                     <span className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Selling Price</span>
+                     <p className="mt-2 text-lg font-bold text-[#7C4E2F]">
+                        {formatMoney(
+                          quickUpdate.discountType === 'percentage'
+                            ? Math.max((Number(quickUpdate.price) || 0) - ((Number(quickUpdate.price) || 0) * (Number(quickUpdate.discountValue) || 0)) / 100, 0)
+                            : quickUpdate.discountType === 'fixed'
+                              ? Math.max((Number(quickUpdate.price) || 0) - (Number(quickUpdate.discountValue) || 0), 0)
+                              : Number(quickUpdate.price) || 0
+                        )}
+                     </p>
+                  </div>
+
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                     <button type="button" onClick={() => setQuickUpdate(null)} className="rounded-full border border-[#E6D9C8] px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Cancel</button>
+                     <button type="button" disabled={quickSaving} onClick={saveQuickUpdate} className="rounded-full bg-[#2B2119] px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-white disabled:opacity-50">
+                        {quickSaving ? 'Saving...' : 'Save Update'}
+                     </button>
+                  </div>
+               </motion.div>
+            </div>
+         ) : null}
+      </AnimatePresence>
+
+      <AnimatePresence>
+         {variantQuickUpdate ? (
+            <div className="fixed inset-0 z-[75] flex items-center justify-center p-4 sm:p-6">
+               <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-[#2B2119]/55 backdrop-blur-sm"
+                  onClick={() => !quickSaving && setVariantQuickUpdate(null)}
+               />
+               <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                  className="relative w-full max-w-lg rounded-[36px] border border-[#E6D9C8] bg-white p-6 shadow-2xl sm:p-8"
+               >
+                  <div className="flex items-start justify-between gap-4">
+                     <div>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Quick Update</p>
+                        <h3 className="mt-1 font-display text-2xl text-[#2B2119]">{variantQuickUpdate.name}</h3>
+                        <p className="mt-2 text-xs text-[#6B594A]">{variantQuickUpdate.productName}</p>
+                     </div>
+                     <button type="button" onClick={() => setVariantQuickUpdate(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Close</button>
+                  </div>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Price</label>
+                        <input type="number" value={variantQuickUpdate.price} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, price: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Stock Count</label>
+                        <input type="number" value={variantQuickUpdate.stockCount} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, stockCount: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                  </div>
+
+                  <div className="mt-4">
+                     <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Stock Status</label>
+                     <select value={variantQuickUpdate.stockStatus} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, stockStatus: e.target.value as VariantQuickUpdateState['stockStatus'] })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none">
+                        <option value="in_stock">In stock</option>
+                        <option value="low_stock">Low stock</option>
+                        <option value="out_of_stock">Out of stock</option>
+                        <option value="preorder">Preorder</option>
+                     </select>
+                  </div>
+
+                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                     <button type="button" onClick={() => setVariantQuickUpdate(null)} className="rounded-full border border-[#E6D9C8] px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Cancel</button>
+                     <button type="button" disabled={quickSaving} onClick={saveVariantQuickUpdate} className="rounded-full bg-[#2B2119] px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-white disabled:opacity-50">
+                        {quickSaving ? 'Saving...' : 'Save Variant'}
+                     </button>
+                  </div>
+               </motion.div>
+            </div>
+         ) : null}
+      </AnimatePresence>
     </div>
   )
 }

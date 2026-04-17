@@ -48,6 +48,8 @@ export type ProductVariant = {
   stockCount?: number
   color?: string
   image?: ProductImage | null
+  materials?: string[]
+  finishes?: string[]
   specifications?: string[]
 }
 
@@ -63,6 +65,9 @@ export type Review = {
 
 export type CartItem = {
   productId: string
+  variantId?: string
+  variantName?: string
+  color?: string
   quantity: number
   saved?: boolean
 }

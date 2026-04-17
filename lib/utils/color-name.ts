@@ -50,3 +50,29 @@ export function getColorName(hex?: string | null) {
 
   return closest.name
 }
+
+const COLOR_FAMILY_SWATCHES: Record<string, string> = {
+  White: '#f5f1e8',
+  Beige: '#d8c7b3',
+  Brown: '#8b6a4e',
+  Green: '#6f7f61',
+  Blue: '#6f8fa8',
+  Gray: '#8e8e8e',
+  Black: '#1f1f1f',
+}
+
+export function getColorFamily(hex?: string | null) {
+  const name = getColorName(hex)
+  if (['White', 'Ivory', 'Cream'].includes(name)) return 'White'
+  if (['Sand', 'Beige', 'Taupe'].includes(name)) return 'Beige'
+  if (['Mocha', 'Walnut', 'Brown', 'Terracotta'].includes(name)) return 'Brown'
+  if (['Olive', 'Green'].includes(name)) return 'Green'
+  if (['Blue'].includes(name)) return 'Blue'
+  if (['Gray'].includes(name)) return 'Gray'
+  if (['Black', 'Charcoal'].includes(name)) return 'Black'
+  return name
+}
+
+export function getColorFamilySwatch(family: string) {
+  return COLOR_FAMILY_SWATCHES[family] || '#d8c7b3'
+}

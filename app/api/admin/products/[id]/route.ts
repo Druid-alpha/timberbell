@@ -58,13 +58,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     )
   }
 
-  const result = await db.collection('products').findOneAndUpdate(
-    getQuery(id),
-    { $set: { ...body, updatedAt: new Date() } },
-    { returnDocument: 'after' }
-  )
-
-  const value = result?.value
+  await db.collection('products').updateOne(getQuery(id), { $set: { ...body, updatedAt: new Date() } })
+  const value = await db.collection('products').findOne(getQuery(id))
   if (!value) {
     return Response.json({ message: 'Product not found' }, { status: 404 })
   }

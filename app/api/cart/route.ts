@@ -47,8 +47,12 @@ export async function GET(request: NextRequest) {
     if (!product) {
       return { ...item, product: null }
     }
+    const selectedVariant = Array.isArray(product.variants)
+      ? product.variants.find((variant: any) => variant.id === item.variantId)
+      : null
+    const basePrice = typeof selectedVariant?.price === 'number' ? selectedVariant.price : product.price
     const finalPrice = computeFinalPrice({
-      price: product.price,
+      price: basePrice,
       discountType: product.discountType,
       discountValue: product.discountValue,
       saleDiscount: product.saleDiscount,
@@ -57,7 +61,13 @@ export async function GET(request: NextRequest) {
     })
     return {
       ...item,
-      product: { ...product, finalPrice },
+      product: {
+        ...product,
+        finalPrice,
+        inventoryCount: selectedVariant?.stockCount ?? product.inventoryCount,
+        stockStatus: selectedVariant?.stockStatus ?? product.stockStatus,
+      },
+      selectedVariant,
     }
   })
 
@@ -79,6 +89,9 @@ export async function POST(request: NextRequest) {
 
   const cart = await addCartItemForUser(user.id, {
     productId: body.productId,
+    variantId: body.variantId ? String(body.variantId) : undefined,
+    variantName: body.variantName ? String(body.variantName) : undefined,
+    color: body.color ? String(body.color) : undefined,
     quantity: body.quantity,
   })
 

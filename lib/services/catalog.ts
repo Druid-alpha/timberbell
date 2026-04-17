@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
 import type { Category, Product, Review } from '@/types/catalog'
 import { computeFinalPrice } from '@/lib/utils/pricing'
+import { getColorFamily } from '@/lib/utils/color-name'
 
 const fallbackPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
 
@@ -61,6 +62,41 @@ const normalizeReview = (doc: any): Review => ({
   createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : undefined,
 })
 
+async function attachReviewStats(db: any, rows: any[]) {
+  if (!rows.length) return rows
+
+  const productIds = rows.map((row) => row._id.toString())
+  const stats = await db
+    .collection('reviews')
+    .aggregate([
+      { $match: { productId: { $in: productIds } } },
+      {
+        $group: {
+          _id: '$productId',
+          rating: { $avg: '$rating' },
+          reviewCount: { $sum: 1 },
+        },
+      },
+    ])
+    .toArray()
+
+  const statsMap = new Map(
+    stats.map((entry: any) => [
+      String(entry._id),
+      {
+        rating: Number(entry.rating || 0),
+        reviewCount: Number(entry.reviewCount || 0),
+      },
+    ])
+  )
+
+  return rows.map((row) => {
+    const stat = statsMap.get(row._id.toString()) as { rating: number; reviewCount: number } | undefined
+    if (!stat) return row
+    return { ...row, rating: stat.rating, reviewCount: stat.reviewCount }
+  })
+}
+
 export async function getCategories() {
   const db = await getDb()
   const rows = await db.collection('categories').find({}).sort({ name: 1 }).toArray()
@@ -97,16 +133,12 @@ export async function getProducts(params?: {
     if (typeof params?.maxPrice === 'number') filter.price.$lte = params.maxPrice
   }
 
-  if (params?.colors?.length) {
-    filter.palette = { $in: params.colors }
-  }
-
   if (params?.materials?.length) {
-    filter.materials = { $in: params.materials }
+    filter.$and = [...(filter.$and || []), { $or: [{ materials: { $in: params.materials } }, { 'variants.materials': { $in: params.materials } }] }]
   }
 
   if (params?.finishes?.length) {
-    filter.finishes = { $in: params.finishes }
+    filter.$and = [...(filter.$and || []), { $or: [{ finishes: { $in: params.finishes } }, { 'variants.finishes': { $in: params.finishes } }] }]
   }
 
   let sort: Record<string, 1 | -1> = { createdAt: -1 }
@@ -125,8 +157,19 @@ export async function getProducts(params?: {
       sort = { createdAt: -1 }
   }
 
-  const rows = await db.collection('products').find(filter).sort(sort).toArray()
-  return rows.map(normalizeProduct)
+  let rows = await db.collection('products').find(filter).sort(sort).toArray()
+  if (params?.colors?.length) {
+    rows = rows.filter((row) => {
+      const colorPool = [
+        ...(Array.isArray(row.palette) ? row.palette : []),
+        ...((Array.isArray(row.variants) ? row.variants : []).map((variant: any) => variant?.color).filter(Boolean)),
+      ]
+      const families = new Set(colorPool.map((color: string) => getColorFamily(color)))
+      return params.colors?.some((color) => families.has(color))
+    })
+  }
+  const rowsWithStats = await attachReviewStats(db, rows)
+  return rowsWithStats.map(normalizeProduct)
 }
 
 export async function getFeaturedProducts(limit = 6) {
@@ -137,8 +180,8 @@ export async function getFeaturedProducts(limit = 6) {
     .sort({ rating: -1, createdAt: -1 })
     .limit(limit)
     .toArray()
-
-  return rows.map(normalizeProduct)
+  const rowsWithStats = await attachReviewStats(db, rows)
+  return rowsWithStats.map(normalizeProduct)
 }
 
 export async function getProductByIdOrSlug(idOrSlug: string) {
@@ -149,7 +192,9 @@ export async function getProductByIdOrSlug(idOrSlug: string) {
     : { slug: idOrSlug }
 
   const doc = await db.collection('products').findOne(query)
-  return doc ? normalizeProduct(doc) : null
+  if (!doc) return null
+  const [withStats] = await attachReviewStats(db, [doc])
+  return normalizeProduct(withStats)
 }
 
 export async function getReviews(limit = 3) {
@@ -178,6 +223,6 @@ export async function getRelatedProducts(productId: string, category: string, li
     })
     .limit(limit)
     .toArray()
-
-  return rows.map(normalizeProduct)
+  const rowsWithStats = await attachReviewStats(db, rows)
+  return rowsWithStats.map(normalizeProduct)
 }

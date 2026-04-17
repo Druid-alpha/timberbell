@@ -113,7 +113,7 @@ export default function ProductDetailPage() {
   const handleAddToCart = async () => {
     if (!product) return
     setStatus('Adding to cart...')
-    
+    const selectedVariant = product.variants?.find((v: any) => v.id === activeVariantId) ?? null
     const finalPrice = variantPrice ?? product.finalPrice ?? product.price
     
     const res = await fetch('/api/cart', {
@@ -121,6 +121,9 @@ export default function ProductDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         productId: product.id,
+        variantId: selectedVariant?.id,
+        variantName: selectedVariant?.name ?? null,
+        color: selectedVariant?.color ?? activeColorHex ?? null,
         quantity: quantity,
       }),
     })
@@ -130,10 +133,12 @@ export default function ProductDetailPage() {
       dispatch(
         addItem({
           productId: product.id,
+          variantId: selectedVariant?.id,
           quantity: quantity,
           name: product.name,
           price: finalPrice,
-          variantName: product.variants?.find((v: any) => v.id === activeVariantId)?.name,
+          variantName: selectedVariant?.name,
+          color: selectedVariant?.color ?? activeColorHex,
         })
       )
       toast(`${product.name} added to your bundle`, 'success')
@@ -240,11 +245,16 @@ export default function ProductDetailPage() {
   const images = product.images?.length ? product.images.map((img: any) => img.url) : []
   const fallbackPalette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   const price = variantPrice ?? product.finalPrice ?? product.price
-  const compareAt = product.compareAt ?? (product.finalPrice ? product.price : undefined)
   const selectedVariant = product.variants?.find((variant: any) => variant.id === activeVariantId) ?? null
+  const galleryImages = Array.from(new Set([selectedVariant?.image?.url, ...images].filter(Boolean))) as string[]
   const selectedColorHex = selectedVariant?.color || activeColorHex || fallbackPalette[0]
   const selectedColorName = getColorName(selectedColorHex)
   const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
+  const availableStock = selectedVariant?.stockCount ?? product.inventoryCount ?? 0
+  const selectedSpecifications = selectedVariant?.specifications?.length ? selectedVariant.specifications : []
+  const displayMaterials = selectedVariant?.materials?.length ? selectedVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
+  const displayFinishes = selectedVariant?.finishes?.length ? selectedVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Hand-finished studio treatment'
+  const displayLeadTime = selectedVariant?.stockStatus === 'preorder' ? `Preorder · ${product.leadTime || '2-4 weeks'}` : product.leadTime || '2-4 weeks'
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-16 sm:px-6">
@@ -276,14 +286,14 @@ export default function ProductDetailPage() {
                 }}
               />
             )}
-            {compareAt && compareAt > price && (
-               <div className="absolute left-6 top-6 rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white">
-                Save {Math.round(((compareAt - price) / compareAt) * 100)}%
+            {product.discountType && product.discountValue ? (
+              <div className="absolute left-6 top-6 rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white">
+                {product.discountType === 'percentage' ? `${product.discountValue}% Off` : `${formatMoney(product.discountValue)} Off`}
               </div>
-            )}
+            ) : null}
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {images.map((img: string, i: number) => (
+            {galleryImages.map((img: string, i: number) => (
               <button
                 key={i}
                 onClick={() => setActiveImage(img)}
@@ -312,9 +322,6 @@ export default function ProductDetailPage() {
 
             <div className="flex items-baseline gap-3">
               <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
-              {compareAt && (
-                <span className="text-lg text-[#8C7A6B] line-through">{formatMoney(compareAt)}</span>
-              )}
             </div>
 
             <p className="text-sm leading-relaxed text-[#6B594A]">{product.description}</p>
@@ -330,9 +337,10 @@ export default function ProductDetailPage() {
                       key={v.id}
                       onClick={() => {
                         setActiveVariantId(v.id)
-                        if (v.image?.url) setActiveImage(v.image.url)
-                        if (v.price) setVariantPrice(v.price)
+                        setActiveImage(v.image?.url || product.images?.[0]?.url || '')
+                        setVariantPrice(typeof v.price === 'number' ? v.price : product.finalPrice ?? product.price)
                         setActiveColorHex(v.color || fallbackPalette[0])
+                        setQuantity(1)
                       }}
                       className={`flex items-center gap-2 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.2em] transition-all ${activeVariantId === v.id ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white shadow-md' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                     >
@@ -382,23 +390,29 @@ export default function ProductDetailPage() {
                   <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-[#7C4E2F] transition hover:bg-[#F4EEE4]"
+                    disabled={availableStock > 0 && quantity >= availableStock}
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-[#7C4E2F] transition hover:bg-[#F4EEE4] disabled:opacity-40"
                   >
                     +
                   </button>
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  className="group relative flex-1 overflow-hidden rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98]"
+                  disabled={selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0}
+                  className="group relative flex-1 overflow-hidden rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="relative z-10">Add to bundle</span>
+                  <span className="relative z-10">{selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of stock' : 'Add to bundle'}</span>
                 </button>
               </div>
               
               <div className="flex flex-col gap-3 px-2">
                  <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
-                  <div className={`h-1.5 w-1.5 rounded-full ${(!product.inventoryCount || product.inventoryCount > 5) ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
-                  {(!product.inventoryCount || product.inventoryCount > 5) ? 'In stock and ready to ship' : `Only ${product.inventoryCount} left - items in cart are reserved for 10 min`}
+                  <div className={`h-1.5 w-1.5 rounded-full ${(availableStock > 5 || selectedVariant?.stockStatus === 'preorder') ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
+                  {selectedVariant?.stockStatus === 'preorder'
+                    ? 'Available on preorder'
+                    : availableStock > 5
+                      ? 'In stock and ready to ship'
+                      : `Only ${availableStock} left - items in cart are reserved for 10 min`}
                 </div>
                 
                 {/* Nigeria specific ETAs */}
@@ -415,7 +429,7 @@ export default function ProductDetailPage() {
 
                 <div className="flex items-center justify-between text-[10px] text-[#8C7A6B]">
                   <span>Secure Nigeria logistics available</span>
-                  <span>Lead time: {product.leadTime || '2-4 weeks'}</span>
+                  <span>Lead time: {displayLeadTime}</span>
                 </div>
               </div>
             </div>
@@ -432,15 +446,30 @@ export default function ProductDetailPage() {
             </div>
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Materials</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.materials?.join(', ') || 'Natural wood & organic fabric'}</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayMaterials}</p>
+            </div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Finishes</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayFinishes}</p>
             </div>
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Color</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{selectedColorName}</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">
+                {selectedColorName}
+                {selectedVariant?.name ? <span className="text-[#8C7A6B]"> · {selectedVariant.name}</span> : null}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Stock Quantity</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{availableStock}</p>
             </div>
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Lead Time</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.leadTime || '2-4 weeks'}</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayLeadTime}</p>
+            </div>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Configuration Details</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{selectedSpecifications.length ? selectedSpecifications.join(', ') : 'Standard studio configuration'}</p>
             </div>
           </div>
         </div>
