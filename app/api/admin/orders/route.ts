@@ -53,6 +53,7 @@ export async function PATCH(request: NextRequest) {
     _id: undefined,
   })
 }
+<<<<<<< HEAD
 
 export async function DELETE(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -79,3 +80,5 @@ export async function DELETE(request: NextRequest) {
 
   return Response.json({ ok: true })
 }
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe

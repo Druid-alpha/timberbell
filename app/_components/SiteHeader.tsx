@@ -76,7 +76,10 @@ export default function SiteHeader() {
             imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
             variantId: item.variantId ?? undefined,
             variantName: item.variantName ?? undefined,
+<<<<<<< HEAD
             color: item.color ?? item.selectedVariant?.color ?? undefined,
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
             saved: item.saved ?? false,
           }))
       dispatch(syncCart(items))
@@ -144,6 +147,7 @@ export default function SiteHeader() {
 
       isExpiringReservation.current = true
 
+<<<<<<< HEAD
         const updatedItems = cartItems.map((item) => ({
           productId: item.productId,
           variantId: item.variantId,
@@ -152,6 +156,13 @@ export default function SiteHeader() {
           quantity: item.quantity,
           saved: item.saved ? true : item.quantity > 0,
         }))
+=======
+      const updatedItems = cartItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        saved: item.saved ? true : item.quantity > 0,
+      }))
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
       try {
         const res = await fetch('/api/cart', {
@@ -173,7 +184,10 @@ export default function SiteHeader() {
                 imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
                 variantId: item.variantId ?? undefined,
                 variantName: item.variantName ?? undefined,
+<<<<<<< HEAD
                 color: item.color ?? item.selectedVariant?.color ?? undefined,
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 saved: item.saved ?? false,
               }))
             )

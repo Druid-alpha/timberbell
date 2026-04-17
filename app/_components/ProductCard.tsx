@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 'use client'
 
 import { useMemo, useState } from 'react'
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 import Link from 'next/link'
 import type { Product } from '@/types/catalog'
 import { formatMoney } from '@/lib/utils/format'
@@ -46,7 +49,10 @@ export default function ProductCard({
   variant?: 'grid' | 'list'
 }) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
+<<<<<<< HEAD
   const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null)
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   let price = product.price
 
   if (product.discountValue) {
@@ -63,12 +69,15 @@ export default function ProductCard({
 
   const discountPercent = product.price > price ? Math.round(((product.price - price) / product.price) * 100) : null
   const variants = product.variants ?? []
+<<<<<<< HEAD
   const hoveredVariant = useMemo(
     () => variants.find((entry) => entry.id === hoveredVariantId) ?? null,
     [hoveredVariantId, variants]
   )
   const primaryImage = hoveredVariant?.image?.url || product.images?.[0]?.url
   const secondaryImage = hoveredVariant ? hoveredVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
   if (variant === 'list') {
     return (
@@ -77,8 +86,13 @@ export default function ProductCard({
           href={`/products/${product.id}`}
           className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:w-48"
         >
+<<<<<<< HEAD
           {primaryImage ? (
             <img src={primaryImage} alt={product.name} className="h-full w-full object-cover" />
+=======
+          {product.images?.[0]?.url ? (
+            <img src={product.images[0].url} alt={product.name} className="h-full w-full object-cover" />
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
           ) : (
             <div
               className="absolute inset-0"
@@ -139,6 +153,7 @@ export default function ProductCard({
   return (
     <article className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
       <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
+<<<<<<< HEAD
         {primaryImage ? (
           <>
             <img
@@ -149,6 +164,18 @@ export default function ProductCard({
             {secondaryImage && secondaryImage !== primaryImage && (
               <img
                 src={secondaryImage}
+=======
+        {product.images?.[0]?.url ? (
+          <>
+            <img
+              src={product.images[0].url}
+              alt={product.name}
+              className={`h-full w-full object-cover transition duration-700 ${product.images.length > 1 ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
+            />
+            {product.images.length > 1 && (
+              <img
+                src={product.images[1].url}
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 alt={product.name}
                 className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:opacity-100 group-hover:scale-105"
               />
@@ -194,8 +221,11 @@ export default function ProductCard({
             {variants.slice(0, 4).map((variant) => (
               <div
                 key={variant.id}
+<<<<<<< HEAD
                 onMouseEnter={() => setHoveredVariantId(variant.id)}
                 onMouseLeave={() => setHoveredVariantId(null)}
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                 className="flex items-center gap-1.5 rounded-full border border-[#E6D9C8] bg-white px-2 py-1 text-[9px] uppercase tracking-[0.25em] text-[#6B594A]"
               >
                 <span

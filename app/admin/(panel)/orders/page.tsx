@@ -6,7 +6,10 @@ import { formatMoney } from '@/lib/utils/format'
 
 type OrderItem = {
   productId: string
+<<<<<<< HEAD
   variantName?: string | null
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   quantity: number
   price?: number
   name?: string
@@ -30,7 +33,11 @@ type Order = {
   items: OrderItem[]
 }
 
+<<<<<<< HEAD
 const statusOptions = ['pending_payment', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'payment_failed']
+=======
+const statusOptions = ['pending_payment', 'pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'payment_failed']
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
 
 const statusColors: Record<string, string> = {
   pending_payment: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -58,10 +65,13 @@ export default function AdminOrdersPage() {
 
   useEffect(() => { loadOrders() }, [])
 
+<<<<<<< HEAD
   function downloadOrderDocument(id: string, document: 'receipt' | 'invoice') {
     window.open(`/api/orders/${id}/receipt?document=${document}`, '_blank', 'noopener,noreferrer')
   }
 
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
   async function updateStatus(id: string, status: string) {
     await fetch('/api/admin/orders', {
       method: 'PATCH',
@@ -71,6 +81,7 @@ export default function AdminOrdersPage() {
     loadOrders()
   }
 
+<<<<<<< HEAD
   async function deleteOrder(id: string) {
     if (!confirm('Delete this order from fulfillment history?')) return
     await fetch('/api/admin/orders', {
@@ -85,6 +96,10 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     if (filter === 'all') return orders
     if (filter === 'paid') return orders.filter(o => o.status === 'paid' || o.paymentStatus === 'paid')
+=======
+  const filteredOrders = useMemo(() => {
+    if (filter === 'all') return orders
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
     return orders.filter(o => o.status === filter)
   }, [orders, filter])
 
@@ -134,7 +149,11 @@ export default function AdminOrdersPage() {
                      <div className="flex items-center justify-between gap-4">
                         <div className="space-y-2">
                            <select
+<<<<<<< HEAD
                               value={o.status === 'paid' ? 'processing' : o.status}
+=======
+                              value={o.status}
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                               onChange={(e) => updateStatus(o.id, e.target.value)}
                               className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
                            >
@@ -189,7 +208,11 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="px-8 py-6">
                            <select 
+<<<<<<< HEAD
                               value={o.status === 'paid' ? 'processing' : o.status}
+=======
+                              value={o.status}
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                               onChange={(e) => updateStatus(o.id, e.target.value)}
                               className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
                            >
@@ -198,11 +221,17 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="px-8 py-6">
                            <div className="space-y-1">
+<<<<<<< HEAD
                               <input
                                  disabled
                                  value={String(o.paymentStatus || 'unpaid').replace('_', ' ')}
                                  className="h-9 w-full rounded-full border border-[#E6D9C8] bg-[#F8F4EE] px-3 text-[10px] font-bold uppercase tracking-widest text-[#2B2119]"
                               />
+=======
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">
+                                 {String(o.paymentStatus || 'unpaid').replace('_', ' ')}
+                              </p>
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                               <p className="text-[10px] text-[#8C7A6B]">{o.paymentProvider || 'paystack'}</p>
                            </div>
                         </td>
@@ -210,6 +239,7 @@ export default function AdminOrdersPage() {
                            {formatMoney(o.total)}
                         </td>
                         <td className="px-8 py-6">
+<<<<<<< HEAD
                            <div className="flex items-center gap-2">
                               <button 
                                  onClick={() => setSelected(o)}
@@ -224,6 +254,14 @@ export default function AdminOrdersPage() {
                                  Delete
                               </button>
                            </div>
+=======
+                           <button 
+                              onClick={() => setSelected(o)}
+                              className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-[#F4EEE4]"
+                           >
+                              Details
+                           </button>
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                         </td>
                      </motion.tr>
                   ))}
@@ -276,7 +314,10 @@ export default function AdminOrdersPage() {
                                  </div>
                                  <div className="flex-1">
                                     <h4 className="text-sm font-bold text-[#2B2119]">{item.name || 'Bespoke Piece'}</h4>
+<<<<<<< HEAD
                                     {item.variantName ? <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">{item.variantName}</p> : null}
+=======
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                                     <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Quantity: {item.quantity}</p>
                                  </div>
                                  <div className="text-right">
@@ -339,9 +380,14 @@ export default function AdminOrdersPage() {
                         </div>
 
                         <div className="mt-12 space-y-3">
+<<<<<<< HEAD
                            <button onClick={() => deleteOrder(selected.id)} className="w-full rounded-2xl border border-red-100 py-3 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50">Delete Order</button>
                            <button onClick={() => downloadOrderDocument(selected.id, 'receipt')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Export Receipt</button>
                            <button onClick={() => downloadOrderDocument(selected.id, 'invoice')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Generate Invoice</button>
+=======
+                           <button className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Export Receipt</button>
+                           <button className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Generate Invoice</button>
+>>>>>>> e7cd282d2482ffba0f0273ec98994b171c5c5efe
                         </div>
                      </div>
                   </div>
