@@ -46,11 +46,16 @@ export default function ProductDetailPage() {
   const computeDisplayPrice = (basePrice?: number | null) => {
     const priceValue = Number(basePrice || 0)
     if (!priceValue) return 0
-    if (product?.discountType === 'percentage' && product?.discountValue) {
-      return Math.max(priceValue - (priceValue * Number(product.discountValue || 0)) / 100, 0)
+    const selectedVariant = product?.variants?.find((v: any) => v.id === activeVariantId) ?? null
+    const activeDiscountType =
+      selectionMode === 'variant' ? selectedVariant?.discountType || product?.discountType : product?.discountType
+    const activeDiscountValue =
+      selectionMode === 'variant' ? selectedVariant?.discountValue ?? product?.discountValue : product?.discountValue
+    if (activeDiscountType === 'percentage' && activeDiscountValue) {
+      return Math.max(priceValue - (priceValue * Number(activeDiscountValue || 0)) / 100, 0)
     }
-    if (product?.discountType === 'fixed' && product?.discountValue) {
-      return Math.max(priceValue - Number(product.discountValue || 0), 0)
+    if (activeDiscountType === 'fixed' && activeDiscountValue) {
+      return Math.max(priceValue - Number(activeDiscountValue || 0), 0)
     }
     return priceValue
   }
@@ -263,6 +268,8 @@ export default function ProductDetailPage() {
   const galleryImages = Array.from(new Set([displayVariant?.image?.url, ...images].filter(Boolean))) as string[]
   const variantBasePrice = displayVariant?.price ?? product.price
   const variantDisplayPrice = computeDisplayPrice(variantBasePrice)
+  const activeDiscountType = displayVariant?.discountType || product.discountType
+  const activeDiscountValue = displayVariant?.discountValue ?? product.discountValue
   const selectedColorHex = displayVariant?.color || activeColorHex || fallbackPalette[0]
   const selectedColorName = getColorName(selectedColorHex)
   const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
@@ -303,9 +310,9 @@ export default function ProductDetailPage() {
                 }}
               />
             )}
-            {product.discountType && product.discountValue ? (
+            {activeDiscountType && activeDiscountValue ? (
               <div className="absolute left-6 top-6 rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white">
-                {product.discountType === 'percentage' ? `${product.discountValue}% Off` : `${formatMoney(product.discountValue)} Off`}
+                {activeDiscountType === 'percentage' ? `${activeDiscountValue}% Off` : `${formatMoney(activeDiscountValue)} Off`}
               </div>
             ) : null}
           </div>

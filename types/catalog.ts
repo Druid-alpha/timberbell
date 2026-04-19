@@ -44,6 +44,8 @@ export type ProductVariant = {
   name: string
   sku?: string
   price?: number
+  discountType?: 'percentage' | 'fixed'
+  discountValue?: number
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
   stockCount?: number
   color?: string

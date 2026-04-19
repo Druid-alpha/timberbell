@@ -117,13 +117,29 @@ export async function getProducts(params?: {
   const filter: Record<string, any> = {}
 
   if (params?.category) {
-    filter.category = params.category
+    const categoryRows = await db
+      .collection('categories')
+      .find({
+        $or: [
+          { slug: params.category },
+          { name: { $regex: `^${params.category}$`, $options: 'i' } },
+        ],
+      })
+      .toArray()
+    const categoryNames = Array.from(new Set(categoryRows.map((row: any) => row.name).filter(Boolean)))
+    filter.category = categoryNames.length
+      ? { $in: [params.category, ...categoryNames] }
+      : params.category
   }
 
   if (params?.query) {
     filter.$or = [
       { name: { $regex: params.query, $options: 'i' } },
       { description: { $regex: params.query, $options: 'i' } },
+      { slug: { $regex: params.query, $options: 'i' } },
+      { 'variants.name': { $regex: params.query, $options: 'i' } },
+      { 'variants.sku': { $regex: params.query, $options: 'i' } },
+      { 'variants.color': { $regex: params.query, $options: 'i' } },
     ]
   }
 

@@ -14,6 +14,8 @@ type Variant = {
   name: string
   sku?: string
   price?: string
+  discountType?: string
+  discountValue?: string
   stockCount?: string
   stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
   color?: string
@@ -60,7 +62,11 @@ type VariantQuickUpdateState = {
   variantId: string
   productName: string
   name: string
+  sku: string
+  color: string
   price: string
+  discountType: string
+  discountValue: string
   stockCount: string
   stockStatus: NonNullable<Variant['stockStatus']>
 }
@@ -104,6 +110,8 @@ type ProductPayload = {
     name: string
     sku?: string
     price?: number
+    discountType?: string
+    discountValue?: number
     stockCount?: number
     stockStatus?: Variant['stockStatus']
     color?: string
@@ -167,6 +175,8 @@ function createVariant(): Variant {
     name: '',
     sku: '',
     price: '',
+    discountType: '',
+    discountValue: '',
     stockCount: '',
     stockStatus: 'in_stock',
     color: '#c59a6b',
@@ -308,6 +318,8 @@ export default function AdminProductsPage() {
         ...v,
         sku: v.sku?.trim() || undefined,
         price: v.price ? Number(v.price) : undefined,
+        discountType: v.discountType || undefined,
+        discountValue: v.discountValue ? Number(v.discountValue) : undefined,
         stockCount: v.stockCount ? Number(v.stockCount) : undefined,
         color: v.color?.trim() || undefined,
         image: v.image || null,
@@ -389,6 +401,8 @@ export default function AdminProductsPage() {
     const nextVariants = (p.variants || []).map((variant) => ({
         ...variant,
         price: variant.price ? String(variant.price) : '',
+        discountType: variant.discountType || '',
+        discountValue: variant.discountValue ? String(variant.discountValue) : '',
         stockCount: variant.stockCount ? String(variant.stockCount) : '',
         materials: variant.materials || [],
         finishes: variant.finishes || [],
@@ -418,6 +432,8 @@ export default function AdminProductsPage() {
         ...variant,
         sku: variant.sku || undefined,
         price: variant.price ? Number(variant.price) : undefined,
+        discountType: variant.discountType || undefined,
+        discountValue: variant.discountValue ? Number(variant.discountValue) : undefined,
         stockCount: variant.stockCount ? Number(variant.stockCount) : undefined,
         color: variant.color || undefined,
         materials: variant.materials || [],
@@ -504,7 +520,11 @@ export default function AdminProductsPage() {
       variantId: variant.id,
       productName: product.name,
       name: variant.name,
+      sku: variant.sku || '',
+      color: variant.color || '',
       price: variant.price || '',
+      discountType: variant.discountType || '',
+      discountValue: variant.discountValue || '',
       stockCount: variant.stockCount || '',
       stockStatus: variant.stockStatus || 'in_stock',
     })
@@ -526,8 +546,12 @@ export default function AdminProductsPage() {
         ? {
             ...variant,
             price: variantQuickUpdate.price ? Number(variantQuickUpdate.price) : undefined,
+            discountType: variantQuickUpdate.discountType || undefined,
+            discountValue: variantQuickUpdate.discountValue ? Number(variantQuickUpdate.discountValue) : undefined,
             stockCount: variantQuickUpdate.stockCount ? Number(variantQuickUpdate.stockCount) : undefined,
             stockStatus: variantQuickUpdate.stockStatus,
+            sku: variantQuickUpdate.sku || undefined,
+            color: variantQuickUpdate.color || undefined,
           }
         : variant
     )
@@ -557,8 +581,12 @@ export default function AdminProductsPage() {
           ? {
               ...variant,
               price: variantQuickUpdate.price,
+              discountType: variantQuickUpdate.discountType,
+              discountValue: variantQuickUpdate.discountValue,
               stockCount: variantQuickUpdate.stockCount,
               stockStatus: variantQuickUpdate.stockStatus,
+              sku: variantQuickUpdate.sku,
+              color: variantQuickUpdate.color,
             }
           : variant
       )
@@ -670,8 +698,8 @@ export default function AdminProductsPage() {
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                            <div className="flex items-start gap-4 lg:w-full">
                            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#FCFAF6] border border-[#F4EEE4]">
-                              {p.images?.[0] ? (
-                                 <img src={p.images[0].url} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                              {p.images?.[0] || p.variants?.find((variant) => variant.image?.url)?.image ? (
+                                 <img src={(p.images?.[0]?.url || p.variants?.find((variant) => variant.image?.url)?.image?.url)!} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
                               ) : (
                                  <div className="flex h-full w-full items-center justify-center text-[10px] tracking-widest opacity-20 uppercase font-bold text-[#8C7A6B]">No Image</div>
                               )}
@@ -957,6 +985,12 @@ export default function AdminProductsPage() {
                                 <input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name e.g. Walnut / Queen" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                                 <input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                                 <input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Price override" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                <select value={variant.discountType || ''} onChange={(e) => updateVariant(variant.id, { discountType: e.target.value })} className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none">
+                                  <option value="">No variant discount</option>
+                                  <option value="percentage">Percentage</option>
+                                  <option value="fixed">Fixed amount</option>
+                                </select>
+                                <input type="number" value={variant.discountValue || ''} onChange={(e) => updateVariant(variant.id, { discountValue: e.target.value })} placeholder={variant.discountType === 'percentage' ? '10' : '5000'} className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                                 <input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Stock quantity" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
                                 <select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none">
                                   <option value="in_stock">In stock</option>
@@ -1197,8 +1231,28 @@ export default function AdminProductsPage() {
                         <input type="number" value={variantQuickUpdate.price} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, price: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
                      </div>
                      <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">SKU</label>
+                        <input type="text" value={variantQuickUpdate.sku} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, sku: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
                         <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Stock Count</label>
                         <input type="number" value={variantQuickUpdate.stockCount} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, stockCount: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Color</label>
+                        <input type="text" value={variantQuickUpdate.color} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, color: e.target.value })} placeholder="#c59a6b" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Type</label>
+                        <select value={variantQuickUpdate.discountType} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, discountType: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none">
+                           <option value="">None</option>
+                           <option value="percentage">Percentage</option>
+                           <option value="fixed">Fixed amount</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Value</label>
+                        <input type="number" value={variantQuickUpdate.discountValue} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, discountValue: e.target.value })} className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
                      </div>
                   </div>
 

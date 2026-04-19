@@ -23,6 +23,8 @@ type Product = {
     id: string
     name: string
     price?: number
+    discountType?: 'percentage' | 'fixed'
+    discountValue?: number
     color?: string
     stockCount?: number
     stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
@@ -50,11 +52,13 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const computeDisplayPrice = (basePrice?: number | null) => {
     const sourcePrice = Number(basePrice || 0)
     if (!sourcePrice) return 0
-    if (product.discountType === 'percentage' && product.discountValue) {
-      return Math.max(sourcePrice - (sourcePrice * product.discountValue) / 100, 0)
+    const discountType = displayVariant?.discountType || product.discountType
+    const discountValue = displayVariant?.discountValue ?? product.discountValue
+    if (discountType === 'percentage' && discountValue) {
+      return Math.max(sourcePrice - (sourcePrice * discountValue) / 100, 0)
     }
-    if (product.discountType === 'fixed' && product.discountValue) {
-      return Math.max(sourcePrice - product.discountValue, 0)
+    if (discountType === 'fixed' && discountValue) {
+      return Math.max(sourcePrice - discountValue, 0)
     }
     return sourcePrice
   }

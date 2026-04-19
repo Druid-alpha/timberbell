@@ -71,8 +71,11 @@ export default function ProductCard({
     [hoveredVariantId, variants]
   )
   const previewVariant = hoveredVariant ?? (isCardHovered ? variants.find((entry) => entry.image?.url) ?? variants[0] ?? null : null)
-  const primaryImage = previewVariant?.image?.url || product.images?.[0]?.url
-  const secondaryImage = previewVariant ? previewVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
+  const fallbackVariantImage = variants.find((entry) => entry.image?.url)?.image?.url
+  const primaryImage = previewVariant?.image?.url || product.images?.[0]?.url || fallbackVariantImage
+  const secondaryImage = previewVariant
+    ? previewVariant.image?.url || product.images?.[1]?.url || fallbackVariantImage
+    : product.images?.[1]?.url || fallbackVariantImage
   const visiblePalette = palette.slice(0, 3)
   const extraPaletteCount = Math.max(0, palette.length - visiblePalette.length)
 
