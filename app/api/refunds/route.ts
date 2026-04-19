@@ -58,13 +58,20 @@ export async function POST(request: NextRequest) {
   const result = await db.collection('refunds').insertOne({
     orderId: String(body.orderId),
     userId: user.id,
-    customerName: body.customerName || (user as any).name || user.email,
+    customerName: body.customerName || ('name' in user ? String(user.name || '') : '') || user.email,
     customerEmail: body.customerEmail || user.email,
     reason: String(body.reason),
     message: String(body.message),
     attachments: Array.isArray(body.attachments) ? body.attachments.slice(0, 3) : [],
     status: 'pending',
     adminMessage: '',
+    conversation: [
+      {
+        sender: 'customer',
+        message: String(body.message),
+        createdAt: new Date(),
+      },
+    ],
     createdAt: new Date(),
     updatedAt: new Date(),
   })

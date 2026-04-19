@@ -45,7 +45,9 @@ export default function ProductCard({
   product: Product
   variant?: 'grid' | 'list'
 }) {
-  const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
+  const palette = (product.palette?.filter(Boolean).slice(0, 4) ?? []).length
+    ? (product.palette?.filter(Boolean).slice(0, 4) as string[])
+    : ['#f4e7d2', '#eab38b', '#c59a6b']
   const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null)
   const [isCardHovered, setIsCardHovered] = useState(false)
   let price = product.price
@@ -71,6 +73,8 @@ export default function ProductCard({
   const previewVariant = hoveredVariant ?? (isCardHovered ? variants.find((entry) => entry.image?.url) ?? variants[0] ?? null : null)
   const primaryImage = previewVariant?.image?.url || product.images?.[0]?.url
   const secondaryImage = previewVariant ? previewVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
+  const visiblePalette = palette.slice(0, 3)
+  const extraPaletteCount = Math.max(0, palette.length - visiblePalette.length)
 
   if (variant === 'list') {
     return (
@@ -112,11 +116,26 @@ export default function ProductCard({
           <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
             {product.description}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            {palette.slice(0, 3).map((color, index) => (
-              <span key={`${product.id}-list-${index}`} className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
-            ))}
-            {variants.length ? <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B]">{variants.length} variants</span> : null}
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {visiblePalette.map((color, index) => (
+                <span
+                  key={`${product.id}-list-${index}`}
+                  className="h-4 w-4 shrink-0 rounded-full border border-black/10"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+              {extraPaletteCount ? (
+                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[8px] font-bold text-[#7C4E2F]">
+                  +{extraPaletteCount}
+                </span>
+              ) : null}
+            </div>
+            {variants.length ? (
+              <span className="min-w-0 truncate text-[10px] uppercase tracking-[0.18em] text-[#8C7A6B]">
+                {variants.length} variants
+              </span>
+            ) : null}
           </div>
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-1.5">
@@ -212,37 +231,67 @@ export default function ProductCard({
       </Link>
 
       <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-5 pt-4 sm:px-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#2B2119]">
+        <div className="space-y-3">
+          <div className="min-w-0">
+            <p className="mb-2 truncate text-[9px] font-semibold uppercase tracking-[0.24em] text-[#8C7A6B] sm:text-[10px] sm:tracking-[0.3em]">
+              {product.category}
+            </p>
+            <h3 className="line-clamp-2 min-h-[2.9rem] break-words text-base font-semibold leading-snug text-[#2B2119] xl:text-[1.05rem]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
             </h3>
-            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
-              {product.category}
-            </p>
           </div>
-          <div className="text-right whitespace-nowrap shrink-0">
-            <div className="text-base font-bold text-[#2B2119]">{formatMoney(price)}</div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#8C7A6B]">Price</p>
+              <div className="truncate font-display text-xl text-[#2B2119] sm:text-[1.35rem]">{formatMoney(price)}</div>
+            </div>
+            {product.price > price ? (
+              <div className="shrink-0 text-right">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Was</p>
+                <p className="text-sm text-[#8C7A6B] line-through">{formatMoney(product.price)}</p>
+              </div>
+            ) : null}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {palette.slice(0, 3).map((color, index) => (
-            <span key={`${product.id}-grid-${index}`} className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
-          ))}
-          {variants.length ? <span className="text-[10px] uppercase tracking-[0.25em] text-[#8C7A6B]">{variants.length} variants</span> : null}
+        <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#E6D9C8]/70 bg-white/70 px-3 py-2.5">
+          <div className="min-w-0">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Palette</p>
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
+            {visiblePalette.map((color, index) => (
+              <span
+                key={`${product.id}-grid-${index}`}
+                className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10 sm:h-4 sm:w-4"
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            {extraPaletteCount ? (
+                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-[#F8F3EC] px-1 text-[8px] font-bold text-[#7C4E2F]">
+                +{extraPaletteCount}
+              </span>
+            ) : null}
+          </div>
+          </div>
+          {variants.length ? (
+            <div className="shrink-0 text-right">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Options</p>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7C4E2F]">
+                {variants.length} variants
+              </span>
+            </div>
+          ) : null}
         </div>
 
-        <div className="mt-auto flex items-center justify-between border-t border-[#E6D9C8]/50 pt-2">
-          <div className="flex items-center gap-1.5">
-            <span className="flex items-center gap-0.5">{renderStars(product.rating)}</span>
-            <span className="text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-[#E6D9C8]/50 pt-2">
+          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+            <span className="flex shrink-0 items-center gap-0.5">{renderStars(product.rating)}</span>
+            <span className="truncate text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>
           </div>
           <Link
             href={`/products/${product.id}`}
-            className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition hover:text-[#2B2119]"
+            className="inline-flex shrink-0 items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#7C4E2F] transition hover:text-[#2B2119] sm:gap-2 sm:text-[10px] sm:tracking-[0.2em]"
           >
             Details
             <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">

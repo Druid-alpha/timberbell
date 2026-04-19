@@ -26,22 +26,31 @@ type Product = {
 
 const heroSlides = [
   {
+    eyebrow: 'Gallery One',
     title: 'Spaces shaped with quiet confidence',
     description: 'Sculptural silhouettes, calm luxury, and finely balanced pieces designed to make the room feel intentional.',
     image: '/modern-cool-white-furniture.jpg',
-    chip: 'White Edit'
+    accent: '/lifestyle-1.svg',
+    supportTitle: 'Soft architectural living',
+    supportText: 'Layered neutrals, sculptural forms, and a calm focal composition.'
   },
   {
+    eyebrow: 'Gallery Two',
     title: 'Editorial furniture for modern living',
     description: 'Confident forms, composed layers, and elevated textures that turn everyday interiors into curated scenes.',
     image: '/cool-half-furniture.jpg',
-    chip: 'Cool Edit'
+    accent: '/lifestyle-2.svg',
+    supportTitle: 'Warm tonal styling',
+    supportText: 'A more intimate composition with contrast, depth, and visual rhythm.'
   },
   {
+    eyebrow: 'Gallery Three',
     title: 'Raw materials with refined presence',
     description: 'Honest timber, tactile finishes, and collectible craftsmanship brought together with architectural restraint.',
     image: '/raw-furniture-art.jpg',
-    chip: 'Raw Edit'
+    accent: '/modern-cool-white-furniture.jpg',
+    supportTitle: 'Natural statement finish',
+    supportText: 'Raw texture and clean silhouettes presented with a gallery-like stillness.'
   }
 ]
 
@@ -111,109 +120,122 @@ export default function HomePage() {
       {/* Hero Carousel */}
       <section className="px-6 pt-10">
         <div className="mx-auto max-w-7xl">
-          <div className="relative overflow-hidden rounded-[48px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_40px_100px_-50px_rgba(55,32,15,0.4)]">
+          <div className="relative overflow-hidden rounded-[48px] border border-[#E6D9C8] shadow-[0_40px_100px_-50px_rgba(55,32,15,0.4)]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSlide}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, scale: 1.02 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.99 }}
                 transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center px-10 py-16 lg:px-20 lg:py-24"
+                className="relative min-h-[620px] overflow-hidden bg-[#2B2119]"
               >
-                <div className="space-y-8">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="image-glass inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[10px] font-bold uppercase tracking-[0.4em] text-[#6A4529]"
-                  >
-                    {heroSlides[activeSlide].chip}
-                  </motion.div>
-                  <motion.h1 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="font-display text-5xl leading-[0.96] text-[#2B2119] sm:text-6xl lg:text-7xl"
-                  >
-                    {heroSlides[activeSlide].title}
-                  </motion.h1>
-                  <motion.p 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="max-w-xl text-base leading-relaxed text-[#6B594A]"
-                  >
-                    {heroSlides[activeSlide].description}
-                  </motion.p>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.45 }}
-                    className="flex flex-wrap gap-2"
-                  >
-                    {heroChips.map((chip) => (
-                      <span key={chip} className="image-glass rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#6A4529]">
-                        {chip}
-                      </span>
-                    ))}
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex flex-wrap gap-4 pt-4"
-                  >
-                    <Link
-                      href="/productfilter"
-                    className="rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white shadow-[0_24px_60px_-30px_rgba(55,32,15,0.55)] hover:-translate-y-0.5 hover:bg-[#5C3A24] hover:shadow-[0_30px_70px_-30px_rgba(55,32,15,0.6)] transition-all"
-                    >
-                      Shop Collection
-                    </Link>
-                    <Link
-                      href="/journal"
-                    className="rounded-full border border-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] hover:-translate-y-0.5 hover:bg-white/50 transition-all"
-                    >
-                      View the Lookbook
-                    </Link>
-                  </motion.div>
-                  
-                  <div className="flex gap-2 pt-8">
-                    {heroSlides.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setActiveSlide(i)}
-                        className={`h-1 rounded-full transition-all duration-500 ${activeSlide === i ? 'bg-[#7C4E2F] w-12' : 'bg-[#E6D9C8] w-4 hover:bg-[#D9C7B3]'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <motion.div
+                  style={{ y: y1 }}
+                  initial={{ opacity: 0, scale: 1.08 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
+                  className="absolute inset-0"
+                >
+                  <img
+                    src={heroSlides[activeSlide].image}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-[18s] hover:scale-105"
+                  />
+                </motion.div>
+                <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(10,7,5,0.9)_0%,rgba(18,13,10,0.72)_38%,rgba(22,16,12,0.4)_68%,rgba(12,8,6,0.6)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.18)_0%,rgba(0,0,0,0.08)_30%,rgba(0,0,0,0.38)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(244,238,228,0.18),transparent_34%)]" />
 
-                <div className="relative aspect-square">
-                  <motion.div 
-                    style={{ y: y1 }}
-                    initial={{ opacity: 0, scale: 1.1, rotate: 2 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
-                    className="h-full w-full overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-[0_35px_100px_-40px_rgba(55,32,15,0.55)]"
-                  >
-                    <img 
-                      src={heroSlides[activeSlide].image} 
-                      alt="" 
-                      className="h-full w-full object-cover transition-transform duration-[18s] hover:scale-105" 
-                    />
-                  </motion.div>
-                  <motion.div
-                    style={{ y: y2 }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.35, duration: 0.9 }}
-                    className="image-glass absolute -bottom-6 -left-6 hidden overflow-hidden rounded-[28px] px-5 py-4 md:block"
-                  >
-                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.3),rgba(43,33,25,0.08))]" />
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Curated Mood</p>
-                    <p className="relative mt-2 max-w-[12rem] text-sm leading-relaxed text-[#2B2119] [text-shadow:0_1px_1px_rgba(255,255,255,0.45)]">Sophisticated furniture direction with collectible presence.</p>
-                  </motion.div>
+                <div className="relative flex min-h-[620px] items-end px-5 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-16 lg:py-16">
+                  <div className="grid w-full gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end lg:gap-10">
+                    <div className="space-y-5 sm:space-y-6 lg:space-y-8">
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/24 bg-black/42 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.32em] text-white backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.65)] sm:px-5 sm:py-2.5 sm:text-[10px] sm:tracking-[0.4em]"
+                      >
+                        {heroSlides[activeSlide].eyebrow}
+                      </motion.div>
+                      <motion.h1
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="max-w-3xl font-display text-[2.25rem] leading-[0.94] text-white [text-shadow:0_10px_28px_rgba(0,0,0,0.72)] sm:text-5xl lg:text-7xl"
+                      >
+                        {heroSlides[activeSlide].title}
+                      </motion.h1>
+                      <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="max-w-2xl text-sm leading-relaxed text-white [text-shadow:0_6px_18px_rgba(0,0,0,0.72)] sm:text-base"
+                      >
+                        {heroSlides[activeSlide].description}
+                      </motion.p>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.45 }}
+                        className="flex flex-wrap gap-2"
+                      >
+                        {heroChips.map((chip) => (
+                          <span key={chip} className="rounded-full border border-white/18 bg-black/38 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.58)] sm:px-4 sm:text-[10px] sm:tracking-[0.22em]">
+                            {chip}
+                          </span>
+                        ))}
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex flex-wrap gap-3 pt-1 sm:gap-4 sm:pt-2"
+                      >
+                        <Link
+                          href="/productfilter"
+                          className="rounded-full bg-[#F4EEE4] px-6 py-3 text-[9px] font-bold uppercase tracking-[0.22em] text-[#2B2119] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.4)] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
+                        >
+                          Shop Collection
+                        </Link>
+                        <Link
+                          href="/journal"
+                          className="rounded-full border border-white/40 bg-black/18 px-6 py-3 text-[9px] font-bold uppercase tracking-[0.22em] text-white transition-all hover:-translate-y-0.5 hover:bg-white/10 sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
+                        >
+                          View the Lookbook
+                        </Link>
+                      </motion.div>
+
+                      <div className="flex gap-2 pt-4 sm:pt-6">
+                        {heroSlides.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setActiveSlide(i)}
+                            className={`h-1 rounded-full transition-all duration-500 ${activeSlide === i ? 'w-12 bg-white' : 'w-4 bg-white/35 hover:bg-white/60'}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <motion.div
+                      style={{ y: y2 }}
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.35, duration: 0.9 }}
+                      className="justify-self-start lg:justify-self-end"
+                    >
+                      <div className="w-full max-w-[280px] overflow-hidden rounded-[28px] border border-white/20 bg-[rgba(251,247,241,0.16)] p-3 backdrop-blur-xl shadow-[0_35px_100px_-40px_rgba(0,0,0,0.65)] sm:max-w-[320px] sm:rounded-[32px] sm:p-4">
+                        <div className="relative overflow-hidden rounded-[24px]">
+                          <img src={heroSlides[activeSlide].accent} alt="" className="h-40 w-full object-cover sm:h-48" />
+                          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(23,15,10,0.52))]" />
+                        </div>
+                        <div className="space-y-2 px-1 pt-4 text-white">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-white/78 [text-shadow:0_2px_10px_rgba(0,0,0,0.55)]">{heroSlides[activeSlide].supportTitle}</p>
+                          <p className="text-xs leading-relaxed text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.6)] sm:text-sm">{heroSlides[activeSlide].supportText}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>

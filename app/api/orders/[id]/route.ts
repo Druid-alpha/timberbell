@@ -49,9 +49,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     { returnDocument: 'after' }
   )
 
-  if (!result || !result.value) {
+  const updatedOrder = result && typeof result === 'object' && 'value' in result ? result.value : result
+  if (!updatedOrder) {
     return Response.json({ message: 'Order not found' }, { status: 404 })
   }
 
-  return Response.json({ id: result.value._id.toString(), ...result.value, _id: undefined })
+  return Response.json({ id: updatedOrder._id.toString(), ...updatedOrder, _id: undefined })
 }

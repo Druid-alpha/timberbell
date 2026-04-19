@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import 'server-only'
 import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
 import { getCartByUserId, clearActiveCartItems } from '@/lib/services/cart'
 import { computeFinalPrice } from '@/lib/utils/pricing'
+import { getOrderProgressFromStatus } from '@/lib/orderTracking'
 
 type CheckoutInput = {
   userId: string
@@ -204,6 +206,8 @@ export async function markOrderPaymentFailed(input: {
       $set: {
         status: 'payment_failed',
         paymentStatus: input.paymentStatus,
+        trackingStage: 'processing',
+        trackingUpdatedAt: new Date(),
         paymentGatewayResponse: input.gatewayResponse || null,
         paymentFailureReason: input.failureReason || null,
         updatedAt: new Date(),
@@ -224,8 +228,10 @@ export async function markOrderPaid(input: {
     { _id: input.order._id },
     {
       $set: {
-        status: 'paid',
+        status: 'processing',
         paymentStatus: 'paid',
+        trackingStage: getOrderProgressFromStatus('processing').trackingStage,
+        trackingUpdatedAt: new Date(),
         paidAt: input.paidAt ? new Date(input.paidAt) : new Date(),
         paymentGatewayResponse: input.gatewayResponse || null,
         paymentChannel: input.channel || null,

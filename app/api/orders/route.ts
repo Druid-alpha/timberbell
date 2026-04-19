@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getUserFromRequest } from '@/lib/authServer'
 import { buildOrderDraft, fulfillPaidOrder, incrementCouponUsage } from '@/lib/services/checkout'
+import { getOrderProgressFromStatus } from '@/lib/orderTracking'
 
 export async function GET(request: NextRequest) {
   const user = getUserFromRequest(request)
@@ -41,10 +42,11 @@ export async function POST(request: NextRequest) {
       notes: body.notes,
       couponCode: body.couponCode,
     })
-  } catch (error: any) {
-    return Response.json({ message: error?.message || 'Cart is empty' }, { status: 400 })
+  } catch (error: unknown) {
+    return Response.json({ message: error instanceof Error ? error.message : 'Cart is empty' }, { status: 400 })
   }
 
+  const progress = getOrderProgressFromStatus('processing')
   const result = await draft.db.collection('orders').insertOne({
     userId: user.id,
     items: draft.items,
@@ -55,6 +57,8 @@ export async function POST(request: NextRequest) {
     status: 'pending',
     paymentProvider: 'manual',
     paymentStatus: 'unpaid',
+    trackingStage: progress.trackingStage,
+    trackingUpdatedAt: new Date(),
     customer: draft.customer,
     notes: draft.notes,
     createdAt: new Date(),

@@ -82,6 +82,7 @@ export type Order = {
   id: string
   items: CartItem[]
   total: number
-  status: 'pending_payment' | 'pending' | 'paid' | 'payment_failed' | 'shipped' | 'delivered'
+  status: 'pending_payment' | 'pending' | 'processing' | 'paid' | 'payment_failed' | 'shipped' | 'delivered' | 'cancelled'
+  trackingStage?: 'processing' | 'wood_selection' | 'crafting' | 'quality_check' | 'in_transit' | 'delivered'
   createdAt: string
 }

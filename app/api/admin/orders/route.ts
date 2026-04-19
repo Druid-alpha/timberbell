@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { isAdminRequest } from '@/lib/admin'
+import {
+  getOrderProgressFromStatus,
+  getOrderStatusForTrackingStage,
+  normalizeTrackingStage,
+} from '@/lib/orderTracking'
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -27,9 +32,16 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json().catch(() => null)
   const id = body?.id ? String(body.id) : ''
   const status = body?.status ? String(body.status) : ''
+  const hasTrackingStage = typeof body?.trackingStage !== 'undefined'
+  const nextTrackingStage = hasTrackingStage ? normalizeTrackingStage(body?.trackingStage) : null
+  const note = typeof body?.trackingNote === 'string' ? body.trackingNote.trim() : ''
 
-  if (!id || !status) {
-    return Response.json({ message: 'id and status required' }, { status: 400 })
+  if (!id) {
+    return Response.json({ message: 'id required' }, { status: 400 })
+  }
+
+  if (!status && !hasTrackingStage) {
+    return Response.json({ message: 'status or trackingStage required' }, { status: 400 })
   }
 
   const db = await (await import('@/lib/db')).getDb()
@@ -37,19 +49,41 @@ export async function PATCH(request: NextRequest) {
     return Response.json({ message: 'Invalid order id' }, { status: 400 })
   }
   const query = { _id: new ObjectId(id) }
+  const update: Record<string, unknown> = {
+    updatedAt: new Date(),
+  }
+
+  if (status) {
+    const progress = getOrderProgressFromStatus(status)
+    update.status = progress.orderStatus
+    update.trackingStage = progress.trackingStage
+    update.trackingUpdatedAt = new Date()
+  }
+
+  if (nextTrackingStage) {
+    update.trackingStage = nextTrackingStage
+    update.trackingUpdatedAt = new Date()
+    update.status = getOrderStatusForTrackingStage(nextTrackingStage)
+  }
+
+  if (note) {
+    update.trackingNote = note
+  }
+
   const result = await db.collection('orders').findOneAndUpdate(
     query,
-    { $set: { status, updatedAt: new Date() } },
+    { $set: update },
     { returnDocument: 'after' }
   )
 
-  if (!result || !result.value) {
+  const updatedOrder = result && typeof result === 'object' && 'value' in result ? result.value : result
+  if (!updatedOrder) {
     return Response.json({ message: 'Order not found' }, { status: 404 })
   }
 
   return Response.json({
-    id: result.value._id.toString(),
-    ...result.value,
+    id: updatedOrder._id.toString(),
+    ...updatedOrder,
     _id: undefined,
   })
 }

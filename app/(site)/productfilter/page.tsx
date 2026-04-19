@@ -1,30 +1,17 @@
 'use client'
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ProductSkeleton from '@/app/_components/ProductSkeleton'
 import { getColorFamily, getColorFamilySwatch } from '@/lib/utils/color-name'
+import type { Product } from '@/types/catalog'
 
 type Category = {
   id: string
   slug: string
   name: string
-}
-
-type Product = {
-  id: string
-  name: string
-  price: number
-  category: string
-  description: string
-  palette?: string[]
-  materials?: string[]
-  finishes?: string[]
-  variants?: any[]
 }
 
 function ProductFilterContent() {
@@ -37,7 +24,6 @@ function ProductFilterContent() {
   const maxPriceParam = searchParams.get('maxPrice') || ''
   const colorsParam = searchParams.get('colors') || ''
   const materialsParam = searchParams.get('materials') || ''
-  const finishesParam = searchParams.get('finishes') || ''
   const sortParam = searchParams.get('sort') || 'newest'
   const pageParam = searchParams.get('page') || '1'
 
@@ -49,9 +35,6 @@ function ProductFilterContent() {
   )
   const [materials, setMaterials] = useState<string[]>(
     materialsParam ? materialsParam.split(',').filter(Boolean) : []
-  )
-  const [finishes, setFinishes] = useState<string[]>(
-    finishesParam ? finishesParam.split(',').filter(Boolean) : []
   )
   const [sort, setSort] = useState(sortParam)
   const [page, setPage] = useState(Number(pageParam) || 1)
@@ -71,13 +54,12 @@ function ProductFilterContent() {
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (colors.length) params.set('colors', colors.join(','))
     if (materials.length) params.set('materials', materials.join(','))
-    if (finishes.length) params.set('finishes', finishes.join(','))
     if (sort) params.set('sort', sort)
     if (page > 1) params.set('page', String(page))
     params.set('limit', '12')
     const qs = params.toString()
     return `/api/products${qs ? `?${qs}` : ''}`
-  }, [query, category, minPrice, maxPrice, colors, materials, finishes, sort, page])
+  }, [query, category, minPrice, maxPrice, colors, materials, sort, page])
 
   useEffect(() => {
     let active = true
@@ -105,15 +87,18 @@ function ProductFilterContent() {
   }, [url])
 
   useEffect(() => {
-    setSearch(query)
-    setMinPrice(minPriceParam || '0')
-    setMaxPrice(maxPriceParam || '5000')
-    setColors(colorsParam ? colorsParam.split(',').filter(Boolean) : [])
-    setMaterials(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
-    setFinishes(finishesParam ? finishesParam.split(',').filter(Boolean) : [])
-    setSort(sortParam || 'newest')
-    setPage(Number(pageParam) || 1)
-  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, finishesParam, sortParam, pageParam])
+    const timer = window.setTimeout(() => {
+      setSearch(query)
+      setMinPrice(minPriceParam || '0')
+      setMaxPrice(maxPriceParam || '5000')
+      setColors(colorsParam ? colorsParam.split(',').filter(Boolean) : [])
+      setMaterials(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
+      setSort(sortParam || 'newest')
+      setPage(Number(pageParam) || 1)
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, sortParam, pageParam])
 
   function toggleValue(list: string[], value: string) {
     return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -128,7 +113,6 @@ function ProductFilterContent() {
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (colors.length) params.set('colors', colors.join(','))
     if (materials.length) params.set('materials', materials.join(','))
-    if (finishes.length) params.set('finishes', finishes.join(','))
     if (sort) params.set('sort', sort)
     params.set('limit', '12')
     const qs = params.toString()
@@ -141,7 +125,6 @@ function ProductFilterContent() {
     setMaxPrice('5000')
     setColors([])
     setMaterials([])
-    setFinishes([])
     setSort('newest')
     setPage(1)
     router.push('/productfilter')
@@ -158,17 +141,9 @@ function ProductFilterContent() {
   const materialOptions = useMemo(() => {
     const allMaterials = filterProducts.flatMap((product) => [
       ...(product.materials ?? []),
-      ...((product.variants ?? []).flatMap((variant: any) => variant.materials ?? [])),
+      ...((product.variants ?? []).flatMap((variant) => variant.materials ?? [])),
     ])
     return Array.from(new Set(allMaterials)).sort()
-  }, [filterProducts])
-
-  const finishOptions = useMemo(() => {
-    const allFinishes = filterProducts.flatMap((product) => [
-      ...(product.finishes ?? []),
-      ...((product.variants ?? []).flatMap((variant: any) => variant.finishes ?? [])),
-    ])
-    return Array.from(new Set(allFinishes)).sort()
   }, [filterProducts])
 
   return (
@@ -198,31 +173,19 @@ function ProductFilterContent() {
           </button>
         </div>
       </div>
-      <div className="rounded-[36px] border border-[#E6D9C8] bg-[#F4EEE4] px-8 py-10 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.55)]">
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="space-y-3">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#8C7A6B]">Timberbell</p>
-            <h1 className="font-display text-3xl text-[#2B2119] sm:text-4xl">
-              Shop with category
-            </h1>
-            <p className="max-w-xl text-sm text-[#6B594A]">
-              Filter by price, color, and materials to find furniture that feels calm and natural.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
+      <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+        <aside className="space-y-6 rounded-[2rem] border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Refine selection</p>
             <button
               type="button"
               onClick={clearFilters}
-              className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#7C4E2F]"
+              className="rounded-full border border-[#7C4E2F] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#7C4E2F]"
             >
-              Clear filters
+              Clear
             </button>
           </div>
-        </div>
-      </div>
 
-      <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-        <aside className="space-y-6 rounded-[2rem] border border-[#E6D9C8] bg-[#F4EEE4] p-6">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Search</p>
             <div className="mt-3 flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-4 py-2">
@@ -368,22 +331,6 @@ function ProductFilterContent() {
             </div>
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Finishes</p>
-            <div className="mt-4 space-y-2 text-sm text-[#6B594A]">
-              {finishOptions.map((finish) => (
-                <label key={finish} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={finishes.includes(finish)}
-                    onChange={() => setFinishes((prev) => toggleValue(prev, finish))}
-                  />
-                  {finish}
-                </label>
-              ))}
-            </div>
-          </div>
-
           <button
             type="button"
             onClick={applyFilters}
@@ -399,13 +346,13 @@ function ProductFilterContent() {
             <span>{sort.replace('_', ' ')}</span>
           </div>
           {loading ? (
-            <div className={`grid gap-8 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+            <div className={`grid gap-8 ${viewMode === 'grid' ? 'md:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
               {Array.from({ length: 9 }).map((_, i) => (
                 <ProductSkeleton key={i} />
               ))}
             </div>
           ) : (
-            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
+            <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} variant={viewMode} />
               ))}

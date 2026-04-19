@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
+import { TRACKING_STAGES, getTrackingEntries, getTrackingStageLabel, normalizeTrackingStage } from '@/lib/orderTracking'
 
 type OrderItem = {
   productId: string
@@ -21,8 +22,11 @@ type Order = {
   total: number
   subtotal: number
   discountTotal: number
-  couponCode?: string | null
   createdAt: string
+  updatedAt?: string
+  trackingStage?: string
+  trackingUpdatedAt?: string
+  trackingNote?: string
   customer: {
     name: string
     email: string
@@ -48,38 +52,77 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Order | null>(null)
   const [filter, setFilter] = useState('all')
+  const [notice, setNotice] = useState('')
+  const [busyKey, setBusyKey] = useState<string | null>(null)
+  const [trackingStageDraft, setTrackingStageDraft] = useState('processing')
+  const [trackingNoteDraft, setTrackingNoteDraft] = useState('')
 
-  async function loadOrders() {
+  function openSelected(order: Order) {
+    setSelected(order)
+    setTrackingStageDraft(normalizeTrackingStage(order.trackingStage))
+    setTrackingNoteDraft(order.trackingNote || '')
+  }
+
+  async function loadOrders(selectedId?: string | null) {
     const res = await fetch('/api/admin/orders', { cache: 'no-store' })
-    const json = await res.json()
-    setOrders(json?.orders || [])
+    const json = await res.json().catch(() => ({}))
+    const nextOrders = json?.orders || []
+    setOrders(nextOrders)
+    if (selectedId) {
+      const nextSelected = nextOrders.find((order: Order) => order.id === selectedId) || null
+      setSelected(nextSelected)
+      if (nextSelected) {
+        setTrackingStageDraft(normalizeTrackingStage(nextSelected.trackingStage))
+        setTrackingNoteDraft(nextSelected.trackingNote || '')
+      }
+    }
     setLoading(false)
   }
 
-  useEffect(() => { loadOrders() }, [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadOrders()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [])
 
   function downloadOrderDocument(id: string, document: 'receipt' | 'invoice') {
     window.open(`/api/orders/${id}/receipt?document=${document}`, '_blank', 'noopener,noreferrer')
   }
 
-  async function updateStatus(id: string, status: string) {
-    await fetch('/api/admin/orders', {
+  async function updateOrder(id: string, payload: Record<string, string>) {
+    setBusyKey(id)
+    setNotice('')
+    const res = await fetch('/api/admin/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status }),
+      body: JSON.stringify({ id, ...payload }),
     })
-    loadOrders()
+    const json = await res.json().catch(() => ({}))
+    setBusyKey(null)
+    setNotice(json.message || (res.ok ? 'Order updated.' : 'Unable to update order.'))
+    if (res.ok) {
+      await loadOrders(selected?.id === id ? id : null)
+    }
   }
 
   async function deleteOrder(id: string) {
     if (!confirm('Delete this order from fulfillment history?')) return
-    await fetch('/api/admin/orders', {
+    setBusyKey(id)
+    setNotice('')
+    const res = await fetch('/api/admin/orders', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     })
-    if (selected?.id === id) setSelected(null)
-    loadOrders()
+    const json = await res.json().catch(() => ({}))
+    setBusyKey(null)
+    setNotice(json.message || (res.ok ? 'Order deleted.' : 'Unable to delete order.'))
+    if (res.ok) {
+      if (selected?.id === id) setSelected(null)
+      await loadOrders()
+    }
   }
 
   const filteredOrders = useMemo(() => {
@@ -93,34 +136,38 @@ export default function AdminOrdersPage() {
       <div className="flex flex-col gap-4 px-2 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="font-display text-4xl text-[#2B2119]">Fulfillment Engine</h1>
-          <p className="mt-1 text-sm text-[#8C7A6B]">Audit atelier orders and logistics timelines.</p>
+          <p className="mt-1 text-sm text-[#8C7A6B]">Audit atelier orders and control production progress in one place.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex flex-wrap rounded-2xl bg-[#FCFAF6] border border-[#E6D9C8] p-1">
+          <div className="flex flex-wrap rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-1">
             {['all', 'pending_payment', 'pending', 'paid', 'processing', 'shipped'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 text-[10px] uppercase tracking-widest font-bold transition-all rounded-xl ${filter === f ? 'bg-[#7C4E2F] text-white shadow-lg' : 'text-[#8C7A6B] hover:text-[#2B2119]'}`}
+                className={`rounded-xl px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${filter === f ? 'bg-[#7C4E2F] text-white shadow-lg' : 'text-[#8C7A6B] hover:text-[#2B2119]'}`}
               >
-                {f}
+                {f.replace('_', ' ')}
               </button>
             ))}
           </div>
         </div>
       </div>
 
+      {notice ? (
+        <div className="rounded-3xl border border-[#E6D9C8] bg-[#FDF7F0] px-5 py-4 text-sm text-[#6B594A]">{notice}</div>
+      ) : null}
+
       <div className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-xl shadow-[#C5A070]/5">
         <div className="grid gap-4 p-4 md:hidden">
           {filteredOrders.map((o) => (
             <div key={o.id} className="rounded-[28px] border border-[#F4EEE4] bg-[#FCFAF6] p-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold text-[#2B2119]">Reference #{o.id.slice(-8).toUpperCase()}</p>
+                <div className="min-w-0">
+                  <p className="break-all text-xs font-bold text-[#2B2119]">Reference #{o.id.slice(-8).toUpperCase()}</p>
                   <p className="text-[10px] text-[#8C7A6B]">{new Date(o.createdAt).toLocaleDateString()}</p>
                 </div>
                 <button
-                  onClick={() => setSelected(o)}
+                  onClick={() => openSelected(o)}
                   className="rounded-full border border-[#E6D9C8] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white"
                 >
                   Details
@@ -135,13 +182,13 @@ export default function AdminOrdersPage() {
                   <div className="space-y-2">
                     <select
                       value={o.status === 'paid' ? 'processing' : o.status}
-                      onChange={(e) => updateStatus(o.id, e.target.value)}
+                      onChange={(e) => updateOrder(o.id, { status: e.target.value })}
                       className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
                     >
                       {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
-                      Payment: {String(o.paymentStatus || 'unpaid').replace('_', ' ')}
+                      Stage: {getTrackingStageLabel(normalizeTrackingStage(o.trackingStage))}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-[#2B2119]">{formatMoney(o.total)}</span>
@@ -151,12 +198,13 @@ export default function AdminOrdersPage() {
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="hidden min-w-[760px] w-full text-left md:table">
-            <thead className="bg-[#FCFAF6] border-b border-[#E6D9C8]">
+          <table className="hidden min-w-[860px] w-full text-left md:table">
+            <thead className="border-b border-[#E6D9C8] bg-[#FCFAF6]">
               <tr>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Reference</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Client</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Fulfillment</th>
+                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Production Stage</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Payment</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Investment</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Action</th>
@@ -177,8 +225,8 @@ export default function AdminOrdersPage() {
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4EEE4] text-xs font-bold text-[#7C4E2F]">
                           O{o.id.slice(-3).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-[#2B2119]">Reference #{o.id.slice(-8).toUpperCase()}</p>
+                        <div className="min-w-0">
+                          <p className="max-w-[13rem] break-all text-xs font-bold text-[#2B2119]">Reference #{o.id.slice(-8).toUpperCase()}</p>
                           <p className="text-[10px] text-[#8C7A6B]">{new Date(o.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
@@ -190,38 +238,43 @@ export default function AdminOrdersPage() {
                     <td className="px-8 py-6">
                       <select
                         value={o.status === 'paid' ? 'processing' : o.status}
-                        onChange={(e) => updateStatus(o.id, e.target.value)}
+                        onChange={(e) => updateOrder(o.id, { status: e.target.value })}
                         className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
                       >
                         {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </td>
                     <td className="px-8 py-6">
+                      <button
+                        onClick={() => openSelected(o)}
+                        className="rounded-full border border-[#E6D9C8] bg-[#F8F4EE] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:border-[#7C4E2F]"
+                      >
+                        {getTrackingStageLabel(normalizeTrackingStage(o.trackingStage))}
+                      </button>
+                    </td>
+                    <td className="px-8 py-6">
                       <div className="space-y-1">
-                        <input
-                          disabled
-                          value={String(o.paymentStatus || 'unpaid').replace('_', ' ')}
-                          className="h-9 w-full rounded-full border border-[#E6D9C8] bg-[#F8F4EE] px-3 text-[10px] font-bold uppercase tracking-widest text-[#2B2119]"
-                        />
+                        <div className="rounded-full border border-[#E6D9C8] bg-[#F8F4EE] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">
+                          {String(o.paymentStatus || 'unpaid').replace('_', ' ')}
+                        </div>
                         <p className="text-[10px] text-[#8C7A6B]">{o.paymentProvider || 'paystack'}</p>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-xs font-bold text-[#2B2119]">
-                      {formatMoney(o.total)}
-                    </td>
+                    <td className="px-8 py-6 text-xs font-bold text-[#2B2119]">{formatMoney(o.total)}</td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setSelected(o)}
+                          onClick={() => openSelected(o)}
                           className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-[#F4EEE4]"
                         >
                           Details
                         </button>
                         <button
                           onClick={() => deleteOrder(o.id)}
-                          className="rounded-full border border-red-100 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50"
+                          disabled={busyKey === o.id}
+                          className="rounded-full border border-red-100 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50 disabled:opacity-60"
                         >
-                          Delete
+                          {busyKey === o.id ? 'Deleting...' : 'Delete'}
                         </button>
                       </div>
                     </td>
@@ -231,18 +284,20 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
-        {filteredOrders.length === 0 && (
+        {!loading && filteredOrders.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="text-sm text-[#8C7A6B] italic font-display">No orders awaiting fulfillment in this vault.</p>
+            <p className="font-display text-sm italic text-[#8C7A6B]">No orders awaiting fulfillment in this vault.</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       <AnimatePresence>
         {selected && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setSelected(null)}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
@@ -250,27 +305,27 @@ export default function AdminOrdersPage() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[48px] border border-[#E6D9C8] bg-[#FDFCFB] shadow-2xl"
+              className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-[48px] border border-[#E6D9C8] bg-[#FDFCFB] shadow-2xl"
             >
-              <div className="grid lg:grid-cols-[1fr_350px]">
+              <div className="grid lg:grid-cols-[1fr_360px]">
                 <div className="p-6 sm:p-10">
                   <div className="flex items-center justify-between border-b border-[#F4EEE4] pb-6">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">Order Manifest</p>
                       <h2 className="mt-1 font-display text-3xl text-[#2B2119]">Logistics Flow</h2>
-                      <p className="mt-2 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
-                        Payment: {String(selected.paymentStatus || 'unpaid').replace('_', ' ')}
+                      <p className="mt-2 break-all text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                        Ref: {selected.id}
                       </p>
                     </div>
                     <div className={`rounded-full border px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest ${statusColors[selected.status]}`}>
-                      {selected.status}
+                      {selected.status.replace('_', ' ')}
                     </div>
                   </div>
 
                   <div className="mt-8 space-y-4">
                     {selected.items.map((item, i) => (
                       <div key={i} className="flex items-center gap-6 rounded-3xl border border-[#F4EEE4] bg-white p-4">
-                        <div className="h-16 w-16 overflow-hidden rounded-2xl bg-[#FCFAF6] border border-[#F4EEE4]">
+                        <div className="h-16 w-16 overflow-hidden rounded-2xl border border-[#F4EEE4] bg-[#FCFAF6]">
                           {item.image ? <img src={item.image} className="h-full w-full object-cover" alt="" /> : <div className="h-full w-full bg-[#F4EEE4]" />}
                         </div>
                         <div className="flex-1">
@@ -286,11 +341,11 @@ export default function AdminOrdersPage() {
                   </div>
 
                   <div className="mt-10 rounded-[32px] bg-[#2B2119] p-8 text-[#F4EEE4]">
-                    <div className="flex items-center justify-between opacity-60 text-[10px] uppercase tracking-widest font-bold">
+                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
                       <span>Subtotal</span>
                       <span>{formatMoney(selected.subtotal)}</span>
                     </div>
-                    <div className="mt-2 flex items-center justify-between opacity-60 text-[10px] uppercase tracking-widest font-bold">
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
                       <span>Studio Discount</span>
                       <span>-{formatMoney(selected.discountTotal)}</span>
                     </div>
@@ -303,7 +358,7 @@ export default function AdminOrdersPage() {
 
                 <div className="bg-[#FCFAF6] p-6 sm:border-l sm:border-[#F4EEE4] sm:p-10">
                   <div className="mb-10 text-right">
-                    <button onClick={() => setSelected(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] hover:text-[#2B2119] transition-colors">Close Manifest</button>
+                    <button onClick={() => setSelected(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] transition-colors hover:text-[#2B2119]">Close Manifest</button>
                   </div>
 
                   <div className="space-y-8">
@@ -315,21 +370,45 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <div className="pt-6 border-t border-[#F4EEE4]">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Atelier Fulfillment</p>
-                      <div className="mt-6 space-y-6 relative">
-                        <div className="absolute left-[7px] top-2 bottom-2 w-px bg-[#E6D9C8]" />
-                        {[
-                          { step: 'Validated', done: true, sub: 'Order authenticated' },
-                          { step: 'Processing', done: ['processing', 'shipped', 'delivered'].includes(selected.status), sub: 'Quality audit started' },
-                          { step: 'Shipped', done: ['shipped', 'delivered'].includes(selected.status), sub: 'In transit to Nigerian hub' },
-                          { step: 'Delivered', done: selected.status === 'delivered', sub: 'Handover complete' },
-                        ].map((s, i) => (
-                          <div key={i} className="flex gap-4 relative">
-                            <div className={`h-4 w-4 rounded-full border-2 border-white shadow-sm shrink-0 z-10 ${s.done ? 'bg-[#C5A070]' : 'bg-[#E6D9C8]'}`} />
+                    <div className="border-t border-[#F4EEE4] pt-6">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Production Tracker</p>
+                      <div className="mt-4 space-y-3">
+                        <select
+                          value={trackingStageDraft}
+                          onChange={(e) => setTrackingStageDraft(e.target.value)}
+                          className="h-11 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none"
+                        >
+                          {TRACKING_STAGES.map((stage) => (
+                            <option key={stage} value={stage}>
+                              {getTrackingStageLabel(stage)}
+                            </option>
+                          ))}
+                        </select>
+                        <textarea
+                          value={trackingNoteDraft}
+                          onChange={(e) => setTrackingNoteDraft(e.target.value)}
+                          placeholder="Optional internal or customer-facing progress note."
+                          className="h-24 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm outline-none"
+                        />
+                        <button
+                          onClick={() => updateOrder(selected.id, { trackingStage: trackingStageDraft, trackingNote: trackingNoteDraft })}
+                          disabled={busyKey === selected.id}
+                          className="w-full rounded-2xl bg-[#7C4E2F] py-3 text-[10px] font-bold uppercase tracking-widest text-white disabled:opacity-60"
+                        >
+                          {busyKey === selected.id ? 'Saving...' : 'Update Tracking'}
+                        </button>
+                      </div>
+
+                      <div className="mt-6 space-y-4">
+                        {getTrackingEntries({
+                          trackingStage: selected.trackingStage,
+                          trackingUpdatedAt: selected.trackingUpdatedAt || selected.updatedAt || selected.createdAt,
+                        }).map((step) => (
+                          <div key={step.stage} className="flex gap-4">
+                            <div className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow-sm ${step.completed ? 'bg-[#C5A070]' : step.current ? 'bg-[#7C4E2F]' : 'bg-[#E6D9C8]'}`} />
                             <div>
-                              <p className={`text-[10px] font-bold uppercase tracking-widest ${s.done ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}>{s.step}</p>
-                              <p className="text-[9px] text-[#8C7A6B]">{s.sub}</p>
+                              <p className={`text-[10px] font-bold uppercase tracking-widest ${step.completed || step.current ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}>{step.label}</p>
+                              <p className="text-[9px] text-[#8C7A6B]">{step.detail}</p>
                             </div>
                           </div>
                         ))}

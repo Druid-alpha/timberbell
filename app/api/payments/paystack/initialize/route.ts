@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getUserFromRequest } from '@/lib/authServer'
 import { buildOrderDraft } from '@/lib/services/checkout'
 import { initializePaystackTransaction } from '@/lib/paystack'
+import { getOrderProgressFromStatus } from '@/lib/orderTracking'
 
 function createReference(userId: string) {
   return `timberbell_${userId}_${Date.now()}`
@@ -31,11 +32,12 @@ export async function POST(request: NextRequest) {
       notes: body.notes,
       couponCode: body.couponCode,
     })
-  } catch (error: any) {
-    return Response.json({ message: error?.message || 'Cart is empty' }, { status: 400 })
+  } catch (error: unknown) {
+    return Response.json({ message: error instanceof Error ? error.message : 'Cart is empty' }, { status: 400 })
   }
 
   const reference = createReference(user.id)
+  const progress = getOrderProgressFromStatus('pending_payment')
 
   const orderInsert = await draft.db.collection('orders').insertOne({
     userId: user.id,
@@ -48,6 +50,8 @@ export async function POST(request: NextRequest) {
     paymentProvider: 'paystack',
     paymentStatus: 'initialized',
     paymentReference: reference,
+    trackingStage: progress.trackingStage,
+    trackingUpdatedAt: new Date(),
     customer: draft.customer,
     notes: draft.notes,
     createdAt: new Date(),
@@ -85,19 +89,19 @@ export async function POST(request: NextRequest) {
       reference,
       authorizationUrl: paystack.data.authorization_url,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     await draft.db.collection('orders').updateOne(
       { _id: orderInsert.insertedId },
       {
         $set: {
           status: 'payment_failed',
           paymentStatus: 'failed',
-          paymentFailureReason: error?.message || 'Unable to initialize Paystack payment',
+          paymentFailureReason: error instanceof Error ? error.message : 'Unable to initialize Paystack payment',
           updatedAt: new Date(),
         },
       }
     )
 
-    return Response.json({ message: error?.message || 'Unable to initialize payment' }, { status: 500 })
+    return Response.json({ message: error instanceof Error ? error.message : 'Unable to initialize payment' }, { status: 500 })
   }
 }

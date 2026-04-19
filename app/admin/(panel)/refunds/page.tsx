@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from 'react'
 
+type RefundMessage = {
+  sender: 'admin' | 'customer'
+  message: string
+  createdAt: string
+}
+
 type Refund = {
   id: string
   orderId: string
@@ -12,6 +18,7 @@ type Refund = {
   attachments?: string[]
   status: string
   adminMessage?: string
+  conversation?: RefundMessage[]
   createdAt: string
 }
 
@@ -24,16 +31,30 @@ export default function AdminRefundsPage() {
   const [adminMessage, setAdminMessage] = useState('')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
 
-  async function loadRefunds() {
+  async function loadRefunds(selectedId?: string | null) {
     const res = await fetch('/api/refunds', { cache: 'no-store' })
     const data = await res.json().catch(() => ({}))
-    setRefunds(data.refunds || [])
+    const nextRefunds = data.refunds || []
+    setRefunds(nextRefunds)
+    if (selectedId) {
+      const nextSelected = nextRefunds.find((refund: Refund) => refund.id === selectedId) || null
+      setSelected(nextSelected)
+      if (nextSelected) {
+        setAdminMessage('')
+      }
+    }
     setLoading(false)
   }
 
   useEffect(() => {
-    loadRefunds()
+    const timer = window.setTimeout(() => {
+      void loadRefunds()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   const filteredRefunds = refunds.filter((refund) => {
@@ -49,16 +70,20 @@ export default function AdminRefundsPage() {
     return matchesFilter && matchesQuery
   })
 
-  async function updateRefund(id: string, status: string) {
+  async function updateRefund(id: string, payload: Record<string, string>) {
+    setBusy(true)
+    setNotice('')
     const res = await fetch(`/api/refunds/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, adminMessage }),
+      body: JSON.stringify(payload),
     })
+    const json = await res.json().catch(() => ({}))
+    setBusy(false)
+    setNotice(json.message || (res.ok ? 'Refund updated.' : 'Unable to update refund request.'))
     if (res.ok) {
-      setSelected(null)
       setAdminMessage('')
-      loadRefunds()
+      await loadRefunds(selected?.id === id ? id : null)
     }
   }
 
@@ -70,8 +95,12 @@ export default function AdminRefundsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-display text-4xl text-[#2B2119]">Refund Desk</h1>
-        <p className="mt-2 text-sm text-[#8C7A6B]">Review customer complaints, attachments, and response notes.</p>
+        <p className="mt-2 text-sm text-[#8C7A6B]">Review customer complaints, attachments, status actions, and message replies.</p>
       </div>
+
+      {notice ? (
+        <div className="rounded-[28px] border border-[#E6D9C8] bg-[#FDF7F0] px-5 py-4 text-sm text-[#6B594A]">{notice}</div>
+      ) : null}
 
       <div className="flex flex-col gap-3 rounded-[28px] border border-[#E6D9C8] bg-[#FCFAF6] p-4 sm:flex-row sm:items-center sm:justify-between">
         <input
@@ -106,7 +135,10 @@ export default function AdminRefundsPage() {
               <span className="rounded-full border border-[#E6D9C8] bg-[#FCFAF6] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">
                 {refund.status}
               </span>
-              <button onClick={() => { setSelected(refund); setAdminMessage(refund.adminMessage || '') }} className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
+              <button
+                onClick={() => { setSelected(refund); setAdminMessage('') }}
+                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]"
+              >
                 Review
               </button>
             </div>
@@ -135,13 +167,27 @@ export default function AdminRefundsPage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Attachments</p>
                 <div className="flex flex-wrap gap-3">
                   {selected.attachments.map((file) => (
-                    <a key={file} href={file} target="_blank" className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
+                    <a key={file} href={file} target="_blank" rel="noreferrer" className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
                       Open file
                     </a>
                   ))}
                 </div>
               </div>
             ) : null}
+
+            <div className="space-y-3 rounded-3xl border border-[#E6D9C8] bg-white p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Conversation</p>
+              {(selected.conversation?.length ? selected.conversation : [{ sender: 'customer', message: selected.message, createdAt: selected.createdAt }]).map((entry, index) => (
+                <div key={`${entry.createdAt}-${index}`} className={`rounded-2xl px-4 py-3 ${entry.sender === 'admin' ? 'bg-[#2B2119] text-[#F4EEE4]' : 'bg-[#FCFAF6] text-[#2B2119]'}`}>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{entry.sender === 'admin' ? 'Timberbell' : selected.customerName}</span>
+                    <span className="text-[10px] opacity-70">{new Date(entry.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm">{entry.message}</p>
+                </div>
+              ))}
+            </div>
+
             <textarea
               value={adminMessage}
               onChange={(e) => setAdminMessage(e.target.value)}
@@ -150,10 +196,22 @@ export default function AdminRefundsPage() {
             />
             <div className="flex flex-wrap gap-3">
               {statusOptions.map((status) => (
-                <button key={status} onClick={() => updateRefund(selected.id, status)} className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
-                  {status}
+                <button
+                  key={status}
+                  onClick={() => updateRefund(selected.id, { status, adminMessage })}
+                  disabled={busy}
+                  className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] disabled:opacity-60"
+                >
+                  {busy ? 'Saving...' : status}
                 </button>
               ))}
+              <button
+                onClick={() => updateRefund(selected.id, { adminMessage })}
+                disabled={busy || !adminMessage.trim()}
+                className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white disabled:opacity-60"
+              >
+                {busy ? 'Sending...' : 'Send Message'}
+              </button>
             </div>
           </div>
         </div>
