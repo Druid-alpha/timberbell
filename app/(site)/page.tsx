@@ -118,9 +118,9 @@ export default function HomePage() {
   return (
     <div className="space-y-24 pb-24">
       {/* Hero Carousel */}
-      <section className="px-6 pt-10">
+      <section className="px-0 pt-0 sm:px-6 sm:pt-10">
         <div className="mx-auto max-w-7xl">
-          <div className="relative overflow-hidden rounded-[48px] border border-[#E6D9C8] shadow-[0_40px_100px_-50px_rgba(55,32,15,0.4)]">
+          <div className="relative overflow-hidden sm:rounded-[48px] sm:border sm:border-[#E6D9C8] sm:shadow-[0_40px_100px_-50px_rgba(55,32,15,0.4)]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeSlide}
@@ -128,7 +128,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.99 }}
                 transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                className="relative min-h-[620px] overflow-hidden bg-[#2B2119]"
+                className="relative min-h-[100svh] overflow-hidden bg-[#2B2119] sm:min-h-[620px]"
               >
                 <motion.div
                   style={{ y: y1 }}
@@ -143,18 +143,19 @@ export default function HomePage() {
                     className="h-full w-full object-cover transition-transform duration-[18s] hover:scale-105"
                   />
                 </motion.div>
-                <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(10,7,5,0.9)_0%,rgba(18,13,10,0.72)_38%,rgba(22,16,12,0.4)_68%,rgba(12,8,6,0.6)_100%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.18)_0%,rgba(0,0,0,0.08)_30%,rgba(0,0,0,0.38)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,5,4,0.2)_0%,rgba(7,5,4,0.18)_18%,rgba(7,5,4,0.56)_56%,rgba(7,5,4,0.88)_100%)] sm:bg-[linear-gradient(100deg,rgba(10,7,5,0.9)_0%,rgba(18,13,10,0.72)_38%,rgba(22,16,12,0.4)_68%,rgba(12,8,6,0.6)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0.04)_24%,rgba(0,0,0,0.24)_52%,rgba(0,0,0,0.42)_100%)] sm:bg-[linear-gradient(180deg,rgba(0,0,0,0.18)_0%,rgba(0,0,0,0.08)_30%,rgba(0,0,0,0.38)_100%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(244,238,228,0.18),transparent_34%)]" />
+                <div className="absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,transparent,rgba(8,6,5,0.75))] sm:hidden" />
 
-                <div className="relative flex min-h-[620px] items-end px-5 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-16 lg:py-16">
+                <div className="relative flex min-h-[100svh] items-end px-5 pb-8 pt-24 sm:min-h-[620px] sm:px-8 sm:py-8 md:px-10 md:py-10 lg:px-16 lg:py-16">
                   <div className="grid w-full gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end lg:gap-10">
                     <div className="space-y-5 sm:space-y-6 lg:space-y-8">
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/24 bg-black/42 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.32em] text-white backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.65)] sm:px-5 sm:py-2.5 sm:text-[10px] sm:tracking-[0.4em]"
+                        className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.3em] text-white backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.65)] sm:border-white/24 sm:bg-black/42 sm:px-5 sm:py-2.5 sm:text-[10px] sm:tracking-[0.4em]"
                       >
                         {heroSlides[activeSlide].eyebrow}
                       </motion.div>
@@ -162,7 +163,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="max-w-3xl font-display text-[2.25rem] leading-[0.94] text-white [text-shadow:0_10px_28px_rgba(0,0,0,0.72)] sm:text-5xl lg:text-7xl"
+                        className="max-w-3xl font-display text-[2.65rem] leading-[0.92] text-white [text-shadow:0_12px_34px_rgba(0,0,0,0.78)] sm:text-5xl lg:text-7xl"
                       >
                         {heroSlides[activeSlide].title}
                       </motion.h1>
@@ -170,7 +171,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="max-w-2xl text-sm leading-relaxed text-white [text-shadow:0_6px_18px_rgba(0,0,0,0.72)] sm:text-base"
+                        className="max-w-xl text-[0.95rem] leading-relaxed text-white/96 [text-shadow:0_6px_18px_rgba(0,0,0,0.74)] sm:max-w-2xl sm:text-base"
                       >
                         {heroSlides[activeSlide].description}
                       </motion.p>
@@ -178,10 +179,10 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.45 }}
-                        className="flex flex-wrap gap-2"
+                        className="flex flex-wrap gap-2 sm:flex"
                       >
                         {heroChips.map((chip) => (
-                          <span key={chip} className="rounded-full border border-white/18 bg-black/38 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.58)] sm:px-4 sm:text-[10px] sm:tracking-[0.22em]">
+                          <span key={chip} className="rounded-full border border-white/14 bg-black/20 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.14em] text-white/92 backdrop-blur-md [text-shadow:0_1px_10px_rgba(0,0,0,0.58)] sm:border-white/18 sm:bg-black/38 sm:px-4 sm:text-[10px] sm:tracking-[0.22em]">
                             {chip}
                           </span>
                         ))}
@@ -190,23 +191,23 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="flex flex-wrap gap-3 pt-1 sm:gap-4 sm:pt-2"
+                        className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:gap-4 sm:pt-2"
                       >
                         <Link
                           href="/productfilter"
-                          className="rounded-full bg-[#F4EEE4] px-6 py-3 text-[9px] font-bold uppercase tracking-[0.22em] text-[#2B2119] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.4)] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
+                          className="inline-flex items-center justify-center rounded-full bg-[#F4EEE4] px-6 py-3.5 text-[9px] font-bold uppercase tracking-[0.22em] text-[#2B2119] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.4)] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
                         >
                           Shop Collection
                         </Link>
                         <Link
                           href="/journal"
-                          className="rounded-full border border-white/40 bg-black/18 px-6 py-3 text-[9px] font-bold uppercase tracking-[0.22em] text-white transition-all hover:-translate-y-0.5 hover:bg-white/10 sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
+                          className="inline-flex items-center justify-center rounded-full border border-white/28 bg-white/8 px-6 py-3.5 text-[9px] font-bold uppercase tracking-[0.22em] text-white transition-all hover:-translate-y-0.5 hover:bg-white/10 sm:border-white/40 sm:bg-black/18 sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
                         >
                           View the Lookbook
                         </Link>
                       </motion.div>
 
-                      <div className="flex gap-2 pt-4 sm:pt-6">
+                      <div className="flex gap-2 pt-5 sm:pt-6">
                         {heroSlides.map((_, i) => (
                           <button
                             key={i}
@@ -222,7 +223,7 @@ export default function HomePage() {
                       initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.35, duration: 0.9 }}
-                      className="justify-self-start lg:justify-self-end"
+                      className="hidden justify-self-start lg:justify-self-end lg:block"
                     >
                       <div className="w-full max-w-[280px] overflow-hidden rounded-[28px] border border-white/20 bg-[rgba(251,247,241,0.16)] p-3 backdrop-blur-xl shadow-[0_35px_100px_-40px_rgba(0,0,0,0.65)] sm:max-w-[320px] sm:rounded-[32px] sm:p-4">
                         <div className="relative overflow-hidden rounded-[24px]">
