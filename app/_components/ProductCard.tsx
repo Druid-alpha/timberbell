@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { Product } from '@/types/catalog'
 import { formatMoney } from '@/lib/utils/format'
+import { getOptimizedImageUrl } from '@/lib/utils/image'
 import WishlistButton from '@/app/_components/WishlistButton'
 
 const StarIcon = ({ variant }: { variant: 'full' | 'half' | 'empty' }) => (
@@ -72,10 +73,10 @@ export default function ProductCard({
   )
   const previewVariant = hoveredVariant ?? (isCardHovered ? variants.find((entry) => entry.image?.url) ?? variants[0] ?? null : null)
   const fallbackVariantImage = variants.find((entry) => entry.image?.url)?.image?.url
-  const primaryImage = previewVariant?.image?.url || product.images?.[0]?.url || fallbackVariantImage
+  const primaryImage = getOptimizedImageUrl(previewVariant?.image?.url || product.images?.[0]?.url || fallbackVariantImage)
   const secondaryImage = previewVariant
-    ? previewVariant.image?.url || product.images?.[1]?.url || fallbackVariantImage
-    : product.images?.[1]?.url || fallbackVariantImage
+    ? getOptimizedImageUrl(previewVariant.image?.url || product.images?.[1]?.url || fallbackVariantImage)
+    : getOptimizedImageUrl(product.images?.[1]?.url || fallbackVariantImage)
   const visiblePalette = palette.slice(0, 3)
   const extraPaletteCount = Math.max(0, palette.length - visiblePalette.length)
 

@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
+import { getOptimizedImageUrl } from '@/lib/utils/image'
 
 type ProductImage = {
   url: string
@@ -188,6 +191,10 @@ function createVariant(): Variant {
 }
 
 export default function AdminProductsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const editParam = searchParams.get('edit') || ''
+  const editorMode = searchParams.get('view') === 'editor'
   const [products, setProducts] = useState<Product[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
@@ -211,6 +218,7 @@ export default function AdminProductsPage() {
   const [uploading, setUploading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [baselinePayload, setBaselinePayload] = useState<ProductPayload | null>(null)
+  const [loadingEditor, setLoadingEditor] = useState(false)
   const [quickUpdate, setQuickUpdate] = useState<QuickUpdateState | null>(null)
   const [variantQuickUpdate, setVariantQuickUpdate] = useState<VariantQuickUpdateState | null>(null)
   const [quickSaving, setQuickSaving] = useState(false)
@@ -232,6 +240,7 @@ export default function AdminProductsPage() {
   }, [form.discountType, form.discountValue, form.price])
   const isSlugSuggested = slugify(form.name) === form.slug
   const totalPages = Math.max(1, Math.ceil(total / 12))
+  const isStandaloneEdit = editorMode && Boolean(editParam)
 
   async function loadProducts(next?: { page?: number; search?: string; category?: string }) {
     const targetPage = next?.page ?? page
@@ -267,6 +276,49 @@ export default function AdminProductsPage() {
     init()
   }, [])
 
+  useEffect(() => {
+    if (!editParam) {
+      if (editingId) {
+        setEditingId(null)
+        setBaselinePayload(null)
+        setForm(emptyForm)
+        setImages([])
+        setPalette(defaultPalette)
+        setVariants([])
+        setError('')
+      }
+      return
+    }
+
+    let active = true
+
+    async function loadEditorProduct() {
+      setLoadingEditor(true)
+      setError('')
+
+      const res = await fetch(`/api/admin/products/${editParam}`, { cache: 'no-store' })
+      const data = await res.json().catch(() => ({}))
+
+      if (!active) return
+
+      if (!res.ok) {
+        setError(data?.message || 'Unable to load this product for editing.')
+        setLoadingEditor(false)
+        return
+      }
+
+      hydrateEditor(data as Product)
+      setLoadingEditor(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    loadEditorProduct()
+
+    return () => {
+      active = false
+    }
+  }, [editParam])
+
   // Image Upload Logic
   async function uploadImage(file: File, onDone: (image: ProductImage) => void) {
     setUploading(true)
@@ -287,7 +339,7 @@ export default function AdminProductsPage() {
       formData.append('folder', signatureData.folder)
 
       const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
         { method: 'POST', body: formData }
       )
       const uploadJson = await uploadRes.json()
@@ -372,13 +424,16 @@ export default function AdminProductsPage() {
       const optionRes = await fetch('/api/admin/product-options', { cache: 'no-store' })
       const optionData = await optionRes.json().catch(() => ({}))
       setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
+      if (editorMode) {
+        router.push('/admin/products')
+      }
     } else {
       setError(data?.message || 'Failed to save product. Verify all fields.')
     }
     setSaving(false)
   }
 
-  function beginEdit(p: Product) {
+  function hydrateEditor(p: Product) {
     setEditingId(p.id)
     setForm({
       name: p.name,
@@ -441,10 +496,18 @@ export default function AdminProductsPage() {
         specifications: variant.specifications || [],
       })),
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function beginEdit(p: Product) {
+    router.push(`/admin/products/${p.id}`)
   }
 
   function resetEditor() {
+    if (editorMode) {
+      router.push('/admin/products')
+      return
+    }
+
     setEditingId(null)
     setForm(emptyForm)
     setImages([])
@@ -640,18 +703,32 @@ export default function AdminProductsPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col gap-4 px-2 sm:flex-row sm:items-center sm:justify-between">
          <div>
-            <h1 className="font-display text-4xl text-[#2B2119]">Design Catalog</h1>
-            <p className="mt-1 text-sm text-[#8C7A6B]">Manage your studio&apos;s curated pieces, discounts, colors, and variants.</p>
+            <h1 className="font-display text-4xl text-[#2B2119]">{isStandaloneEdit ? 'Edit Catalog Piece' : 'Design Catalog'}</h1>
+            <p className="mt-1 text-sm text-[#8C7A6B]">
+              {isStandaloneEdit
+                ? 'Update one product in its own editing space, then return to the catalog when you are done.'
+                : 'Manage your studio&apos;s curated pieces, discounts, colors, and variants.'}
+            </p>
          </div>
          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F]">
-               {products.length} Total Pieces
-            </span>
+            {isStandaloneEdit ? (
+              <Link
+                href="/admin/products"
+                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white"
+              >
+                Back To Catalog
+              </Link>
+            ) : (
+              <span className="rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F]">
+                 {products.length} Total Pieces
+              </span>
+            )}
          </div>
       </div>
 
-      <div className="grid gap-10 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,460px)]">
+      <div className={`grid gap-10 ${isStandaloneEdit ? 'xl:grid-cols-1' : '2xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]'}`}>
          {/* Catalog Feed */}
+         {!isStandaloneEdit ? (
          <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-[#E6D9C8] pb-4">
                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -699,7 +776,7 @@ export default function AdminProductsPage() {
                            <div className="flex items-start gap-4 lg:w-full">
                            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#FCFAF6] border border-[#F4EEE4]">
                               {p.images?.[0] || p.variants?.find((variant) => variant.image?.url)?.image ? (
-                                 <img src={(p.images?.[0]?.url || p.variants?.find((variant) => variant.image?.url)?.image?.url)!} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
+                                 <img src={getOptimizedImageUrl(p.images?.[0]?.url || p.variants?.find((variant) => variant.image?.url)?.image?.url)} className="h-full w-full object-cover transition-transform group-hover:scale-110" />
                               ) : (
                                  <div className="flex h-full w-full items-center justify-center text-[10px] tracking-widest opacity-20 uppercase font-bold text-[#8C7A6B]">No Image</div>
                               )}
@@ -762,7 +839,7 @@ export default function AdminProductsPage() {
                                     onClick={() => beginEdit(p)}
                                     className="flex-1 rounded-full border border-[#E6D9C8] py-2 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-[#F4EEE4]"
                                  >
-                                    Refine
+                                    Edit
                                  </button>
                                  <button 
                                     onClick={() => handleDelete(p.id)}
@@ -783,19 +860,25 @@ export default function AdminProductsPage() {
                <button type="button" onClick={() => loadProducts({ page: Math.min(totalPages, page + 1), search, category: categoryFilter })} disabled={page >= totalPages} className="rounded-full border border-[#E6D9C8] px-4 py-2 disabled:opacity-40">Next</button>
             </div>
          </div>
+         ) : null}
 
          {/* Command Sidebar Form */}
-         <div className="space-y-6 xl:sticky xl:top-10 xl:self-start">
+         <div className="min-w-0 space-y-6 2xl:sticky 2xl:top-10 2xl:self-start">
             <div className="rounded-[40px] border border-[#E6D9C8] bg-white p-6 shadow-2xl shadow-[#C5A070]/5 sm:p-8">
                <div className="mb-8 flex items-center justify-between gap-4">
-                  <h2 className="font-display text-2xl text-[#2B2119]">{editingId ? 'Refine Piece' : 'New Entry'}</h2>
+                  <h2 className="font-display text-2xl text-[#2B2119]">{editingId ? 'Edit Piece' : 'New Entry'}</h2>
                   {editingId ? (
                      <button onClick={resetEditor} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Cancel</button>
                   ) : null}
                </div>
                {editingId ? (
                   <div className="mb-6 rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-xs text-[#6B594A]">
-                     Only fields you change are saved, so you can refine one detail without rewriting the whole product.
+                     Only fields you change are saved, so you can update one detail without rewriting the whole product.
+                  </div>
+               ) : null}
+               {loadingEditor ? (
+                  <div className="mb-6 rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-xs text-[#6B594A]">
+                     Loading product editor...
                   </div>
                ) : null}
 
@@ -920,7 +1003,7 @@ export default function AdminProductsPage() {
                     <div className="mt-4 flex flex-wrap gap-3">
                       {images.map((img, i) => (
                         <div key={img.publicId || img.url} className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]">
-                          <img src={img.url} className="h-full w-full object-cover" />
+                          <img src={getOptimizedImageUrl(img.url)} className="h-full w-full object-cover" />
                           {i === 0 ? <span className="absolute left-1 top-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-widest text-[#7C4E2F]">Cover</span> : null}
                           <button type="button" onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))} className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-[8px] text-white">x</button>
                         </div>
@@ -929,12 +1012,12 @@ export default function AdminProductsPage() {
                     <div className="mt-4 flex flex-wrap gap-3">
                       <label className="flex cursor-pointer items-center justify-center rounded-full border border-[#C5A070] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#C5A070]/5">
                         {uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{images.length ? 'Replace Cover' : 'Upload Cover'}</span>}
-                        <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], replacePrimaryImage)} />
+                        <input accept="image/*" type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], replacePrimaryImage)} />
                       </label>
                       {images.length < 5 ? (
                         <label className="flex cursor-pointer items-center justify-center rounded-full border border-dashed border-[#C5A070] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#C5A070]/5">
                           {uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>Add Gallery Image</span>}
-                          <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], addGalleryImage)} />
+                          <input accept="image/*" type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], addGalleryImage)} />
                         </label>
                       ) : null}
                     </div>
@@ -1014,8 +1097,8 @@ export default function AdminProductsPage() {
                                 <div className="rounded-2xl border border-[#E6D9C8] p-3">
                                   <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
                                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                                    {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={variant.image.url} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
-                                    <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
+                                    {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={getOptimizedImageUrl(variant.image.url)} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
+                                    <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input accept="image/*" type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
                                   </div>
                                 </div>
                               </div>
@@ -1148,7 +1231,7 @@ export default function AdminProductsPage() {
                      <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Quick Update</p>
                         <h3 className="mt-1 font-display text-2xl text-[#2B2119]">{quickUpdate.name}</h3>
-                        <p className="mt-2 text-xs text-[#6B594A]">Update stock and discount without opening the full refine form.</p>
+                        <p className="mt-2 text-xs text-[#6B594A]">Update stock and discount without opening the full edit page.</p>
                      </div>
                      <button type="button" onClick={() => setQuickUpdate(null)} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Close</button>
                   </div>

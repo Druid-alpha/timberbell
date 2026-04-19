@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
+import { getOptimizedImageUrl } from '@/lib/utils/image'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { addItem } from '@/lib/redux/cartSlice'
 import { ensureReservationCountdown } from '@/lib/reservation'
@@ -40,7 +41,7 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const dispatch = useAppDispatch()
   const [selectionMode, setSelectionMode] = useState<'main' | 'variant'>(product.variants?.length ? 'main' : 'main')
   const [activeVariantId, setActiveVariantId] = useState<string | null>(product.variants?.[0]?.id ?? null)
-  const [activeImage, setActiveImage] = useState(product.images?.[0]?.url || product.variants?.[0]?.image?.url || '')
+  const [activeImage, setActiveImage] = useState(getOptimizedImageUrl(product.images?.[0]?.url || product.variants?.[0]?.image?.url || ''))
   const [status, setStatus] = useState('')
 
   const selectedVariant = useMemo(
@@ -66,7 +67,11 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const basePrice = displayVariant?.price ?? product.price
   const displayPrice = computeDisplayPrice(basePrice)
   const galleryImages = Array.from(
-    new Set([displayVariant?.image?.url, ...(product.images?.map((img) => img.url) || [])].filter(Boolean))
+    new Set(
+      [displayVariant?.image?.url, ...(product.images?.map((img) => img.url) || [])]
+        .filter(Boolean)
+        .map((url) => getOptimizedImageUrl(url))
+    )
   ) as string[]
   const availableStock = displayVariant?.stockCount ?? product.inventoryCount ?? null
   const stockStatus = displayVariant?.stockStatus ?? product.stockStatus
@@ -89,14 +94,14 @@ export default function QuickViewModal({ product }: { product: Product }) {
 
   function selectMainProduct() {
     setSelectionMode('main')
-    setActiveImage(product.images?.[0]?.url || product.variants?.[0]?.image?.url || '')
+    setActiveImage(getOptimizedImageUrl(product.images?.[0]?.url || product.variants?.[0]?.image?.url || ''))
   }
 
   function selectVariant(variantId: string) {
     const nextVariant = product.variants?.find((variant) => variant.id === variantId) ?? null
     setSelectionMode('variant')
     setActiveVariantId(variantId)
-    setActiveImage(nextVariant?.image?.url || product.images?.[0]?.url || '')
+    setActiveImage(getOptimizedImageUrl(nextVariant?.image?.url || product.images?.[0]?.url || ''))
   }
 
   async function handleAddToCart() {
@@ -124,7 +129,7 @@ export default function QuickViewModal({ product }: { product: Product }) {
           name: product.name,
           price: displayPrice,
           quantity: 1,
-          imageUrl: displayVariant?.image?.url || product.images?.[0]?.url,
+          imageUrl: getOptimizedImageUrl(displayVariant?.image?.url || product.images?.[0]?.url),
           variantName: displayVariant?.name,
           color: displayVariant?.color,
         }))

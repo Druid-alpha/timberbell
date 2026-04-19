@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
+import { getOptimizedImageUrl } from '@/lib/utils/image'
 
 type Product = {
   id: string
@@ -69,7 +70,7 @@ export default function RelatedProducts({ productId, category }: { productId: st
               <div className="relative aspect-[4/5] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4]">
                 {product.images?.[0]?.url ? (
                   <img
-                    src={product.images[0].url}
+                    src={getOptimizedImageUrl(product.images[0].url)}
                     alt={product.name}
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />

@@ -13,6 +13,7 @@ import { useToast } from '@/app/_components/ToastProvider'
 import { ensureReservationCountdown } from '@/lib/reservation'
 import { parseJsonArray } from '@/lib/utils/safe-json'
 import { getColorName } from '@/lib/utils/color-name'
+import { getOptimizedImageUrl } from '@/lib/utils/image'
 
 type ProductReview = {
   id: string
@@ -79,7 +80,7 @@ export default function ProductDetailPage() {
             name: data.name,
             price: data.finalPrice || data.price,
             category: data.category,
-            imageUrl: data.images?.[0]?.url
+            imageUrl: getOptimizedImageUrl(data.images?.[0]?.url)
           }
           const filtered = viewed.filter((item: any) => item.id !== data.id)
           localStorage.setItem('recentlyViewed', JSON.stringify([newItem, ...filtered].slice(0, 10)))
@@ -105,7 +106,7 @@ export default function ProductDetailPage() {
     if (!product) return
     const firstVariantImage = product.variants?.find((variant: any) => variant.image?.url)?.image?.url
     setSelectionMode('main')
-    setActiveImage(product.images?.[0]?.url || firstVariantImage || '')
+    setActiveImage(getOptimizedImageUrl(product.images?.[0]?.url || firstVariantImage || ''))
     setActiveVariantId(product.variants?.[0]?.id ?? null)
     setActiveColorHex(product.variants?.[0]?.color ?? product.palette?.[0] ?? '#f4e7d2')
   }, [product])
@@ -260,12 +261,12 @@ export default function ProductDetailPage() {
     )
   }
 
-  const images = product.images?.length ? product.images.map((img: any) => img.url) : []
+  const images = product.images?.length ? product.images.map((img: any) => getOptimizedImageUrl(img.url)) : []
   const fallbackPalette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   const selectedVariant = product.variants?.find((variant: any) => variant.id === activeVariantId) ?? null
   const displayVariant = selectionMode === 'variant' ? selectedVariant : null
   const price = computeDisplayPrice(displayVariant?.price ?? product.price)
-  const galleryImages = Array.from(new Set([displayVariant?.image?.url, ...images].filter(Boolean))) as string[]
+  const galleryImages = Array.from(new Set([getOptimizedImageUrl(displayVariant?.image?.url), ...images].filter(Boolean))) as string[]
   const variantBasePrice = displayVariant?.price ?? product.price
   const variantDisplayPrice = computeDisplayPrice(variantBasePrice)
   const activeDiscountType = displayVariant?.discountType || product.discountType
@@ -363,7 +364,7 @@ export default function ProductDetailPage() {
                     type="button"
                     onClick={() => {
                       setSelectionMode('main')
-                      setActiveImage(product.images?.[0]?.url || selectedVariant?.image?.url || '')
+                      setActiveImage(getOptimizedImageUrl(product.images?.[0]?.url || selectedVariant?.image?.url || ''))
                       setQuantity(1)
                     }}
                     className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
@@ -378,7 +379,7 @@ export default function ProductDetailPage() {
                       setSelectionMode('variant')
                       setActiveVariantId(fallbackVariant)
                       const nextVariant = product.variants?.find((variant: any) => variant.id === fallbackVariant) ?? null
-                      setActiveImage(nextVariant?.image?.url || product.images?.[0]?.url || '')
+                      setActiveImage(getOptimizedImageUrl(nextVariant?.image?.url || product.images?.[0]?.url || ''))
                       setQuantity(1)
                     }}
                     className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
@@ -393,7 +394,7 @@ export default function ProductDetailPage() {
                       onClick={() => {
                         setSelectionMode('variant')
                         setActiveVariantId(v.id)
-                        setActiveImage(v.image?.url || product.images?.[0]?.url || '')
+                        setActiveImage(getOptimizedImageUrl(v.image?.url || product.images?.[0]?.url || ''))
                         setActiveColorHex(v.color || fallbackPalette[0])
                         setQuantity(1)
                       }}

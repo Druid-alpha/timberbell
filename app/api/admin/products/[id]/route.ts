@@ -7,6 +7,26 @@ function getQuery(id: string) {
   return ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }
 }
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isAdminRequest(request)) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { id } = await params
+  const db = await (await import('@/lib/db')).getDb()
+  const product = await db.collection('products').findOne(getQuery(id))
+
+  if (!product) {
+    return Response.json({ message: 'Product not found' }, { status: 404 })
+  }
+
+  return Response.json({
+    id: product._id.toString(),
+    ...product,
+    _id: undefined,
+  })
+}
+
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!isAdminRequest(request)) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })

@@ -14,6 +14,9 @@ type Category = {
   name: string
 }
 
+const DEFAULT_MIN_PRICE = '0'
+const FALLBACK_MAX_PRICE = 500000
+
 function ProductFilterContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -28,8 +31,8 @@ function ProductFilterContent() {
   const pageParam = searchParams.get('page') || '1'
 
   const [search, setSearch] = useState(query)
-  const [minPrice, setMinPrice] = useState(minPriceParam || '0')
-  const [maxPrice, setMaxPrice] = useState(maxPriceParam || '5000')
+  const [minPrice, setMinPrice] = useState(minPriceParam || DEFAULT_MIN_PRICE)
+  const [maxPrice, setMaxPrice] = useState(maxPriceParam || '')
   const [colors, setColors] = useState<string[]>(colorsParam ? colorsParam.split(',').filter(Boolean) : [])
   const [materials, setMaterials] = useState<string[]>(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
   const [sort, setSort] = useState(sortParam)
@@ -42,12 +45,30 @@ function ProductFilterContent() {
   const [filterProducts, setFilterProducts] = useState<Product[]>([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
+  const priceCeiling = useMemo(() => {
+    const highest = Math.max(
+      ...filterProducts.map((product) => Number(product.finalPrice ?? product.price ?? 0)),
+      0
+    )
+
+    if (!highest) return FALLBACK_MAX_PRICE
+    if (highest <= 10000) return Math.ceil(highest / 1000) * 1000
+    if (highest <= 100000) return Math.ceil(highest / 5000) * 5000
+    return Math.ceil(highest / 10000) * 10000
+  }, [filterProducts])
+
+  const priceStep = useMemo(() => {
+    if (priceCeiling <= 10000) return 500
+    if (priceCeiling <= 100000) return 2500
+    return 5000
+  }, [priceCeiling])
+
   const url = useMemo(() => {
     const params = new URLSearchParams()
     if (query) params.set('q', query)
     if (category) params.set('category', category)
-    if (minPrice) params.set('minPrice', minPrice)
-    if (maxPrice) params.set('maxPrice', maxPrice)
+    if (minPrice && minPrice !== DEFAULT_MIN_PRICE) params.set('minPrice', minPrice)
+    if (maxPrice && Number(maxPrice) < priceCeiling) params.set('maxPrice', maxPrice)
     if (colors.length) params.set('colors', colors.join(','))
     if (materials.length) params.set('materials', materials.join(','))
     if (sort) params.set('sort', sort)
@@ -55,7 +76,7 @@ function ProductFilterContent() {
     params.set('limit', '12')
     const qs = params.toString()
     return `/api/products${qs ? `?${qs}` : ''}`
-  }, [query, category, minPrice, maxPrice, colors, materials, sort, page])
+  }, [query, category, minPrice, maxPrice, colors, materials, sort, page, priceCeiling])
 
   useEffect(() => {
     let active = true
@@ -83,10 +104,16 @@ function ProductFilterContent() {
   }, [url])
 
   useEffect(() => {
+    if (!maxPriceParam) {
+      setMaxPrice(String(priceCeiling))
+    }
+  }, [maxPriceParam, priceCeiling])
+
+  useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearch(query)
-      setMinPrice(minPriceParam || '0')
-      setMaxPrice(maxPriceParam || '5000')
+      setMinPrice(minPriceParam || DEFAULT_MIN_PRICE)
+      setMaxPrice(maxPriceParam || String(priceCeiling))
       setColors(colorsParam ? colorsParam.split(',').filter(Boolean) : [])
       setMaterials(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
       setSort(sortParam || 'newest')
@@ -94,7 +121,7 @@ function ProductFilterContent() {
     }, 0)
 
     return () => window.clearTimeout(timer)
-  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, sortParam, pageParam])
+  }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, sortParam, pageParam, priceCeiling])
 
   function toggleValue(list: string[], value: string) {
     return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -105,8 +132,8 @@ function ProductFilterContent() {
     const params = new URLSearchParams()
     if (search) params.set('q', search)
     if (category) params.set('category', category)
-    if (minPrice) params.set('minPrice', minPrice)
-    if (maxPrice) params.set('maxPrice', maxPrice)
+    if (minPrice && minPrice !== DEFAULT_MIN_PRICE) params.set('minPrice', minPrice)
+    if (maxPrice && Number(maxPrice) < priceCeiling) params.set('maxPrice', maxPrice)
     if (colors.length) params.set('colors', colors.join(','))
     if (materials.length) params.set('materials', materials.join(','))
     if (sort) params.set('sort', sort)
@@ -118,8 +145,8 @@ function ProductFilterContent() {
 
   function clearFilters() {
     setSearch('')
-    setMinPrice('0')
-    setMaxPrice('5000')
+    setMinPrice(DEFAULT_MIN_PRICE)
+    setMaxPrice(String(priceCeiling))
     setColors([])
     setMaterials([])
     setSort('newest')
@@ -147,7 +174,7 @@ function ProductFilterContent() {
   const filtersContent = (
     <>
       <div className="flex items-center justify-between gap-4">
-        <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Refine selection</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Filter selection</p>
         <button
           type="button"
           onClick={clearFilters}
@@ -235,31 +262,27 @@ function ProductFilterContent() {
       </div>
 
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Price range</p>
+        <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Budget</p>
         <div className="mt-4 space-y-3">
-          <div className="flex items-center justify-between rounded-full border border-[#E6D9C8] bg-white px-4 py-3 text-sm text-[#6B594A]">
-            <span>N{Number(minPrice || 0).toLocaleString()}</span>
-            <span className="text-[#C5A070]">to</span>
-            <span>N{Number(maxPrice || 0).toLocaleString()}</span>
+          <div className="rounded-[1.75rem] border border-[#E6D9C8] bg-white px-4 py-3 text-sm text-[#6B594A]">
+            <div className="flex items-center justify-between gap-3">
+              <span>Showing pieces up to</span>
+              <span className="font-semibold text-[#2B2119]">N{Number(maxPrice || priceCeiling).toLocaleString()}</span>
+            </div>
           </div>
           <input
             type="range"
             min="0"
-            max="5000"
-            step="50"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="w-full"
-          />
-          <input
-            type="range"
-            min="0"
-            max="5000"
-            step="50"
-            value={maxPrice}
+            max={priceCeiling}
+            step={priceStep}
+            value={Number(maxPrice || priceCeiling)}
             onChange={(e) => setMaxPrice(e.target.value)}
             className="w-full"
           />
+          <div className="flex items-center justify-between text-[11px] text-[#8C7A6B]">
+            <span>N0</span>
+            <span>N{priceCeiling.toLocaleString()}</span>
+          </div>
         </div>
       </div>
 
@@ -321,7 +344,7 @@ function ProductFilterContent() {
             onClick={() => setMobileFiltersOpen(true)}
             className="inline-flex h-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-4 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#7C4E2F] transition lg:hidden"
           >
-            Refine
+            Filters
           </button>
           <button
             type="button"
@@ -433,7 +456,7 @@ function ProductFilterContent() {
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[#8C7A6B]">Mobile Refine</p>
-                <h2 className="mt-2 font-display text-2xl text-[#2B2119]">Shape your selection</h2>
+                <h2 className="mt-2 font-display text-2xl text-[#2B2119]">Filter products</h2>
               </div>
               <button
                 type="button"
