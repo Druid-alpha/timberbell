@@ -20,6 +20,28 @@ const baseLinks = [
   { href: '/contact', label: 'Contact' },
 ]
 
+type ServerCartItem = {
+  productId?: string
+  purchaseType?: 'main' | 'variant'
+  product?: {
+    _id?: string
+    name?: string
+    price?: number
+    images?: Array<{ url?: string }>
+  }
+  name?: string
+  price?: number
+  quantity?: number
+  imageUrl?: string
+  variantId?: string
+  variantName?: string
+  color?: string
+  selectedVariant?: {
+    color?: string
+  }
+  saved?: boolean
+}
+
 export default function SiteHeader() {
   const router = useRouter()
   const dispatch = useAppDispatch()
@@ -66,12 +88,13 @@ export default function SiteHeader() {
       const data = await res.json().catch(() => ({}))
       if (!active) return
       const serverItems = Array.isArray(data?.cart?.items) ? data.cart.items : []
-      const items = serverItems.map((item: any) => ({
+      const items = serverItems.map((item: ServerCartItem) => ({
         productId: item.productId ?? item.product?._id ?? '',
         name: item.name ?? item.product?.name ?? '',
         price: item.price ?? item.product?.price ?? 0,
         quantity: item.quantity ?? 1,
         imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
+        purchaseType: item.purchaseType ?? (item.variantId ? 'variant' : 'main'),
         variantId: item.variantId ?? undefined,
         variantName: item.variantName ?? undefined,
         color: item.color ?? item.selectedVariant?.color ?? undefined,
@@ -141,8 +164,9 @@ export default function SiteHeader() {
 
       isExpiringReservation.current = true
 
-      const updatedItems = cartItems.map((item) => ({
+        const updatedItems = cartItems.map((item) => ({
         productId: item.productId,
+        purchaseType: item.purchaseType,
         variantId: item.variantId,
         variantName: item.variantName,
         color: item.color,
@@ -162,12 +186,13 @@ export default function SiteHeader() {
           const serverItems = Array.isArray(data?.cart?.items) ? data.cart.items : []
           dispatch(
             syncCart(
-              serverItems.map((item: any) => ({
+              serverItems.map((item: ServerCartItem) => ({
                 productId: item.productId ?? item.product?._id ?? '',
                 name: item.name ?? item.product?.name ?? '',
                 price: item.price ?? item.product?.price ?? 0,
                 quantity: item.quantity ?? 1,
                 imageUrl: item.imageUrl ?? item.product?.images?.[0]?.url ?? undefined,
+                purchaseType: item.purchaseType ?? (item.variantId ? 'variant' : 'main'),
                 variantId: item.variantId ?? undefined,
                 variantName: item.variantName ?? undefined,
                 color: item.color ?? item.selectedVariant?.color ?? undefined,
@@ -394,7 +419,7 @@ export default function SiteHeader() {
       </div>
 
       {searchOpen ? (
-        <div className="border-t border-[#E6D9C8] bg-[#F4EEE4]">
+        <div className="border-t border-[#E6D9C8] bg-[#F4EEE4] lg:hidden">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-white px-4 py-2">
               <input

@@ -118,6 +118,19 @@
   .font-display {
     font-family: var(--font-display);
   }
+
+  .image-glass {
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.24)),
+      rgba(32, 23, 17, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    box-shadow:
+      0 20px 45px -28px rgba(18, 12, 8, 0.92),
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 -1px 0 rgba(64, 42, 24, 0.12);
+    backdrop-filter: blur(18px) saturate(155%);
+    -webkit-backdrop-filter: blur(18px) saturate(155%);
+  }
 }
 
 @layer components {

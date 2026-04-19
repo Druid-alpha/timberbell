@@ -2,12 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { formatMoney } from '@/lib/utils/format'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { addItem } from '@/lib/redux/cartSlice'
 import { ensureReservationCountdown } from '@/lib/reservation'
-import { getColorName } from '@/lib/utils/color-name'
 
 type Product = {
   id: string
@@ -15,6 +13,8 @@ type Product = {
   price: number
   category: string
   description: string
+  inventoryCount?: number
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock' | 'preorder'
   discountType?: 'percentage' | 'fixed'
   discountValue?: number
   finalPrice?: number
@@ -36,14 +36,16 @@ type Product = {
 export default function QuickViewModal({ product }: { product: Product }) {
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const [selectionMode, setSelectionMode] = useState<'main' | 'variant'>(product.variants?.length ? 'main' : 'main')
   const [activeVariantId, setActiveVariantId] = useState<string | null>(product.variants?.[0]?.id ?? null)
-  const [activeImage, setActiveImage] = useState(product.variants?.[0]?.image?.url || product.images?.[0]?.url || '')
-  const [mounted, setMounted] = useState(false)
+  const [activeImage, setActiveImage] = useState(product.images?.[0]?.url || product.variants?.[0]?.image?.url || '')
+  const [status, setStatus] = useState('')
 
   const selectedVariant = useMemo(
     () => product.variants?.find((variant) => variant.id === activeVariantId) ?? null,
     [activeVariantId, product.variants]
   )
+  const displayVariant = selectionMode === 'variant' ? selectedVariant : null
 
   const computeDisplayPrice = (basePrice?: number | null) => {
     const sourcePrice = Number(basePrice || 0)
@@ -57,14 +59,15 @@ export default function QuickViewModal({ product }: { product: Product }) {
     return sourcePrice
   }
 
-  const basePrice = selectedVariant?.price ?? product.price
-  const displayPrice = product.finalPrice ?? computeDisplayPrice(basePrice)
-  const galleryImages = Array.from(new Set([selectedVariant?.image?.url, ...(product.images?.map((img) => img.url) || [])].filter(Boolean))) as string[]
-  const availableStock = selectedVariant?.stockCount ?? null
-  const selectedColor = selectedVariant?.color ? getColorName(selectedVariant.color) : null
+  const basePrice = displayVariant?.price ?? product.price
+  const displayPrice = computeDisplayPrice(basePrice)
+  const galleryImages = Array.from(
+    new Set([displayVariant?.image?.url, ...(product.images?.map((img) => img.url) || [])].filter(Boolean))
+  ) as string[]
+  const availableStock = displayVariant?.stockCount ?? product.inventoryCount ?? null
+  const stockStatus = displayVariant?.stockStatus ?? product.stockStatus
 
   useEffect(() => {
-    setMounted(true)
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = 'unset'
@@ -72,64 +75,89 @@ export default function QuickViewModal({ product }: { product: Product }) {
   }, [])
 
   function close() {
-    setMounted(false)
-    setTimeout(() => router.back(), 200)
+    router.back()
+  }
+
+  function openFullDetails() {
+    document.body.style.overflow = 'unset'
+    window.location.assign(`/products/${product.id}`)
+  }
+
+  function selectMainProduct() {
+    setSelectionMode('main')
+    setActiveImage(product.images?.[0]?.url || product.variants?.[0]?.image?.url || '')
+  }
+
+  function selectVariant(variantId: string) {
+    const nextVariant = product.variants?.find((variant) => variant.id === variantId) ?? null
+    setSelectionMode('variant')
+    setActiveVariantId(variantId)
+    setActiveImage(nextVariant?.image?.url || product.images?.[0]?.url || '')
   }
 
   async function handleAddToCart() {
-    const res = await fetch('/api/cart', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productId: product.id,
-        variantId: selectedVariant?.id,
-        variantName: selectedVariant?.name ?? null,
-        color: selectedVariant?.color ?? null,
-        quantity: 1,
-      }),
-    })
+    setStatus('')
+    try {
+      const res = await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product.id,
+          purchaseType: displayVariant ? 'variant' : 'main',
+          variantId: displayVariant?.id,
+          variantName: displayVariant?.name ?? null,
+          color: displayVariant?.color ?? null,
+          quantity: 1,
+        }),
+      })
 
-    if (res.ok) {
-      ensureReservationCountdown()
-      dispatch(addItem({
-        productId: product.id,
-        variantId: selectedVariant?.id,
-        name: product.name,
-        price: displayPrice,
-        quantity: 1,
-        imageUrl: selectedVariant?.image?.url || product.images?.[0]?.url,
-        variantName: selectedVariant?.name,
-        color: selectedVariant?.color,
-      }))
-      close()
-      setTimeout(() => router.push('/cart'), 300)
+      if (res.ok) {
+        ensureReservationCountdown()
+        dispatch(addItem({
+          productId: product.id,
+          purchaseType: displayVariant ? 'variant' : 'main',
+          variantId: displayVariant?.id,
+          name: product.name,
+          price: displayPrice,
+          quantity: 1,
+          imageUrl: displayVariant?.image?.url || product.images?.[0]?.url,
+          variantName: displayVariant?.name,
+          color: displayVariant?.color,
+        }))
+        close()
+        setTimeout(() => router.push('/cart'), 300)
+        return
+      }
+
+      const data = await res.json().catch(() => ({}))
+      setStatus(data?.message || 'Unable to add this item right now.')
+    } catch {
+      setStatus('Unable to add this item right now. Please check your connection and try again.')
     }
   }
 
+  const isUnavailable = stockStatus === 'out_of_stock' || availableStock === 0
+
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}
-    >
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 bg-[#2B2119]/40 backdrop-blur-sm"
         onClick={close}
       />
 
-      <div
-        className={`relative w-full max-w-4xl overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-[0_40px_100px_-40px_rgba(55,32,15,0.7)] transition-all duration-500 ${mounted ? 'translate-y-0 scale-100' : 'translate-y-10 scale-95'}`}
-      >
+      <div className="relative my-4 w-full max-w-[52rem] overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-white shadow-[0_40px_100px_-40px_rgba(55,32,15,0.7)] sm:my-0">
         <button
           onClick={close}
-          className="absolute right-6 top-6 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/80 text-[#2B2119] transition hover:bg-white"
+          className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/90 text-[#2B2119] transition hover:bg-white sm:right-5 sm:top-5"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
-        <div className="grid lg:grid-cols-2">
-          <div className="bg-[#F4EEE4] p-8 lg:p-12">
-            <div className="aspect-square w-full overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white shadow-sm">
+        <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="bg-[#F4EEE4] p-4 sm:p-5 lg:p-6">
+            <div className="aspect-square w-full overflow-hidden rounded-[24px] border border-[#E6D9C8] bg-white shadow-sm sm:rounded-[28px]">
               {activeImage ? (
                 <img
                   src={activeImage}
@@ -143,12 +171,12 @@ export default function QuickViewModal({ product }: { product: Product }) {
               )}
             </div>
             {galleryImages.length > 1 && (
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-                {galleryImages.slice(0, 4).map((img) => (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4 sm:gap-3 sm:pb-2">
+                {galleryImages.slice(0, 3).map((img) => (
                   <button
                     key={img}
                     onClick={() => setActiveImage(img)}
-                    className={`h-16 w-16 flex-shrink-0 rounded-2xl border-2 transition ${activeImage === img ? 'border-[#7C4E2F]' : 'border-transparent'}`}
+                    className={`h-14 w-14 flex-shrink-0 rounded-xl border-2 transition sm:h-16 sm:w-16 sm:rounded-2xl ${activeImage === img ? 'border-[#7C4E2F]' : 'border-transparent'}`}
                   >
                     <img src={img} alt="" className="h-full w-full rounded-xl object-cover" />
                   </button>
@@ -157,19 +185,19 @@ export default function QuickViewModal({ product }: { product: Product }) {
             )}
           </div>
 
-          <div className="flex flex-col justify-center p-8 lg:p-12">
-            <div className="space-y-6">
+          <div className="flex min-w-0 flex-col p-4 sm:p-5 lg:p-6">
+            <div className="space-y-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.4em] text-[#8C7A6B]">
                   {product.category}
                 </p>
-                <h2 className="mt-3 font-display text-3xl text-[#2B2119] lg:text-4xl">
-                  {selectedVariant?.name ? `${product.name} · ${selectedVariant.name}` : product.name}
+                <h2 className="mt-2 pr-10 font-display text-2xl text-[#2B2119] sm:mt-3 sm:text-[2rem]">
+                  {displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-semibold text-[#2B2119]">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-2xl font-semibold text-[#2B2119] sm:text-3xl">
                   {formatMoney(displayPrice)}
                 </span>
                 {basePrice > displayPrice && (
@@ -180,23 +208,39 @@ export default function QuickViewModal({ product }: { product: Product }) {
               </div>
 
               {product.variants?.length ? (
-                <div className="space-y-3 rounded-[28px] border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#8C7A6B]">Choose Variant</p>
-                  <div className="grid gap-2 sm:grid-cols-2">
+                <div className="space-y-3 rounded-[24px] border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#8C7A6B]">Choose Purchase Type</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={selectMainProduct}
+                      className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                    >
+                      Main Product
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const fallbackVariantId = activeVariantId ?? product.variants?.[0]?.id
+                        if (fallbackVariantId) selectVariant(fallbackVariantId)
+                      }}
+                      className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                    >
+                      Variant
+                    </button>
+                  </div>
+                  <div className={`grid gap-2 transition-all ${selectionMode === 'variant' ? 'opacity-100' : 'pointer-events-none opacity-45'}`}>
                     {product.variants.map((variant) => (
                       <button
                         key={variant.id}
                         type="button"
-                        onClick={() => {
-                          setActiveVariantId(variant.id)
-                          setActiveImage(variant.image?.url || product.images?.[0]?.url || '')
-                        }}
-                        className={`rounded-[22px] border px-4 py-3 text-left transition ${selectedVariant?.id === variant.id ? 'border-[#7C4E2F] bg-[#2B2119] text-white' : 'border-[#E6D9C8] bg-white text-[#2B2119]'}`}
+                        onClick={() => selectVariant(variant.id)}
+                        className={`rounded-[18px] border px-4 py-3 text-left transition-all active:scale-[0.98] ${displayVariant?.id === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#2B2119] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
                             <p className="truncate text-[11px] font-bold uppercase tracking-[0.18em]">{variant.name}</p>
-                            <p className={`mt-1 text-[10px] ${selectedVariant?.id === variant.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
+                            <p className={`mt-1 text-[10px] ${displayVariant?.id === variant.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
                               {formatMoney(computeDisplayPrice(variant.price ?? product.price))}
                             </p>
                           </div>
@@ -208,42 +252,37 @@ export default function QuickViewModal({ product }: { product: Product }) {
                 </div>
               ) : null}
 
-              <p className="text-sm leading-relaxed text-[#6B594A] line-clamp-4">
+              <p className="text-sm leading-relaxed text-[#6B594A] line-clamp-2">
                 {product.description}
               </p>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Color</p>
-                  <p className="mt-2 text-sm font-bold text-[#2B2119]">{selectedColor || 'Main finish'}</p>
+              <div className="space-y-3 pt-1">
+                <div className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm text-[#6B594A]">
+                  {stockStatus === 'preorder'
+                    ? 'Available for preorder.'
+                    : availableStock === 0
+                      ? 'Currently unavailable.'
+                      : availableStock && availableStock <= 5
+                        ? `Only ${availableStock} left in stock.`
+                        : selectionMode === 'variant'
+                          ? 'Variant ready to add to cart.'
+                          : 'Main product ready to add to cart.'}
                 </div>
-                <div className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Stock</p>
-                  <p className="mt-2 text-sm font-bold text-[#2B2119]">{availableStock ?? 'Main stock'}</p>
-                </div>
-                <div className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                  <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Status</p>
-                  <p className="mt-2 text-sm font-bold text-[#2B2119]">{selectedVariant?.stockStatus?.replace('_', ' ') || 'in stock'}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0}
-                  className="w-full rounded-full bg-[#7C4E2F] py-4 text-xs font-bold uppercase tracking-[0.3em] text-white transition hover:bg-[#6A3F24]"
+                  disabled={isUnavailable}
+                  className="block w-full max-w-full rounded-full bg-[#7C4E2F] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#6A3F24] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#B99982]"
                 >
-                  {selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of Stock' : 'Quick Add to Cart'}
+                  {isUnavailable ? 'Out of Stock' : selectionMode === 'variant' ? 'Add Variant to Cart' : 'Add Product to Cart'}
                 </button>
-                <Link
-                  href={`/products/${product.id}`}
-                  onClick={() => {
-                    document.body.style.overflow = 'unset'
-                  }}
-                  className="flex w-full items-center justify-center rounded-full border border-[#E6D9C8] py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] transition hover:bg-[#F4EEE4]"
+                <button
+                  type="button"
+                  onClick={openFullDetails}
+                  className="block w-full max-w-full rounded-full border border-[#E6D9C8] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7C4E2F] transition hover:bg-[#F4EEE4] active:scale-[0.99]"
                 >
                   View Full Details
-                </Link>
+                </button>
+                {status ? <p className="text-center text-xs text-[#7C4E2F]">{status}</p> : null}
               </div>
             </div>
           </div>

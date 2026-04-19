@@ -42,6 +42,7 @@ type Product = {
   finishes?: string[]
   palette?: string[]
   leadTime?: string
+  dimensions?: string
   finalPrice?: number
 }
 
@@ -78,6 +79,7 @@ type ProductForm = {
   materials: string
   finishes: string
   leadTime: string
+  dimensions: string
 }
 
 type ProductPayload = {
@@ -94,6 +96,7 @@ type ProductPayload = {
   materials: string[]
   finishes: string[]
   leadTime: string | null
+  dimensions: string | null
   palette: string[]
   images: ProductImage[]
   variants: Array<{
@@ -125,6 +128,7 @@ const emptyForm: ProductForm = {
   materials: '',
   finishes: '',
   leadTime: '',
+  dimensions: '',
 }
 
 const defaultPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
@@ -297,6 +301,7 @@ export default function AdminProductsPage() {
       materials: normalizeTextList(form.materials),
       finishes: normalizeTextList(form.finishes),
       leadTime: form.leadTime.trim() || null,
+      dimensions: form.dimensions.trim() || null,
       palette: palette.filter(Boolean),
       images: dedupeImages(images),
       variants: variants.map((v) => ({
@@ -377,6 +382,7 @@ export default function AdminProductsPage() {
       materials: p.materials?.join(', ') || '',
       finishes: p.finishes?.join(', ') || '',
       leadTime: p.leadTime || '',
+      dimensions: p.dimensions || '',
     })
     const nextImages = dedupeImages(p.images || [])
     const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : defaultPalette
@@ -405,6 +411,7 @@ export default function AdminProductsPage() {
       materials: p.materials || [],
       finishes: p.finishes || [],
       leadTime: p.leadTime || null,
+      dimensions: p.dimensions || null,
       palette: nextPalette.filter(Boolean),
       images: nextImages,
       variants: nextVariants.map((variant) => ({
@@ -908,11 +915,14 @@ export default function AdminProductsPage() {
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variants</p><p className="mt-1 text-xs text-[#8C7A6B]">Use variants when a product has selectable options like colorways, finishes, or special pricing.</p></div><div className="flex flex-wrap items-center gap-2"><button type="button" onClick={() => setVariants((current) => [...current, createVariant()])} className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white">Add Variant</button>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Variants</button> : null}</div></div>
                      <div className="mt-4 space-y-4">
-                        {variants.length === 0 ? <div className="rounded-2xl border border-dashed border-[#DCCBB7] bg-white/70 p-4 text-sm text-[#8C7A6B]">No variants yet. If the piece has only one standard option, variants are not required.</div> : null}
+                        {variants.length === 0 ? <div className="rounded-2xl border border-dashed border-[#DCCBB7] bg-white/70 p-4 text-sm text-[#8C7A6B]">No variants yet. If this product has one standard option only, leave variants empty and manage the main product details below.</div> : null}
                         {variants.map((variant, index) => (
                           <div key={variant.id} className="rounded-[28px] border border-[#E6D9C8] bg-white p-4 sm:p-5">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Variant {index + 1}</p>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Variant {index + 1}</p>
+                                <p className="mt-1 text-xs text-[#8C7A6B]">Use a variant only when this option changes price, stock, image, color, or finish from the base product.</p>
+                              </div>
                               <div className="flex flex-wrap items-center gap-3">
                                 {editingId ? (
                                   <button
@@ -938,49 +948,65 @@ export default function AdminProductsPage() {
                               </div>
                             </div>
 
-                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                              <input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
-                              <input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
-                              <input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Variant price" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
-                              <input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Variant stock" className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
-                            </div>
-
-                            <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto]">
-                              <select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none">
-                                <option value="in_stock">In stock</option>
-                                <option value="low_stock">Low stock</option>
-                                <option value="out_of_stock">Out of stock</option>
-                                <option value="preorder">Preorder</option>
-                              </select>
-                              <div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2">
-                                <input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
-                                <input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" />
+                            <div className="mt-4 rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Offer Details</p>
+                                <span className="text-[10px] text-[#8C7A6B]">Required for selectable options</span>
+                              </div>
+                              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                                <input value={variant.name} onChange={(e) => updateVariant(variant.id, { name: e.target.value })} placeholder="Variant name e.g. Walnut / Queen" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                <input value={variant.sku || ''} onChange={(e) => updateVariant(variant.id, { sku: e.target.value })} placeholder="SKU" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                <input type="number" value={variant.price || ''} onChange={(e) => updateVariant(variant.id, { price: e.target.value })} placeholder="Price override" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                <input type="number" value={variant.stockCount || ''} onChange={(e) => updateVariant(variant.id, { stockCount: e.target.value })} placeholder="Stock quantity" className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                <select value={variant.stockStatus || 'in_stock'} onChange={(e) => updateVariant(variant.id, { stockStatus: e.target.value as Variant['stockStatus'] })} className="h-12 rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none">
+                                  <option value="in_stock">In stock</option>
+                                  <option value="low_stock">Low stock</option>
+                                  <option value="out_of_stock">Out of stock</option>
+                                  <option value="preorder">Preorder</option>
+                                </select>
                               </div>
                             </div>
 
-                            <div className="mt-4 rounded-2xl border border-[#E6D9C8] p-3">
-                              <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
-                              <div className="mt-3 flex items-center gap-3">
-                                {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={variant.image.url} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
-                                <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
-                                <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
+                            <div className="mt-4 rounded-2xl border border-[#E6D9C8] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Option Details</p>
+                                <span className="text-[10px] text-[#8C7A6B]">Optional display overrides</span>
+                              </div>
+                              <div className="mt-3 grid gap-4 sm:grid-cols-[auto_1fr]">
+                                <div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2">
+                                  <input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
+                                  <input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" />
+                                </div>
+                                <div className="rounded-2xl border border-[#E6D9C8] p-3">
+                                  <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
+                                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                                    {variant.image?.url ? <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-[#E6D9C8]"><img src={variant.image.url} className="h-full w-full object-cover" /><button type="button" onClick={() => updateVariant(variant.id, { image: null })} className="absolute right-1 top-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[8px] text-white">x</button></div> : null}
+                                    <label className="flex h-16 min-w-16 cursor-pointer items-center justify-center rounded-xl border border-dashed border-[#C5A070] bg-white px-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{uploading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C5A070] border-t-transparent" /> : <span>{variant.image ? 'Replace' : 'Add'}</span>}<input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0], (img) => updateVariant(variant.id, { image: img }))} /></label>
+                                  </div>
+                                </div>
                               </div>
                             </div>
 
-                            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                              <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Materials</label>
-                                <input value={(variant.materials || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'materials', e.target.value)} placeholder="Oak, boucle, linen" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                            <div className="mt-4 rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Detail Overrides</p>
+                                <span className="text-[10px] text-[#8C7A6B]">Leave empty to inherit product details</span>
                               </div>
-                              <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Finishes</label>
-                                <input value={(variant.finishes || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'finishes', e.target.value)} placeholder="Oiled, matte, brushed" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Materials</label>
+                                  <input value={(variant.materials || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'materials', e.target.value)} placeholder="Oak, boucle, linen" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                </div>
+                                <div>
+                                  <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Finishes</label>
+                                  <input value={(variant.finishes || []).join(', ')} onChange={(e) => updateVariantTextList(variant.id, 'finishes', e.target.value)} placeholder="Oiled, matte, brushed" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                                </div>
                               </div>
-                            </div>
 
-                            <div className="mt-4">
-                              <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Specifications</label>
-                              <input value={(variant.specifications || []).join(', ')} onChange={(e) => updateVariantSpec(variant.id, e.target.value)} placeholder="Deep seat, brass feet, soft-close drawers" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                              <div className="mt-4">
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Specifications</label>
+                                <input value={(variant.specifications || []).join(', ')} onChange={(e) => updateVariantSpec(variant.id, e.target.value)} placeholder="Deep seat, brass feet, soft-close drawers" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 text-sm outline-none" />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -989,8 +1015,11 @@ export default function AdminProductsPage() {
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Product Attributes</p>
-                      {editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Attributes</button> : null}
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Product Details</p>
+                        <p className="mt-1 text-xs text-[#8C7A6B]">These are the base details every customer sees unless a variant overrides them.</p>
+                      </div>
+                      {editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Details</button> : null}
                     </div>
                     <div>
                       <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Badge</label>
@@ -1045,6 +1074,11 @@ export default function AdminProductsPage() {
                           ))}
                         </div>
                       ) : null}
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Dimensions</label>
+                      <input value={form.dimensions} onChange={(e) => setForm({ ...form, dimensions: e.target.value })} placeholder="78W x 34D x 30H in" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
+                      <p className="mt-2 text-[10px] text-[#8C7A6B]">Use one clear marketplace-style size string so shoppers can compare options quickly.</p>
                     </div>
                   </div>
 

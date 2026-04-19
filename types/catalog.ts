@@ -65,6 +65,7 @@ export type Review = {
 
 export type CartItem = {
   productId: string
+  purchaseType?: 'main' | 'variant'
   variantId?: string
   variantName?: string
   color?: string

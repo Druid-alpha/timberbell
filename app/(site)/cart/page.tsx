@@ -25,10 +25,12 @@ export default function CartPage() {
 
   const dispatch = useAppDispatch()
   const { toast } = useToast()
-  const getItemKey = (item: any) => `${item.productId}::${item.variantId || 'base'}`
+  const getPurchaseType = (item: any) => (item.purchaseType === 'variant' && item.variantId ? 'variant' : 'main')
+  const getItemKey = (item: any) => `${item.saved ? 'saved' : 'active'}::${item.productId}::${getPurchaseType(item)}::${item.variantId || 'base'}`
   const getItemUnitPrice = (item: any) => item.product?.finalPrice ?? item.price ?? item.product?.price ?? 0
   const getItemImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
-  const getItemLabel = (item: any) => item.variantName || item.selectedVariant?.name || null
+  const getItemLabel = (item: any) => (getPurchaseType(item) === 'variant' ? item.variantName || item.selectedVariant?.name || null : null)
+  const getVariantOptions = (item: any) => (Array.isArray(item.product?.variants) ? item.product.variants : [])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -74,6 +76,7 @@ export default function CartPage() {
         price: item.product?.finalPrice ?? item.product?.price,
         quantity: item.quantity,
         imageUrl: item.selectedVariant?.image?.url || item.product?.images?.[0]?.url,
+        purchaseType: item.purchaseType ?? (item.variantId ? 'variant' : 'main'),
         variantId: item.variantId ?? undefined,
         variantName: item.variantName ?? item.selectedVariant?.name ?? undefined,
         color: item.color ?? item.selectedVariant?.color ?? undefined,
@@ -102,6 +105,7 @@ export default function CartPage() {
       body: JSON.stringify({
         items: finalItems.map((it: any) => ({
           productId: it.productId,
+          purchaseType: getPurchaseType(it),
           variantId: it.variantId,
           variantName: it.variantName,
           color: it.color,
@@ -117,6 +121,73 @@ export default function CartPage() {
       if (updates.quantity === 0) toast('Piece removed from bundle', 'info')
       load()
     }
+    setUpdatingId(null)
+  }
+
+  async function switchItemVariant(itemKey: string, variantId?: string) {
+    if (!cart?.items?.length) return
+
+    const currentItem = cart.items.find((item: any) => getItemKey(item) === itemKey)
+    if (!currentItem) return
+
+    const targetVariant = getVariantOptions(currentItem).find((variant: any) => variant.id === variantId) ?? null
+    const targetPurchaseType = variantId ? 'variant' : 'main'
+    const targetKey = `${currentItem.saved ? 'saved' : 'active'}::${currentItem.productId}::${targetPurchaseType}::${variantId || 'base'}`
+    setUpdatingId(itemKey)
+
+    const nextItems: any[] = []
+
+    for (const item of cart.items) {
+      const key = getItemKey(item)
+
+      if (key === itemKey) continue
+
+      if (key === targetKey) {
+        nextItems.push({
+          ...item,
+          quantity: item.quantity + currentItem.quantity,
+          saved: currentItem.saved,
+          purchaseType: targetPurchaseType,
+        })
+        continue
+      }
+
+      nextItems.push(item)
+    }
+
+    const targetAlreadyExists = cart.items.some((item: any) => getItemKey(item) === targetKey && getItemKey(item) !== itemKey)
+
+    if (!targetAlreadyExists) {
+      nextItems.push({
+        ...currentItem,
+        purchaseType: targetPurchaseType,
+        variantId: variantId ?? undefined,
+        variantName: targetVariant?.name ?? undefined,
+        color: targetVariant?.color ?? undefined,
+      })
+    }
+
+    const res = await fetch('/api/cart', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: nextItems.map((item: any) => ({
+          productId: item.productId,
+          purchaseType: getPurchaseType(item),
+          variantId: item.variantId,
+          variantName: item.variantName,
+          color: item.color,
+          quantity: item.quantity,
+          saved: item.saved,
+        })),
+      }),
+    })
+
+    if (res.ok) {
+      toast(variantId ? 'Variant updated in your bundle' : 'Main product restored in your bundle', 'success')
+      load()
+    }
+
     setUpdatingId(null)
   }
 
@@ -137,6 +208,7 @@ export default function CartPage() {
       body: JSON.stringify({
         items: releasedItems.map((item: any) => ({
           productId: item.productId,
+          purchaseType: getPurchaseType(item),
           variantId: item.variantId,
           variantName: item.variantName,
           color: item.color,
@@ -246,6 +318,27 @@ export default function CartPage() {
                           </span>
                         ) : null}
                       </div>
+                      {getVariantOptions(item).length > 0 ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => switchItemVariant(getItemKey(item))}
+                            className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                          >
+                            Main Product
+                          </button>
+                          {getVariantOptions(item).map((variant: any) => (
+                            <button
+                              key={variant.id}
+                              type="button"
+                              onClick={() => switchItemVariant(getItemKey(item), variant.id)}
+                              className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                            >
+                              {variant.name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
                       <p className="mt-3 text-sm font-bold text-[#7C4E2F]">{formatMoney(getItemUnitPrice(item))}</p>
                     </div>
                     <div className="flex flex-col gap-3 sm:items-end">
@@ -291,6 +384,27 @@ export default function CartPage() {
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-[#2B2119]">{item.product?.name}</h4>
                         {getItemLabel(item) ? <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">{getItemLabel(item)}</p> : null}
+                        {getVariantOptions(item).length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => switchItemVariant(getItemKey(item))}
+                              className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                            >
+                              Main
+                            </button>
+                            {getVariantOptions(item).map((variant: any) => (
+                              <button
+                                key={variant.id}
+                                type="button"
+                                onClick={() => switchItemVariant(getItemKey(item), variant.id)}
+                                className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                              >
+                                {variant.name}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                         <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="mt-2 border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
                       </div>
                     </motion.div>

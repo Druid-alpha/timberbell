@@ -6,6 +6,7 @@ export type CartItem = {
   price: number
   quantity: number
   imageUrl?: string
+  purchaseType?: 'main' | 'variant'
   variantId?: string
   variantName?: string
   color?: string
@@ -34,7 +35,9 @@ const cartSlice = createSlice({
       const existing = state.items.find(
         (item) =>
           item.productId === action.payload.productId &&
-          item.variantId === action.payload.variantId
+          item.variantId === action.payload.variantId &&
+          (item.purchaseType ?? 'main') === (action.payload.purchaseType ?? 'main') &&
+          Boolean(item.saved) === Boolean(action.payload.saved)
       )
       if (existing) {
         existing.quantity += action.payload.quantity
@@ -43,24 +46,28 @@ const cartSlice = createSlice({
       }
       state.cartCount = calcCount(state.items)
     },
-    removeItem(state, action: PayloadAction<{ productId: string; variantId?: string }>) {
+    removeItem(state, action: PayloadAction<{ productId: string; variantId?: string; purchaseType?: 'main' | 'variant'; saved?: boolean }>) {
       state.items = state.items.filter(
         (item) =>
           !(
             item.productId === action.payload.productId &&
-            item.variantId === action.payload.variantId
+            item.variantId === action.payload.variantId &&
+            (item.purchaseType ?? 'main') === (action.payload.purchaseType ?? 'main') &&
+            Boolean(item.saved) === Boolean(action.payload.saved)
           )
       )
       state.cartCount = calcCount(state.items)
     },
     updateQuantity(
       state,
-      action: PayloadAction<{ productId: string; variantId?: string; quantity: number }>
+      action: PayloadAction<{ productId: string; variantId?: string; purchaseType?: 'main' | 'variant'; saved?: boolean; quantity: number }>
     ) {
       const item = state.items.find(
         (i) =>
           i.productId === action.payload.productId &&
-          i.variantId === action.payload.variantId
+          i.variantId === action.payload.variantId &&
+          (i.purchaseType ?? 'main') === (action.payload.purchaseType ?? 'main') &&
+          Boolean(i.saved) === Boolean(action.payload.saved)
       )
       if (item) {
         item.quantity = Math.max(0, action.payload.quantity)
@@ -69,7 +76,9 @@ const cartSlice = createSlice({
             (i) =>
               !(
                 i.productId === action.payload.productId &&
-                i.variantId === action.payload.variantId
+                i.variantId === action.payload.variantId &&
+                (i.purchaseType ?? 'main') === (action.payload.purchaseType ?? 'main') &&
+                Boolean(i.saved) === Boolean(action.payload.saved)
               )
           )
         }

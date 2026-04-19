@@ -89,10 +89,12 @@ export async function POST(request: NextRequest) {
 
   const cart = await addCartItemForUser(user.id, {
     productId: body.productId,
+    purchaseType: body.purchaseType === 'variant' ? 'variant' : 'main',
     variantId: body.variantId ? String(body.variantId) : undefined,
     variantName: body.variantName ? String(body.variantName) : undefined,
     color: body.color ? String(body.color) : undefined,
     quantity: body.quantity,
+    saved: Boolean(body.saved),
   })
 
   return Response.json({ cart })

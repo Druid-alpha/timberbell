@@ -47,6 +47,7 @@ export default function ProductCard({
 }) {
   const palette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
   const [hoveredVariantId, setHoveredVariantId] = useState<string | null>(null)
+  const [isCardHovered, setIsCardHovered] = useState(false)
   let price = product.price
 
   if (product.discountValue) {
@@ -62,13 +63,14 @@ export default function ProductCard({
   }
 
   const discountPercent = product.price > price ? Math.round(((product.price - price) / product.price) * 100) : null
-  const variants = product.variants ?? []
+  const variants = useMemo(() => product.variants ?? [], [product.variants])
   const hoveredVariant = useMemo(
     () => variants.find((entry) => entry.id === hoveredVariantId) ?? null,
     [hoveredVariantId, variants]
   )
-  const primaryImage = hoveredVariant?.image?.url || product.images?.[0]?.url
-  const secondaryImage = hoveredVariant ? hoveredVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
+  const previewVariant = hoveredVariant ?? (isCardHovered ? variants.find((entry) => entry.image?.url) ?? variants[0] ?? null : null)
+  const primaryImage = previewVariant?.image?.url || product.images?.[0]?.url
+  const secondaryImage = previewVariant ? previewVariant.image?.url || product.images?.[1]?.url : product.images?.[1]?.url
 
   if (variant === 'list') {
     return (
@@ -137,7 +139,14 @@ export default function ProductCard({
   }
 
   return (
-    <article className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal">
+    <article
+      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal"
+      onMouseEnter={() => setIsCardHovered(true)}
+      onMouseLeave={() => {
+        setIsCardHovered(false)
+        setHoveredVariantId(null)
+      }}
+    >
       <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
         {primaryImage ? (
           <>
@@ -182,32 +191,22 @@ export default function ProductCard({
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none group-hover:opacity-100">
-          <div className="rounded-full bg-white/90 px-6 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] shadow-lg backdrop-blur-sm pointer-events-auto">
+          <div className="image-glass rounded-full px-6 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#5B371F] pointer-events-auto">
             Quick View
           </div>
         </div>
 
-        {variants.length > 0 ? (
-          <div className="absolute inset-x-3 bottom-3 hidden gap-2 rounded-2xl bg-white/90 p-2 backdrop-blur-sm transition group-hover:flex">
-            {variants.slice(0, 4).map((variant) => (
-              <div
-                key={variant.id}
-                onMouseEnter={() => setHoveredVariantId(variant.id)}
-                onMouseLeave={() => setHoveredVariantId(null)}
-                className="flex items-center gap-1.5 rounded-full border border-[#E6D9C8] bg-white px-2 py-1 text-[9px] uppercase tracking-[0.25em] text-[#6B594A]"
-              >
+        {previewVariant?.name ? (
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 opacity-0 transition group-hover:opacity-100">
+            <div className="image-glass inline-flex max-w-full items-center gap-2 rounded-full px-3 py-2 text-[9px] uppercase tracking-[0.2em] text-[#4C3628]">
+              {previewVariant.color ? (
                 <span
                   className="h-2.5 w-2.5 rounded-full border border-[#E6D9C8]"
-                  style={{ backgroundColor: variant.color || '#E4DDCF' }}
+                  style={{ backgroundColor: previewVariant.color }}
                 />
-                {variant.name}
-              </div>
-            ))}
-            {variants.length > 4 ? (
-              <span className="rounded-full border border-[#E6D9C8] bg-white px-2 py-1 text-[9px] uppercase tracking-[0.25em] text-[#6B594A]">
-                +{variants.length - 4}
-              </span>
-            ) : null}
+              ) : null}
+              <span className="truncate">{previewVariant.name}</span>
+            </div>
           </div>
         ) : null}
       </Link>

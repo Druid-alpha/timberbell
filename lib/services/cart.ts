@@ -30,14 +30,19 @@ export async function createCartForUser(userId: string) {
 
 export async function addCartItemForUser(userId: string, item: CartItem) {
   const db = await getDb()
+  const purchaseType = item.purchaseType === 'variant' && item.variantId ? 'variant' : 'main'
+  const saved = Boolean(item.saved)
+  const savedMatch = saved ? true : { $ne: true }
   const matchByVariant =
-    item.variantId != null
+    purchaseType === 'variant' && item.variantId != null
       ? {
           userId,
           items: {
             $elemMatch: {
               productId: item.productId,
+              purchaseType: 'variant',
               variantId: item.variantId,
+              saved: savedMatch,
             },
           },
         }
@@ -46,6 +51,8 @@ export async function addCartItemForUser(userId: string, item: CartItem) {
           items: {
             $elemMatch: {
               productId: item.productId,
+              purchaseType: { $in: [null, 'main'] },
+              saved: savedMatch,
               $or: [{ variantId: { $exists: false } }, { variantId: null }],
             },
           },
@@ -62,7 +69,13 @@ export async function addCartItemForUser(userId: string, item: CartItem) {
       {
         $setOnInsert: { createdAt: new Date() },
         $set: { updatedAt: new Date() },
-        $push: { items: item },
+        $push: {
+          items: {
+            ...item,
+            purchaseType,
+            saved,
+          },
+        },
       },
       { upsert: true }
     )

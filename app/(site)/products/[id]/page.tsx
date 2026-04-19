@@ -33,9 +33,9 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
   const [activeImage, setActiveImage] = useState('')
+  const [selectionMode, setSelectionMode] = useState<'main' | 'variant'>('main')
   const [activeVariantId, setActiveVariantId] = useState<string | null>(null)
   const [activeColorHex, setActiveColorHex] = useState('')
-  const [variantPrice, setVariantPrice] = useState<number | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [reviews, setReviews] = useState<ProductReview[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -99,10 +99,9 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return
     const firstVariantImage = product.variants?.find((variant: any) => variant.image?.url)?.image?.url
-    const fallback = product.images?.[0]?.url || firstVariantImage || ''
-    setActiveImage(fallback)
+    setSelectionMode('main')
+    setActiveImage(product.images?.[0]?.url || firstVariantImage || '')
     setActiveVariantId(product.variants?.[0]?.id ?? null)
-    setVariantPrice(product.variants?.[0]?.price ?? null)
     setActiveColorHex(product.variants?.[0]?.color ?? product.palette?.[0] ?? '#f4e7d2')
   }, [product])
 
@@ -125,16 +124,18 @@ export default function ProductDetailPage() {
     if (!product) return
     setStatus('Adding to cart...')
     const selectedVariant = product.variants?.find((v: any) => v.id === activeVariantId) ?? null
-    const finalPrice = variantPrice ?? product.finalPrice ?? product.price
+    const displayVariant = selectionMode === 'variant' ? selectedVariant : null
+    const finalPrice = computeDisplayPrice(displayVariant?.price ?? product.price)
     
     const res = await fetch('/api/cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         productId: product.id,
-        variantId: selectedVariant?.id,
-        variantName: selectedVariant?.name ?? null,
-        color: selectedVariant?.color ?? activeColorHex ?? null,
+        purchaseType: displayVariant ? 'variant' : 'main',
+        variantId: displayVariant?.id,
+        variantName: displayVariant?.name ?? null,
+        color: displayVariant?.color ?? (selectionMode === 'main' ? activeColorHex ?? null : null),
         quantity: quantity,
       }),
     })
@@ -144,12 +145,13 @@ export default function ProductDetailPage() {
       dispatch(
         addItem({
           productId: product.id,
-          variantId: selectedVariant?.id,
+          purchaseType: displayVariant ? 'variant' : 'main',
+          variantId: displayVariant?.id,
           quantity: quantity,
           name: product.name,
           price: finalPrice,
-          variantName: selectedVariant?.name,
-          color: selectedVariant?.color ?? activeColorHex,
+          variantName: displayVariant?.name,
+          color: displayVariant?.color ?? (selectionMode === 'main' ? activeColorHex : undefined),
         })
       )
       toast(`${product.name} added to your bundle`, 'success')
@@ -255,20 +257,21 @@ export default function ProductDetailPage() {
 
   const images = product.images?.length ? product.images.map((img: any) => img.url) : []
   const fallbackPalette = product.palette ?? ['#f4e7d2', '#eab38b', '#c59a6b']
-  const price = variantPrice ?? product.finalPrice ?? product.price
   const selectedVariant = product.variants?.find((variant: any) => variant.id === activeVariantId) ?? null
-  const galleryImages = Array.from(new Set([selectedVariant?.image?.url, ...images].filter(Boolean))) as string[]
-  const variantBasePrice = selectedVariant?.price ?? product.price
+  const displayVariant = selectionMode === 'variant' ? selectedVariant : null
+  const price = computeDisplayPrice(displayVariant?.price ?? product.price)
+  const galleryImages = Array.from(new Set([displayVariant?.image?.url, ...images].filter(Boolean))) as string[]
+  const variantBasePrice = displayVariant?.price ?? product.price
   const variantDisplayPrice = computeDisplayPrice(variantBasePrice)
-  const selectedColorHex = selectedVariant?.color || activeColorHex || fallbackPalette[0]
+  const selectedColorHex = displayVariant?.color || activeColorHex || fallbackPalette[0]
   const selectedColorName = getColorName(selectedColorHex)
   const paletteChoices = (Array.from(new Set((product.palette ?? []).filter(Boolean))) as string[]).slice(0, 3)
-  const availableStock = selectedVariant?.stockCount ?? product.inventoryCount ?? 0
-  const selectedSpecifications = selectedVariant?.specifications?.length ? selectedVariant.specifications : []
-  const displayMaterials = selectedVariant?.materials?.length ? selectedVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
-  const displayFinishes = selectedVariant?.finishes?.length ? selectedVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Hand-finished studio treatment'
-  const displayLeadTime = selectedVariant?.stockStatus === 'preorder' ? `Preorder · ${product.leadTime || '2-4 weeks'}` : product.leadTime || '2-4 weeks'
-  const selectedTitle = selectedVariant?.name ? `${product.name} · ${selectedVariant.name}` : product.name
+  const availableStock = displayVariant?.stockCount ?? product.inventoryCount ?? 0
+  const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
+  const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
+  const displayFinishes = displayVariant?.finishes?.length ? displayVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Hand-finished studio treatment'
+  const displayLeadTime = displayStockStatus === 'preorder' ? `Preorder - ${product.leadTime || '2-4 weeks'}` : product.leadTime || '2-4 weeks'
+  const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-16 sm:px-6">
@@ -322,14 +325,14 @@ export default function ProductDetailPage() {
         <div className="space-y-8 arkwood-stagger">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 rounded-full border border-[#E6D9C8] bg-white/70 px-4 py-2 shadow-sm">
                 <div className="flex">
                   {stars.map((s, i) => (
                     <StarIcon key={i} variant={s as any} />
                   ))}
                 </div>
                 <span className="text-xs font-semibold text-[#2B2119]">{ratingLabel}</span>
-                <span className="text-xs text-[#8C7A6B]">({reviews.length} reviews)</span>
+                <span className="text-xs uppercase tracking-[0.18em] text-[#8C7A6B]">{reviews.length} reviews</span>
               </div>
               <WishlistButton productId={product.id} />
             </div>
@@ -347,77 +350,78 @@ export default function ProductDetailPage() {
           <div className="space-y-6 rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4]/50 p-8 shadow-sm">
             {product.variants?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Select configuration</p>
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Choose purchase type</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectionMode('main')
+                      setActiveImage(product.images?.[0]?.url || selectedVariant?.image?.url || '')
+                      setQuantity(1)
+                    }}
+                    className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                  >
+                    Main Product
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const fallbackVariant = activeVariantId ?? product.variants?.[0]?.id
+                      if (!fallbackVariant) return
+                      setSelectionMode('variant')
+                      setActiveVariantId(fallbackVariant)
+                      const nextVariant = product.variants?.find((variant: any) => variant.id === fallbackVariant) ?? null
+                      setActiveImage(nextVariant?.image?.url || product.images?.[0]?.url || '')
+                      setQuantity(1)
+                    }}
+                    className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                  >
+                    Variant
+                  </button>
+                </div>
+                <div className={`grid gap-2 sm:grid-cols-2 xl:grid-cols-3 transition-all ${selectionMode === 'variant' ? 'opacity-100' : 'pointer-events-none opacity-45'}`}>
                   {product.variants.map((v: any) => (
                     <button
                       key={v.id}
                       onClick={() => {
+                        setSelectionMode('variant')
                         setActiveVariantId(v.id)
                         setActiveImage(v.image?.url || product.images?.[0]?.url || '')
-                        setVariantPrice(typeof v.price === 'number' ? v.price : product.finalPrice ?? product.price)
                         setActiveColorHex(v.color || fallbackPalette[0])
                         setQuantity(1)
                       }}
-                      className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left transition-all ${activeVariantId === v.id ? 'border-[#7C4E2F] bg-[#2B2119] text-white shadow-md' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                      className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left transition-all active:scale-[0.98] ${displayVariant?.id === v.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <div className="h-3 w-3 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: v.color || '#D8C7B3' }} />
                           <span className="truncate text-[11px] font-bold uppercase tracking-[0.18em]">{v.name}</span>
                         </div>
-                        <p className={`mt-1 text-[10px] ${activeVariantId === v.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
+                        <p className={`mt-1 text-[10px] ${displayVariant?.id === v.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
                           {formatMoney(computeDisplayPrice(v.price ?? product.price))}
                         </p>
                       </div>
-                      <span className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-widest ${activeVariantId === v.id ? 'bg-white/10 text-white' : 'bg-[#F4EEE4] text-[#7C4E2F]'}`}>
+                      <span className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-widest ${displayVariant?.id === v.id ? 'bg-white/10 text-white' : 'bg-[#F4EEE4] text-[#7C4E2F]'}`}>
                         {v.stockStatus === 'preorder' ? 'Preorder' : `${v.stockCount ?? 0} left`}
                       </span>
                     </button>
                   ))}
                 </div>
-                {selectedVariant ? (
-                  <div className="rounded-[28px] border border-[#D9C3AA] bg-[linear-gradient(135deg,#fffdf9,#f6ede2)] p-5 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.45)]">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-2">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Current Selection</p>
-                        <h3 className="font-display text-2xl text-[#2B2119]">{selectedVariant.name}</h3>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
-                            <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: selectedColorHex }} />
-                            {selectedColorName}
-                          </span>
-                          <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
-                            SKU {selectedVariant.sku || 'Studio'}
-                          </span>
-                        </div>
+                {displayVariant ? (
+                  <div className="rounded-[24px] border border-[#D9C3AA] bg-[linear-gradient(135deg,#fffdf9,#f6ede2)] p-4 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.45)]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Selected Option</p>
+                        <p className="mt-2 text-sm font-semibold text-[#2B2119]">{displayVariant.name}</p>
                       </div>
-                      <div className="rounded-[24px] bg-[#2B2119] px-5 py-4 text-white shadow-lg">
-                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/60">Selected Price</p>
-                        <p className="mt-2 font-display text-3xl text-[#F4EEE4]">{formatMoney(price)}</p>
-                        {variantBasePrice > variantDisplayPrice ? (
-                          <p className="mt-1 text-sm text-white/50 line-through">{formatMoney(variantBasePrice)}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                    <div className="mt-5 grid gap-3 md:grid-cols-4">
-                      <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#8C7A6B]">Stock</p>
-                        <p className="mt-2 text-lg font-bold text-[#2B2119]">{availableStock}</p>
-                      </div>
-                      <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#8C7A6B]">Discount</p>
-                        <p className="mt-2 text-lg font-bold text-[#2B2119]">
-                          {product.discountType && product.discountValue ? product.discountType === 'percentage' ? `${product.discountValue}%` : formatMoney(product.discountValue) : 'None'}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#8C7A6B]">Lead Time</p>
-                        <p className="mt-2 text-sm font-bold text-[#2B2119]">{displayLeadTime}</p>
-                      </div>
-                      <div className="rounded-2xl border border-white/80 bg-white/90 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.22em] text-[#8C7A6B]">Status</p>
-                        <p className="mt-2 text-sm font-bold text-[#2B2119]">{selectedVariant.stockStatus?.replace('_', ' ') || 'in stock'}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
+                          <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: selectedColorHex }} />
+                          {selectedColorName}
+                        </span>
+                        <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
+                          {displayVariant.stockStatus?.replace('_', ' ') || 'in stock'}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -439,7 +443,7 @@ export default function ProductDetailPage() {
                           setActiveColorHex(color)
                           setActiveImage(product.images?.[0]?.url || '')
                         }}
-                        className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left text-[10px] uppercase tracking-[0.2em] transition-all ${isActive ? 'border-[#7C4E2F] bg-white text-[#2B2119]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A]'}`}
+                        className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left text-[10px] uppercase tracking-[0.2em] transition-all active:scale-[0.98] ${isActive ? 'translate-y-[1px] border-[#7C4E2F] bg-white text-[#2B2119] shadow-[inset_0_0_0_1px_rgba(124,78,47,0.1)]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                       >
                         <span className="inline-flex items-center gap-2">
                           <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: color }} />
@@ -473,38 +477,28 @@ export default function ProductDetailPage() {
                 </div>
                 <button
                   onClick={handleAddToCart}
-                  disabled={selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0}
+                  disabled={displayStockStatus === 'out_of_stock' || availableStock === 0}
                   className="group relative flex-1 overflow-hidden rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <span className="relative z-10">{selectedVariant?.stockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of stock' : 'Add to bundle'}</span>
+                  <span className="relative z-10">{displayStockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of stock' : selectionMode === 'variant' ? 'Add variant to bundle' : 'Add product to bundle'}</span>
                 </button>
               </div>
               
               <div className="flex flex-col gap-3 px-2">
-                 <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
-                  <div className={`h-1.5 w-1.5 rounded-full ${(availableStock > 5 || selectedVariant?.stockStatus === 'preorder') ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
-                  {selectedVariant?.stockStatus === 'preorder'
+                <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
+                  <div className={`h-1.5 w-1.5 rounded-full ${(availableStock > 5 || displayStockStatus === 'preorder') ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
+                  {displayStockStatus === 'preorder'
                     ? 'Available on preorder'
                     : availableStock > 5
                       ? 'In stock and ready to ship'
                       : `Only ${availableStock} left - items in cart are reserved for 10 min`}
                 </div>
-                
-                {/* Nigeria specific ETAs */}
-                <div className="grid grid-cols-2 gap-4 rounded-2xl bg-white/40 p-3 border border-[#E6D9C8]/50">
-                    <div className="space-y-0.5">
-                        <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B] font-bold">Lagos Delivery</p>
-                        <p className="text-[10px] text-[#2B2119]">3 - 5 Business Days</p>
-                    </div>
-                    <div className="space-y-0.5 border-l border-[#E6D9C8] pl-4">
-                        <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B] font-bold">Abuja / PH</p>
-                        <p className="text-[10px] text-[#2B2119]">5 - 9 Business Days</p>
-                    </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-[#8C7A6B]">
-                  <span>Secure Nigeria logistics available</span>
-                  <span>Lead time: {displayLeadTime}</span>
+                <div className="rounded-2xl border border-[#E6D9C8]/60 bg-white/50 px-4 py-3 text-[10px] text-[#6B594A]">
+                  <p className="font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Shipping & Availability</p>
+                  <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <span>Lead time: {displayLeadTime}</span>
+                    <span>Secure delivery arranged at checkout</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -515,10 +509,12 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2">
-            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Dimensions</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.dimensions || 'Standard architectural fit'}</p>
-            </div>
+            {product.dimensions && product.dimensions !== 'TBD' ? (
+              <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Dimensions</p>
+                <p className="mt-2 text-sm font-medium text-[#2B2119]">{product.dimensions}</p>
+              </div>
+            ) : null}
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Materials</p>
               <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayMaterials}</p>
@@ -527,24 +523,16 @@ export default function ProductDetailPage() {
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Finishes</p>
               <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayFinishes}</p>
             </div>
-            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
+            <div className="hidden rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Color</p>
               <p className="mt-2 text-sm font-medium text-[#2B2119]">
                 {selectedColorName}
-                {selectedVariant?.name ? <span className="text-[#8C7A6B]"> · {selectedVariant.name}</span> : null}
+                {displayVariant?.name ? <span className="text-[#8C7A6B]"> - {displayVariant.name}</span> : null}
               </p>
-            </div>
-            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Stock Quantity</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{availableStock}</p>
             </div>
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
               <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Lead Time</p>
               <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayLeadTime}</p>
-            </div>
-            <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Configuration Details</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{selectedSpecifications.length ? selectedSpecifications.join(', ') : 'Standard studio configuration'}</p>
             </div>
           </div>
         </div>
@@ -555,8 +543,8 @@ export default function ProductDetailPage() {
       <section className="space-y-10 pt-16 border-t border-[#E6D9C8]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
-            <h2 className="font-display text-4xl text-[#2B2119]">Community Notes</h2>
-            <p className="text-sm text-[#6B594A]">Honest thoughts from fellow curators.</p>
+            <h2 className="font-display text-4xl text-[#2B2119]">Collector Reviews</h2>
+            <p className="text-sm text-[#6B594A]">A more refined read on comfort, finish, and presence in real spaces.</p>
           </div>
           <button 
             onClick={() => {
@@ -611,9 +599,9 @@ export default function ProductDetailPage() {
         <div className="grid gap-8">
           {reviews.length > 0 ? (
             reviews.map((review, i) => (
-              <div key={review.id || i} className="group relative space-y-4 rounded-3xl border border-[#E6D9C8] bg-white p-8 shadow-sm transition-all hover:shadow-md">
+              <div key={review.id || i} className="group relative space-y-5 rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdfa,#ffffff)] p-8 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.45)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_70px_-40px_rgba(55,32,15,0.5)]">
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-0.5">
+                  <div className="flex gap-0.5 rounded-full border border-[#E6D9C8] bg-[#F9F5EF] px-3 py-2">
                     {Array.from({ length: 5 }).map((_, idx) => (
                       <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />
                     ))}
@@ -622,9 +610,9 @@ export default function ProductDetailPage() {
                     {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
-                <p className="text-base italic leading-relaxed text-[#2B2119] font-medium">"{review.message}"</p>
+                <p className="text-lg italic leading-relaxed text-[#2B2119] font-medium">&ldquo;{review.message}&rdquo;</p>
                 <div className="flex items-center gap-3 pt-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F4EEE4] text-[10px] font-bold text-[#7C4E2F] ring-1 ring-[#7C4E2F]/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4EEE4] text-[10px] font-bold text-[#7C4E2F] ring-1 ring-[#7C4E2F]/10 shadow-inner">
                     {review.customer?.[0]?.toUpperCase()}
                   </div>
                   <div>

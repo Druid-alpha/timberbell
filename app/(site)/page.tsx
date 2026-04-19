@@ -26,26 +26,26 @@ type Product = {
 
 const heroSlides = [
   {
-    title: 'Nature in your home',
-    description: 'Curate warm, grounded interiors with sculptural seating and organic finishes.',
-    image: '/lifestyle-1.svg',
-    chip: 'Timberbell Atelier'
+    title: 'Spaces shaped with quiet confidence',
+    description: 'Sculptural silhouettes, calm luxury, and finely balanced pieces designed to make the room feel intentional.',
+    image: '/modern-cool-white-furniture.jpg',
+    chip: 'White Edit'
   },
   {
-    title: 'Quiet Silhouettes',
-    description: 'Soft edges and warm textures designed for slow mornings.',
-    image: '/lifestyle-2.svg',
-    chip: 'Organic Collection'
+    title: 'Editorial furniture for modern living',
+    description: 'Confident forms, composed layers, and elevated textures that turn everyday interiors into curated scenes.',
+    image: '/cool-half-furniture.jpg',
+    chip: 'Cool Edit'
   },
   {
-    title: 'Artisan Crafted',
-    description: 'Sustainably sourced oak and walnut blends built for longevity.',
-    image: '/hero-room.svg',
-    chip: 'Limited Drop'
+    title: 'Raw materials with refined presence',
+    description: 'Honest timber, tactile finishes, and collectible craftsmanship brought together with architectural restraint.',
+    image: '/raw-furniture-art.jpg',
+    chip: 'Raw Edit'
   }
 ]
 
-const heroChips = ['Natural wood', 'Organic fabrics', 'Artisan made', 'Smart storage']
+  const heroChips = ['Editorial calm', 'Museum-white', 'Raw timber', 'Statement silhouettes']
 
 const categoryBanners = [
   {
@@ -57,21 +57,6 @@ const categoryBanners = [
     title: 'Living calm',
     detail: 'Soft seating and serene palettes for slow evenings.',
     image: '/lifestyle-2.svg',
-  },
-]
-
-const featureCards = [
-  {
-    title: 'Style with conscience',
-    detail: 'Sustainably sourced oak, walnut, and cotton blends.',
-  },
-  {
-    title: 'Quiet silhouettes',
-    detail: 'Soft edges, warm textures, and timeless proportions.',
-  },
-  {
-    title: 'Crafted longevity',
-    detail: 'Engineered joints and finishes built to last.',
   },
 ]
 
@@ -133,7 +118,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
                 className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center px-10 py-16 lg:px-20 lg:py-24"
               >
                 <div className="space-y-8">
@@ -141,7 +126,7 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white/70 px-6 py-2.5 text-[10px] uppercase tracking-[0.4em] text-[#7C5A3B] font-bold"
+                    className="image-glass inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-[10px] font-bold uppercase tracking-[0.4em] text-[#6A4529]"
                   >
                     {heroSlides[activeSlide].chip}
                   </motion.div>
@@ -149,7 +134,7 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="font-display text-5xl leading-tight text-[#2B2119] sm:text-6xl lg:text-7xl"
+                    className="font-display text-5xl leading-[0.96] text-[#2B2119] sm:text-6xl lg:text-7xl"
                   >
                     {heroSlides[activeSlide].title}
                   </motion.h1>
@@ -161,6 +146,18 @@ export default function HomePage() {
                   >
                     {heroSlides[activeSlide].description}
                   </motion.p>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {heroChips.map((chip) => (
+                      <span key={chip} className="image-glass rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#6A4529]">
+                        {chip}
+                      </span>
+                    ))}
+                  </motion.div>
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -169,13 +166,13 @@ export default function HomePage() {
                   >
                     <Link
                       href="/productfilter"
-                      className="rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white shadow-lg hover:shadow-xl transition-all hover:bg-[#5C3A24]"
+                    className="rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white shadow-[0_24px_60px_-30px_rgba(55,32,15,0.55)] hover:-translate-y-0.5 hover:bg-[#5C3A24] hover:shadow-[0_30px_70px_-30px_rgba(55,32,15,0.6)] transition-all"
                     >
                       Shop Collection
                     </Link>
                     <Link
                       href="/journal"
-                      className="rounded-full border border-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] hover:bg-white/50 transition-all"
+                    className="rounded-full border border-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] hover:-translate-y-0.5 hover:bg-white/50 transition-all"
                     >
                       View the Lookbook
                     </Link>
@@ -198,13 +195,24 @@ export default function HomePage() {
                     initial={{ opacity: 0, scale: 1.1, rotate: 2 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
                     transition={{ duration: 1, ease: 'easeOut' }}
-                    className="h-full w-full overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-2xl"
+                    className="h-full w-full overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white shadow-[0_35px_100px_-40px_rgba(55,32,15,0.55)]"
                   >
                     <img 
                       src={heroSlides[activeSlide].image} 
                       alt="" 
-                      className="h-full w-full object-cover transition-transform duration-[20s] hover:scale-110" 
+                      className="h-full w-full object-cover transition-transform duration-[18s] hover:scale-105" 
                     />
+                  </motion.div>
+                  <motion.div
+                    style={{ y: y2 }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.35, duration: 0.9 }}
+                    className="image-glass absolute -bottom-6 -left-6 hidden overflow-hidden rounded-[28px] px-5 py-4 md:block"
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.3),rgba(43,33,25,0.08))]" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Curated Mood</p>
+                    <p className="relative mt-2 max-w-[12rem] text-sm leading-relaxed text-[#2B2119] [text-shadow:0_1px_1px_rgba(255,255,255,0.45)]">Sophisticated furniture direction with collectible presence.</p>
                   </motion.div>
                 </div>
               </motion.div>
