@@ -55,8 +55,18 @@ export default function CheckoutPage() {
   }, [form])
 
   const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
+  const getCheckoutUnitPrice = (item: any) => {
+    const variantPrice = item.selectedVariant?.price
+    if (typeof variantPrice === 'number') {
+      return variantPrice
+    }
+    return item.product?.finalPrice ?? item.price ?? item.product?.price ?? 0
+  }
+  const getCheckoutImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
+  const getCheckoutLabel = (item: any) => item.variantName || item.selectedVariant?.name || null
+  const getCheckoutColor = (item: any) => item.color || item.selectedVariant?.color || null
   const subtotal = activeItems.reduce(
-    (sum: number, item: any) => sum + (item.product?.price ?? 0) * item.quantity,
+    (sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity,
     0
   )
   const delivery = subtotal > 0 ? 14000 : 0
@@ -288,13 +298,24 @@ export default function CheckoutPage() {
                   {activeItems.map((item: any) => (
                     <div key={item.id} className="flex gap-4">
                       <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E6D9C8] bg-white">
-                        <img src={item.product?.images?.[0]?.url || ''} alt="" className="h-full w-full object-cover" />
+                        <img src={getCheckoutImage(item)} alt="" className="h-full w-full object-cover" />
                       </div>
                       <div className="flex-1">
                         <p className="line-clamp-1 font-bold leading-tight text-[#2B2119]">{item.product?.name}</p>
+                        {getCheckoutLabel(item) ? (
+                          <p className="mt-0.5 text-[10px] uppercase tracking-widest text-[#7C4E2F]">
+                            {getCheckoutLabel(item)}
+                          </p>
+                        ) : null}
+                        {getCheckoutColor(item) ? (
+                          <div className="mt-1 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                            <span className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ backgroundColor: getCheckoutColor(item) }} />
+                            Selected Color
+                          </div>
+                        ) : null}
                         <p className="text-[10px] text-[#8C7A6B]">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-bold text-[#2B2119]">{formatMoney((item.product?.price || 0) * item.quantity)}</p>
+                      <p className="font-bold text-[#2B2119]">{formatMoney(getCheckoutUnitPrice(item) * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
