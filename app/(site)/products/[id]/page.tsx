@@ -298,8 +298,8 @@ export default function ProductDetailPage() {
         />
       </div>
 
-      <div className="grid gap-12 lg:grid-cols-2">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-12 lg:grid-cols-2">
+        <div className="min-w-0 space-y-6">
           <div className="relative aspect-square overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] arkwood-reveal">
             {activeImage ? (
               <img src={activeImage} alt="" className="h-full w-full object-cover" />
@@ -317,7 +317,7 @@ export default function ProductDetailPage() {
               </div>
             ) : null}
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="flex max-w-full gap-4 overflow-x-auto pb-2">
             {galleryImages.map((img: string, i: number) => (
               <button
                 key={i}
@@ -330,25 +330,25 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        <div className="space-y-8 arkwood-stagger">
+        <div className="min-w-0 space-y-8 arkwood-stagger">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 rounded-full border border-[#E6D9C8] bg-white/70 px-4 py-2 shadow-sm">
-                <div className="flex">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-white/70 px-4 py-2 shadow-sm">
+                <div className="flex shrink-0">
                   {stars.map((s, i) => (
                     <StarIcon key={i} variant={s as any} />
                   ))}
                 </div>
-                <span className="text-xs font-semibold text-[#2B2119]">{ratingLabel}</span>
-                <span className="text-xs uppercase tracking-[0.18em] text-[#8C7A6B]">{reviews.length} reviews</span>
+                <span className="shrink-0 text-xs font-semibold text-[#2B2119]">{ratingLabel}</span>
+                <span className="text-xs uppercase tracking-[0.12em] text-[#8C7A6B]">{reviews.length} reviews</span>
               </div>
               <WishlistButton productId={product.id} />
             </div>
 
-          <div className="flex items-baseline gap-3">
+          <div className="flex min-w-0 flex-wrap items-baseline gap-3">
             <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
             {variantBasePrice > variantDisplayPrice ? (
-              <span className="text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span>
+              <span className="min-w-0 break-words text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span>
             ) : null}
           </div>
 
@@ -358,7 +358,7 @@ export default function ProductDetailPage() {
           <div className="space-y-6 rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4]/50 p-8 shadow-sm">
             {product.variants?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Choose purchase type</p>
+                <p className="text-[10px] uppercase tracking-[0.14em] text-[#8C7A6B]">Choose purchase type</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <button
                     type="button"
@@ -367,7 +367,7 @@ export default function ProductDetailPage() {
                       setActiveImage(getOptimizedImageUrl(product.images?.[0]?.url || selectedVariant?.image?.url || ''))
                       setQuantity(1)
                     }}
-                    className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                    className={`min-w-0 rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                   >
                     Main Product
                   </button>
@@ -382,7 +382,7 @@ export default function ProductDetailPage() {
                       setActiveImage(getOptimizedImageUrl(nextVariant?.image?.url || product.images?.[0]?.url || ''))
                       setQuantity(1)
                     }}
-                    className={`rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                    className={`min-w-0 rounded-full border px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                   >
                     Variant
                   </button>
@@ -403,7 +403,7 @@ export default function ProductDetailPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <div className="h-3 w-3 rounded-full border border-black/10 shadow-inner" style={{ backgroundColor: v.color || '#D8C7B3' }} />
-                          <span className="truncate text-[11px] font-bold uppercase tracking-[0.18em]">{v.name}</span>
+                          <span className="truncate text-[11px] font-bold uppercase tracking-[0.12em]">{v.name}</span>
                         </div>
                         <p className={`mt-1 text-[10px] ${displayVariant?.id === v.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
                           {formatMoney(computeDisplayPrice(v.price ?? product.price))}
@@ -423,11 +423,11 @@ export default function ProductDetailPage() {
                         <p className="mt-2 text-sm font-semibold text-[#2B2119]">{displayVariant.name}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
+                        <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-[#6B594A]">
                           <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: selectedColorHex }} />
                           {selectedColorName}
                         </span>
-                        <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[#6B594A]">
+                        <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-[#6B594A]">
                           {displayVariant.stockStatus?.replace('_', ' ') || 'in stock'}
                         </span>
                       </div>
@@ -451,7 +451,7 @@ export default function ProductDetailPage() {
                           setActiveColorHex(color)
                           setActiveImage(product.images?.[0]?.url || '')
                         }}
-                        className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left text-[10px] uppercase tracking-[0.2em] transition-all active:scale-[0.98] ${isActive ? 'translate-y-[1px] border-[#7C4E2F] bg-white text-[#2B2119] shadow-[inset_0_0_0_1px_rgba(124,78,47,0.1)]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                        className={`flex min-w-0 items-center justify-between gap-3 rounded-[24px] border px-4 py-3 text-left text-[10px] uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${isActive ? 'translate-y-[1px] border-[#7C4E2F] bg-white text-[#2B2119] shadow-[inset_0_0_0_1px_rgba(124,78,47,0.1)]' : 'border-[#E6D9C8] bg-white/80 text-[#6B594A] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                       >
                         <span className="inline-flex items-center gap-2">
                           <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: color }} />
@@ -486,7 +486,7 @@ export default function ProductDetailPage() {
                 <button
                   onClick={handleAddToCart}
                   disabled={displayStockStatus === 'out_of_stock' || availableStock === 0}
-                  className="group relative flex-1 overflow-hidden rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="group relative flex-1 overflow-hidden rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <span className="relative z-10">{displayStockStatus === 'out_of_stock' || availableStock === 0 ? 'Out of stock' : selectionMode === 'variant' ? 'Add variant to bundle' : 'Add product to bundle'}</span>
                 </button>

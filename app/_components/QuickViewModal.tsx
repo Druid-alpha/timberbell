@@ -148,13 +148,13 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const isUnavailable = stockStatus === 'out_of_stock' || availableStock === 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-x-hidden overflow-y-auto p-3 sm:items-center sm:p-4">
       <div
         className="absolute inset-0 bg-[#2B2119]/40 backdrop-blur-sm"
         onClick={close}
       />
 
-      <div className="relative my-4 w-full max-w-[52rem] overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-white shadow-[0_40px_100px_-40px_rgba(55,32,15,0.7)] sm:my-0">
+      <div className="relative my-4 w-full min-w-0 max-w-[52rem] overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-white shadow-[0_40px_100px_-40px_rgba(55,32,15,0.7)] sm:my-0">
         <button
           onClick={close}
           className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/90 text-[#2B2119] transition hover:bg-white sm:right-5 sm:top-5"
@@ -164,8 +164,8 @@ export default function QuickViewModal({ product }: { product: Product }) {
           </svg>
         </button>
 
-        <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="bg-[#F4EEE4] p-4 sm:p-5 lg:p-6">
+        <div className="grid min-w-0 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="min-w-0 bg-[#F4EEE4] p-4 sm:p-5 lg:p-6">
             <div className="aspect-square w-full overflow-hidden rounded-[24px] border border-[#E6D9C8] bg-white shadow-sm sm:rounded-[28px]">
               {activeImage ? (
                 <img
@@ -180,7 +180,7 @@ export default function QuickViewModal({ product }: { product: Product }) {
               )}
             </div>
             {galleryImages.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4 sm:gap-3 sm:pb-2">
+              <div className="mt-3 flex max-w-full gap-2 overflow-x-auto pb-1 sm:mt-4 sm:gap-3 sm:pb-2">
                 {galleryImages.slice(0, 3).map((img) => (
                   <button
                     key={img}
@@ -196,21 +196,21 @@ export default function QuickViewModal({ product }: { product: Product }) {
 
           <div className="flex min-w-0 flex-col p-4 sm:p-5 lg:p-6">
             <div className="space-y-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.4em] text-[#8C7A6B]">
+              <div className="min-w-0">
+                <p className="truncate text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">
                   {product.category}
                 </p>
-                <h2 className="mt-2 pr-10 font-display text-2xl text-[#2B2119] sm:mt-3 sm:text-[2rem]">
+                <h2 className="mt-2 break-words pr-10 font-display text-2xl text-[#2B2119] sm:mt-3 sm:text-[2rem]">
                   {displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name}
                 </h2>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-2.5">
                 <span className="text-2xl font-semibold text-[#2B2119] sm:text-3xl">
                   {formatMoney(displayPrice)}
                 </span>
                 {basePrice > displayPrice && (
-                  <span className="text-sm text-[#8C7A6B] line-through">
+                  <span className="min-w-0 break-words text-sm text-[#8C7A6B] line-through">
                     {formatMoney(basePrice)}
                   </span>
                 )}
@@ -218,12 +218,12 @@ export default function QuickViewModal({ product }: { product: Product }) {
 
               {product.variants?.length ? (
                 <div className="space-y-3 rounded-[24px] border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#8C7A6B]">Choose Purchase Type</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Choose Purchase Type</p>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={selectMainProduct}
-                      className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                      className={`min-w-0 rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${selectionMode === 'main' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                     >
                       Main Product
                     </button>
@@ -233,7 +233,7 @@ export default function QuickViewModal({ product }: { product: Product }) {
                         const fallbackVariantId = activeVariantId ?? product.variants?.[0]?.id
                         if (fallbackVariantId) selectVariant(fallbackVariantId)
                       }}
-                      className={`rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                      className={`min-w-0 rounded-full border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${selectionMode === 'variant' ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                     >
                       Variant
                     </button>
@@ -244,11 +244,11 @@ export default function QuickViewModal({ product }: { product: Product }) {
                         key={variant.id}
                         type="button"
                         onClick={() => selectVariant(variant.id)}
-                        className={`rounded-[18px] border px-4 py-3 text-left transition-all active:scale-[0.98] ${displayVariant?.id === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#2B2119] hover:border-[#7C4E2F] hover:shadow-sm'}`}
+                        className={`min-w-0 rounded-[18px] border px-4 py-3 text-left transition-all active:scale-[0.98] ${displayVariant?.id === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#2B2119] hover:border-[#7C4E2F] hover:shadow-sm'}`}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate text-[11px] font-bold uppercase tracking-[0.18em]">{variant.name}</p>
+                            <p className="truncate text-[11px] font-bold uppercase tracking-[0.12em]">{variant.name}</p>
                             <p className={`mt-1 text-[10px] ${displayVariant?.id === variant.id ? 'text-white/70' : 'text-[#8C7A6B]'}`}>
                               {formatMoney(computeDisplayPrice(variant.price ?? product.price))}
                             </p>
@@ -280,14 +280,14 @@ export default function QuickViewModal({ product }: { product: Product }) {
                 <button
                   onClick={handleAddToCart}
                   disabled={isUnavailable}
-                  className="block w-full max-w-full rounded-full bg-[#7C4E2F] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#6A3F24] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#B99982]"
+                  className="block w-full max-w-full rounded-full bg-[#7C4E2F] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white transition hover:bg-[#6A3F24] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#B99982]"
                 >
                   {isUnavailable ? 'Out of Stock' : selectionMode === 'variant' ? 'Add Variant to Cart' : 'Add Product to Cart'}
                 </button>
                 <button
                   type="button"
                   onClick={openFullDetails}
-                  className="block w-full max-w-full rounded-full border border-[#E6D9C8] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7C4E2F] transition hover:bg-[#F4EEE4] active:scale-[0.99]"
+                  className="block w-full max-w-full rounded-full border border-[#E6D9C8] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#7C4E2F] transition hover:bg-[#F4EEE4] active:scale-[0.99]"
                 >
                   View Full Details
                 </button>
