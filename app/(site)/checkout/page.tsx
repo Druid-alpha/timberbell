@@ -56,11 +56,7 @@ export default function CheckoutPage() {
 
   const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
   const getCheckoutUnitPrice = (item: any) => {
-    const variantPrice = item.selectedVariant?.price
-    if (typeof variantPrice === 'number') {
-      return variantPrice
-    }
-    return item.product?.finalPrice ?? item.price ?? item.product?.price ?? 0
+    return item.product?.finalPrice ?? item.price ?? item.selectedVariant?.price ?? item.product?.price ?? 0
   }
   const getCheckoutImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
   const getCheckoutLabel = (item: any) => item.variantName || item.selectedVariant?.name || null

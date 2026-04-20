@@ -43,6 +43,8 @@ export async function POST(request: NextRequest) {
     userId: user.id,
     items: draft.items,
     subtotal: draft.subtotal,
+    catalogDiscountTotal: draft.catalogDiscountTotal,
+    couponDiscountTotal: draft.couponDiscountTotal,
     discountTotal: draft.discountTotal,
     couponCode: draft.coupon?.code || null,
     total: draft.total,

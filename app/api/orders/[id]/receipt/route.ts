@@ -40,14 +40,23 @@ export async function GET(
     { text: `Customer: ${order.customer?.name || order.customer?.email || 'Customer'}`, x: 50, y: 708, size: 11 },
     { text: `Status: ${String(order.status || 'pending').replace('_', ' ')}`, x: 50, y: 690, size: 11 },
     { text: `Subtotal: ${formatPdfMoney(Number(order.subtotal || 0))}`, x: 50, y: 654, size: 11 },
-    { text: `Discount: ${formatPdfMoney(Number(order.discountTotal || 0))}`, x: 50, y: 636, size: 11 },
-    { text: `Total: ${formatPdfMoney(Number(order.total || 0))}`, x: 50, y: 618, size: 13 },
-    { text: 'Items', x: 50, y: 582, size: 12 },
+    { text: `Catalog Discount: ${formatPdfMoney(Number(order.catalogDiscountTotal || 0))}`, x: 50, y: 636, size: 11 },
+    { text: `Coupon Discount: ${formatPdfMoney(Number(order.couponDiscountTotal || 0))}`, x: 50, y: 618, size: 11 },
+    { text: `Total Discount: ${formatPdfMoney(Number(order.discountTotal || 0))}`, x: 50, y: 600, size: 11 },
+    { text: `Total: ${formatPdfMoney(Number(order.total || 0))}`, x: 50, y: 582, size: 13 },
+    { text: 'Items', x: 50, y: 546, size: 12 },
     ...((order.items || []) as any[]).flatMap((item, index) => {
-      const y = 558 - index * 20
+      const y = 522 - index * 30
+      const itemType =
+        item.purchaseType === 'variant' && item.variantName
+          ? `Variant: ${item.variantName}`
+          : item.purchaseType === 'variant'
+            ? 'Variant purchase'
+            : 'Main product'
       return [
         { text: `${item.name || 'Item'} x${item.quantity}`, x: 50, y, size: 10 },
-        { text: formatPdfMoney((item.price || 0) * item.quantity), x: 430, y, size: 10 },
+        { text: itemType, x: 64, y: y - 12, size: 9 },
+        { text: formatPdfMoney(Number(item.lineTotal || (item.price || 0) * item.quantity)), x: 430, y, size: 10 },
       ]
     }),
     { text: 'Thank you for shopping with Timberbell.', x: 50, y: 90, size: 11 },

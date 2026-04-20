@@ -7,9 +7,13 @@ import { TRACKING_STAGES, getTrackingEntries, getTrackingStageLabel, normalizeTr
 
 type OrderItem = {
   productId: string
+  purchaseType?: 'main' | 'variant'
   variantName?: string | null
   quantity: number
   price?: number
+  originalPrice?: number
+  lineDiscount?: number
+  lineTotal?: number
   name?: string
   image?: string | null
 }
@@ -330,11 +334,22 @@ export default function AdminOrdersPage() {
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-bold text-[#2B2119]">{item.name || 'Bespoke Piece'}</h4>
-                          {item.variantName ? <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">{item.variantName}</p> : null}
+                          <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                            {item.purchaseType === 'variant'
+                              ? item.variantName
+                                ? `Variant Purchase: ${item.variantName}`
+                                : 'Variant Purchase'
+                              : 'Main Product Purchase'}
+                          </p>
                           <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Quantity: {item.quantity}</p>
+                          {Number(item.lineDiscount || 0) > 0 ? (
+                            <p className="text-[10px] uppercase tracking-widest text-[#C5A070]">
+                              Discount Saved: {formatMoney(Number(item.lineDiscount || 0))}
+                            </p>
+                          ) : null}
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney((item.price || 0) * item.quantity)}</p>
+                          <p className="text-sm font-bold text-[#7C4E2F]">{formatMoney(Number(item.lineTotal || (item.price || 0) * item.quantity))}</p>
                         </div>
                       </div>
                     ))}

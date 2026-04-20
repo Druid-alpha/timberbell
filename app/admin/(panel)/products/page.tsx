@@ -58,6 +58,7 @@ type QuickUpdateState = {
   inventoryCount: string
   discountType: string
   discountValue: string
+  variants: VariantQuickUpdateState[]
 }
 
 type VariantQuickUpdateState = {
@@ -666,6 +667,19 @@ export default function AdminProductsPage() {
       inventoryCount: String(product.inventoryCount ?? ''),
       discountType: product.discountType || '',
       discountValue: product.discountValue ? String(product.discountValue) : '',
+      variants: (product.variants || []).map((variant) => ({
+        productId: product.id,
+        variantId: variant.id,
+        productName: product.name,
+        name: variant.name,
+        sku: variant.sku || '',
+        color: variant.color || '',
+        price: variant.price ? String(variant.price) : '',
+        discountType: variant.discountType || '',
+        discountValue: variant.discountValue ? String(variant.discountValue) : '',
+        stockCount: variant.stockCount ? String(variant.stockCount) : '',
+        stockStatus: variant.stockStatus || 'in_stock',
+      })),
     })
   }
 
@@ -1271,6 +1285,56 @@ export default function AdminProductsPage() {
                         )}
                      </p>
                   </div>
+
+                  {quickUpdate.variants.length ? (
+                    <div className="mt-6">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Stock & Discount</p>
+                          <p className="mt-1 text-xs text-[#6B594A]">Edit each variant directly from this quick update flow.</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-3">
+                        {quickUpdate.variants.map((variant) => {
+                          const variantSellingPrice =
+                            variant.discountType === 'percentage'
+                              ? Math.max((Number(variant.price) || 0) - ((Number(variant.price) || 0) * (Number(variant.discountValue) || 0)) / 100, 0)
+                              : variant.discountType === 'fixed'
+                                ? Math.max((Number(variant.price) || 0) - (Number(variant.discountValue) || 0), 0)
+                                : Number(variant.price) || 0
+
+                          return (
+                            <button
+                              key={variant.variantId}
+                              type="button"
+                              onClick={() => {
+                                setQuickUpdate(null)
+                                setVariantQuickUpdate(variant)
+                              }}
+                              className="w-full rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3 text-left transition hover:border-[#C5A070] hover:bg-white"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-bold text-[#2B2119]">{variant.name || 'Untitled variant'}</p>
+                                  <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                                    {variant.stockCount || '0'} in stock
+                                    {variant.discountType && variant.discountValue
+                                      ? ` • ${variant.discountType === 'percentage' ? `${variant.discountValue}% off` : `${formatMoney(Number(variant.discountValue) || 0)} off`}`
+                                      : ' • no discount'}
+                                  </p>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                  <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Selling</p>
+                                  <p className="mt-1 text-sm font-bold text-[#7C4E2F]">{formatMoney(variantSellingPrice)}</p>
+                                </div>
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
                      <button type="button" onClick={() => setQuickUpdate(null)} className="rounded-full border border-[#E6D9C8] px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Cancel</button>

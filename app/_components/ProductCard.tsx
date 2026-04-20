@@ -163,14 +163,14 @@ export default function ProductCard({
 
   return (
     <article
-      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal"
+      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[22px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_16px_34px_-28px_rgba(55,32,15,0.42)] transition hover:-translate-y-1 hover:shadow-[0_24px_48px_-36px_rgba(55,32,15,0.5)] arkwood-reveal"
       onMouseEnter={() => setIsCardHovered(true)}
       onMouseLeave={() => {
         setIsCardHovered(false)
         setHoveredVariantId(null)
       }}
     >
-      <Link href={`/products/${product.id}`} className="relative block h-44 w-full overflow-hidden md:h-48">
+      <Link href={`/products/${product.id}`} className="relative block h-48 w-full overflow-hidden sm:h-52 md:h-56">
         {primaryImage ? (
           <>
             <img
@@ -196,32 +196,32 @@ export default function ProductCard({
         )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.3),transparent_60%)] pointer-events-none" />
 
-        <div className="absolute left-4 top-4 flex flex-col gap-2">
+        <div className="absolute left-3 top-3 flex flex-col gap-1.5 sm:left-4 sm:top-4">
           {product.badge ? (
-            <span className="rounded-full bg-[#2B2119] px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white">
+            <span className="rounded-full bg-[#2B2119] px-2.5 py-1 text-[9px] uppercase tracking-[0.22em] text-white">
               {product.badge}
             </span>
           ) : null}
           {discountPercent ? (
-            <span className="rounded-full bg-[#7C4E2F] px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white">
+            <span className="rounded-full bg-[#7C4E2F] px-2.5 py-1 text-[9px] uppercase tracking-[0.22em] text-white">
               {discountPercent}% OFF
             </span>
           ) : null}
         </div>
 
-        <div className="absolute right-4 top-4 z-10">
+        <div className="absolute right-3 top-3 z-10 sm:right-4 sm:top-4">
           <WishlistButton productId={product.id} />
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none group-hover:opacity-100">
-          <div className="image-glass rounded-full px-6 py-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#5B371F] pointer-events-auto">
+          <div className="image-glass rounded-full px-5 py-2 text-[9px] font-bold uppercase tracking-[0.24em] text-[#5B371F] pointer-events-auto">
             Quick View
           </div>
         </div>
 
         {previewVariant?.name ? (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 opacity-0 transition group-hover:opacity-100">
-            <div className="image-glass inline-flex max-w-full items-center gap-2 rounded-full px-3 py-2 text-[9px] uppercase tracking-[0.2em] text-[#4C3628]">
+            <div className="image-glass inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 text-[8px] uppercase tracking-[0.18em] text-[#4C3628]">
               {previewVariant.color ? (
                 <span
                   className="h-2.5 w-2.5 rounded-full border border-[#E6D9C8]"
@@ -234,45 +234,45 @@ export default function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-3 px-3.5 pb-4 pt-3.5 sm:px-4">
-        <div className="space-y-2.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-3 pb-3.5 pt-3 sm:px-3.5">
+        <div className="space-y-2">
           <div className="min-w-0">
-            <p className="mb-2 truncate text-[9px] font-semibold uppercase tracking-[0.24em] text-[#8C7A6B] sm:text-[10px] sm:tracking-[0.3em]">
+            <p className="mb-1.5 truncate text-[8px] font-semibold uppercase tracking-[0.22em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.26em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2.5rem] break-words text-[0.95rem] font-semibold leading-snug text-[#2B2119]">
+            <h3 className="line-clamp-2 min-h-[2.2rem] break-words text-[0.92rem] font-semibold leading-snug text-[#2B2119]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
             </h3>
           </div>
-          <div className="flex items-end justify-between gap-3">
+          <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#8C7A6B]">Price</p>
-              <div className="truncate font-display text-lg text-[#2B2119] sm:text-[1.2rem]">{formatMoney(price)}</div>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B]">Price</p>
+              <div className="truncate font-display text-[1.02rem] text-[#2B2119] sm:text-[1.1rem]">{formatMoney(price)}</div>
             </div>
             {product.price > price ? (
               <div className="shrink-0 text-right">
-                <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Was</p>
-                <p className="text-xs text-[#8C7A6B] line-through">{formatMoney(product.price)}</p>
+                <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B]">Was</p>
+                <p className="text-[11px] text-[#8C7A6B] line-through">{formatMoney(product.price)}</p>
               </div>
             ) : null}
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#E6D9C8]/70 bg-white/70 px-3 py-2">
+        <div className="flex min-w-0 items-center justify-between gap-2 rounded-[18px] border border-[#E6D9C8]/70 bg-white/70 px-2.5 py-2">
           <div className="min-w-0">
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Palette</p>
+            <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-[#8C7A6B]">Palette</p>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
             {visiblePalette.map((color, index) => (
               <span
                 key={`${product.id}-grid-${index}`}
-                className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10 sm:h-4 sm:w-4"
+                className="h-3 w-3 shrink-0 rounded-full border border-black/10 sm:h-3.5 sm:w-3.5"
                 style={{ backgroundColor: color }}
               />
             ))}
             {extraPaletteCount ? (
-                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-[#F8F3EC] px-1 text-[8px] font-bold text-[#7C4E2F]">
+                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-[#F8F3EC] px-1 text-[7px] font-bold text-[#7C4E2F]">
                 +{extraPaletteCount}
               </span>
             ) : null}
@@ -280,22 +280,22 @@ export default function ProductCard({
           </div>
           {variants.length ? (
             <div className="shrink-0 text-right">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Options</p>
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7C4E2F]">
+              <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-[#8C7A6B]">Options</p>
+              <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7C4E2F]">
                 {variants.length} variants
               </span>
             </div>
           ) : null}
         </div>
 
-        <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-[#E6D9C8]/50 pt-1.5">
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-[#E6D9C8]/50 pt-1.5">
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="flex shrink-0 items-center gap-0.5">{renderStars(product.rating)}</span>
-            <span className="truncate text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>
+            <span className="truncate text-[9px] text-[#8C7A6B]">({product.reviewCount || 0})</span>
           </div>
           <Link
             href={`/products/${product.id}`}
-            className="inline-flex shrink-0 items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#7C4E2F] transition hover:text-[#2B2119] sm:gap-2 sm:text-[10px] sm:tracking-[0.2em]"
+            className="inline-flex shrink-0 items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.14em] text-[#7C4E2F] transition hover:text-[#2B2119] sm:gap-2 sm:text-[9px] sm:tracking-[0.18em]"
           >
             Details
             <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">

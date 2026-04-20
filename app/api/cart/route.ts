@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
     const basePrice = typeof selectedVariant?.price === 'number' ? selectedVariant.price : product.price
     const finalPrice = computeFinalPrice({
       price: basePrice,
-      discountType: product.discountType,
-      discountValue: product.discountValue,
+      discountType: selectedVariant?.discountType || product.discountType,
+      discountValue: selectedVariant?.discountValue ?? product.discountValue,
       saleDiscount: product.saleDiscount,
       saleStartAt: product.saleStartAt,
       saleEndAt: product.saleEndAt,

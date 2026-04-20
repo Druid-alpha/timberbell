@@ -43,27 +43,43 @@ export async function buildOrderDraft(input: CheckoutInput) {
   })
 
   let subtotal = 0
+  let catalogDiscountTotal = 0
   const normalizedItems = activeItems.map((item: any) => {
     const product = priceMap.get(item.productId)
     const selectedVariant = Array.isArray(product?.variants)
       ? product.variants.find((variant: any) => variant.id === item.variantId)
       : null
+    const baseUnitPrice = product
+      ? typeof selectedVariant?.price === 'number'
+        ? selectedVariant.price
+        : product.price
+      : 0
     const unitPrice = product
       ? computeFinalPrice({
-          price: typeof selectedVariant?.price === 'number' ? selectedVariant.price : product.price,
-          discountType: product.discountType,
-          discountValue: product.discountValue,
+          price: baseUnitPrice,
+          discountType: selectedVariant?.discountType || product.discountType,
+          discountValue: selectedVariant?.discountValue ?? product.discountValue,
           saleDiscount: product.saleDiscount,
           saleStartAt: product.saleStartAt,
           saleEndAt: product.saleEndAt,
         })
       : 0
+    const quantity = Math.max(1, Number(item.quantity || 1))
+    const lineSubtotal = baseUnitPrice * quantity
+    const lineDiscount = Math.max(0, baseUnitPrice - unitPrice) * quantity
+    const lineTotal = unitPrice * quantity
 
-    subtotal += unitPrice * item.quantity
+    subtotal += lineSubtotal
+    catalogDiscountTotal += lineDiscount
 
     return {
       ...item,
       price: unitPrice,
+      originalPrice: baseUnitPrice,
+      lineSubtotal,
+      lineDiscount,
+      lineTotal,
+      purchaseType: item.purchaseType === 'variant' && (item.variantId ?? selectedVariant?.id) ? 'variant' : 'main',
       name: selectedVariant?.name ? `${product?.name ?? 'Product'} - ${selectedVariant.name}` : product?.name ?? 'Product',
       slug: product?.slug ?? null,
       category: product?.category ?? null,
@@ -75,7 +91,7 @@ export async function buildOrderDraft(input: CheckoutInput) {
   })
 
   let coupon = null
-  let discountTotal = 0
+  let couponDiscountTotal = 0
 
   if (couponCodeRaw) {
     const code = couponCodeRaw.toUpperCase()
@@ -106,10 +122,10 @@ export async function buildOrderDraft(input: CheckoutInput) {
                 discount = Math.round(discountValue * item.quantity)
               }
 
-              discountTotal += Math.min(discount, lineTotal)
+              couponDiscountTotal += Math.min(discount, lineTotal)
             })
 
-            if (discountTotal > 0) {
+            if (couponDiscountTotal > 0) {
               coupon = found
             }
           }
@@ -118,6 +134,7 @@ export async function buildOrderDraft(input: CheckoutInput) {
     }
   }
 
+  const discountTotal = catalogDiscountTotal + couponDiscountTotal
   const total = Math.max(0, subtotal - discountTotal)
 
   return {
@@ -125,6 +142,8 @@ export async function buildOrderDraft(input: CheckoutInput) {
     cart,
     items: normalizedItems,
     subtotal,
+    catalogDiscountTotal,
+    couponDiscountTotal,
     discountTotal,
     total,
     customer: input.customer ?? null,
