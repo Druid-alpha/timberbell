@@ -405,7 +405,10 @@ export default function CartPage() {
                             ))}
                           </div>
                         ) : null}
-                        <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="mt-2 border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
+                          <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[9px] font-bold uppercase tracking-widest text-red-800 hover:underline">Remove</button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}

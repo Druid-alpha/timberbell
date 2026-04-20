@@ -294,14 +294,14 @@ export default function CheckoutPage() {
                         <p className="line-clamp-1 font-bold leading-tight text-[#2B2119]">{item.product?.name}</p>
                         <p className="text-[10px] text-[#8C7A6B]">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-bold text-[#2B2119]">${(item.product?.price * item.quantity).toLocaleString()}</p>
+                      <p className="font-bold text-[#2B2119]">{formatMoney((item.product?.price || 0) * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
                 <div className="space-y-3 border-t border-[#E6D9C8] pt-6">
                   <div className="flex justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-widest">Subtotal</span>
-                    <span className="font-bold text-[#2B2119]">${subtotal.toLocaleString()}</span>
+                    <span className="font-bold text-[#2B2119]">{formatMoney(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-widest">Delivery</span>

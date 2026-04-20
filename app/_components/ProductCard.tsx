@@ -82,10 +82,10 @@ export default function ProductCard({
 
   if (variant === 'list') {
     return (
-      <article className="group mx-auto flex w-full max-w-full flex-col gap-6 rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-4 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
+      <article className="group mx-auto flex w-full max-w-full flex-col gap-4 rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-3.5 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
         <Link
           href={`/products/${product.id}`}
-          className="relative h-40 w-full shrink-0 overflow-hidden rounded-2xl sm:w-48"
+          className="relative h-32 w-full shrink-0 overflow-hidden rounded-2xl sm:h-36 sm:w-40"
         >
           {primaryImage ? (
             <img src={primaryImage} alt={product.name} className="h-full w-full object-cover" />
@@ -103,18 +103,18 @@ export default function ProductCard({
             </span>
           ) : null}
         </Link>
-        <div className="flex-1 space-y-3 min-w-0">
-          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0 flex-1 space-y-2.5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 {product.category}
               </p>
-              <h3 className="text-lg font-semibold leading-snug text-[#2B2119] break-words">
+              <h3 className="text-base font-semibold leading-snug text-[#2B2119] break-words">
                 <Link href={`/products/${product.id}`}>{product.name}</Link>
               </h3>
             </div>
             <div className="text-left md:text-right md:whitespace-nowrap">
-              <div className="text-lg font-bold text-[#2B2119]">{formatMoney(price)}</div>
+              <div className="text-base font-bold text-[#2B2119]">{formatMoney(price)}</div>
             </div>
           </div>
           <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
@@ -163,14 +163,14 @@ export default function ProductCard({
 
   return (
     <article
-      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal"
+      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_18px_40px_-30px_rgba(55,32,15,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-40px_rgba(55,32,15,0.55)] arkwood-reveal"
       onMouseEnter={() => setIsCardHovered(true)}
       onMouseLeave={() => {
         setIsCardHovered(false)
         setHoveredVariantId(null)
       }}
     >
-      <Link href={`/products/${product.id}`} className="relative block h-56 w-full overflow-hidden md:h-64">
+      <Link href={`/products/${product.id}`} className="relative block h-44 w-full overflow-hidden md:h-48">
         {primaryImage ? (
           <>
             <img
@@ -234,13 +234,13 @@ export default function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pb-5 pt-4 sm:px-5">
-        <div className="space-y-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-3 px-3.5 pb-4 pt-3.5 sm:px-4">
+        <div className="space-y-2.5">
           <div className="min-w-0">
             <p className="mb-2 truncate text-[9px] font-semibold uppercase tracking-[0.24em] text-[#8C7A6B] sm:text-[10px] sm:tracking-[0.3em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2.9rem] break-words text-base font-semibold leading-snug text-[#2B2119] xl:text-[1.05rem]">
+            <h3 className="line-clamp-2 min-h-[2.5rem] break-words text-[0.95rem] font-semibold leading-snug text-[#2B2119]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
@@ -249,18 +249,18 @@ export default function ProductCard({
           <div className="flex items-end justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-[#8C7A6B]">Price</p>
-              <div className="truncate font-display text-xl text-[#2B2119] sm:text-[1.35rem]">{formatMoney(price)}</div>
+              <div className="truncate font-display text-lg text-[#2B2119] sm:text-[1.2rem]">{formatMoney(price)}</div>
             </div>
             {product.price > price ? (
               <div className="shrink-0 text-right">
                 <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Was</p>
-                <p className="text-sm text-[#8C7A6B] line-through">{formatMoney(product.price)}</p>
+                <p className="text-xs text-[#8C7A6B] line-through">{formatMoney(product.price)}</p>
               </div>
             ) : null}
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#E6D9C8]/70 bg-white/70 px-3 py-2.5">
+        <div className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#E6D9C8]/70 bg-white/70 px-3 py-2">
           <div className="min-w-0">
             <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#8C7A6B]">Palette</p>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
@@ -288,7 +288,7 @@ export default function ProductCard({
           ) : null}
         </div>
 
-        <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-[#E6D9C8]/50 pt-2">
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-3 border-t border-[#E6D9C8]/50 pt-1.5">
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="flex shrink-0 items-center gap-0.5">{renderStars(product.rating)}</span>
             <span className="truncate text-[10px] text-[#8C7A6B]">({product.reviewCount || 0})</span>

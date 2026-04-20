@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { formatMoney } from '@/lib/utils/format'
 import {
   ResponsiveContainer,
   LineChart,
@@ -83,7 +84,7 @@ export default function AdminAnalyticsPage() {
                 {loading
                   ? '—'
                   : item.currency
-                  ? `$${Number(item.value).toLocaleString()}`
+                  ? formatMoney(Number(item.value))
                   : item.value}
               </div>
             </div>
@@ -126,7 +127,7 @@ export default function AdminAnalyticsPage() {
                 <CartesianGrid strokeDasharray="4 4" stroke="#E6D9C8" />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} />
-                <Tooltip />
+                <Tooltip formatter={(value: number) => formatMoney(Number(value || 0))} />
                 <Line type="monotone" dataKey="revenue" stroke="#2B2119" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
@@ -178,7 +179,7 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2119]">
-                  ${item.revenue.toLocaleString()}
+                  {formatMoney(item.revenue)}
                 </div>
               </div>
             ))

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import RecentlyViewed from '@/app/_components/RecentlyViewed'
@@ -60,10 +60,16 @@ export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [activeSlide, setActiveSlide] = useState(0)
+  const [isMobileHero, setIsMobileHero] = useState(false)
 
   const { scrollY } = useScroll()
-  const y1 = useTransform(scrollY, [0, 500], [0, 150])
-  const y2 = useTransform(scrollY, [0, 2000], [0, 300])
+  const smoothScrollY = useSpring(scrollY, {
+    stiffness: 110,
+    damping: 28,
+    mass: 0.25,
+  })
+  const y1 = useTransform(smoothScrollY, [0, 500], [0, isMobileHero ? 36 : 150])
+  const y2 = useTransform(smoothScrollY, [0, 2000], [0, isMobileHero ? 60 : 300])
 
   useEffect(() => {
     let active = true
@@ -99,6 +105,14 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)')
+    const sync = () => setIsMobileHero(media.matches)
+    sync()
+    media.addEventListener('change', sync)
+    return () => media.removeEventListener('change', sync)
+  }, [])
+
+  useEffect(() => {
     heroSlides.forEach((slide) => {
       const img = new window.Image()
       img.src = slide.image
@@ -121,12 +135,12 @@ export default function HomePage() {
                     style={{ y: index === activeSlide ? y1 : 0 }}
                     animate={{ opacity: index === activeSlide ? 1 : 0, scale: index === activeSlide ? 1 : 1.03 }}
                     transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-0"
+                    className="absolute inset-0 will-change-transform"
                   >
                     <img
                       src={slide.image}
                       alt=""
-                      className="h-full w-full object-cover transition-transform duration-[18s]"
+                      className="h-full w-full object-cover [transform:translateZ(0)] transition-transform duration-[18s] will-change-transform"
                     />
                   </motion.div>
                 ))}

@@ -726,7 +726,7 @@ export default function AdminProductsPage() {
          </div>
       </div>
 
-      <div className={`grid gap-10 ${isStandaloneEdit ? 'xl:grid-cols-1' : '2xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]'}`}>
+      <div className={`grid gap-10 ${isStandaloneEdit ? 'xl:grid-cols-1' : 'min-[1700px]:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]'}`}>
          {/* Catalog Feed */}
          {!isStandaloneEdit ? (
          <div className="space-y-6">
@@ -863,7 +863,7 @@ export default function AdminProductsPage() {
          ) : null}
 
          {/* Command Sidebar Form */}
-         <div className="min-w-0 space-y-6 2xl:sticky 2xl:top-10 2xl:self-start">
+         <div className="min-w-0 space-y-6 min-[1700px]:sticky min-[1700px]:top-10 min-[1700px]:self-start">
             <div className="rounded-[40px] border border-[#E6D9C8] bg-white p-6 shadow-2xl shadow-[#C5A070]/5 sm:p-8">
                <div className="mb-8 flex items-center justify-between gap-4">
                   <h2 className="font-display text-2xl text-[#2B2119]">{editingId ? 'Edit Piece' : 'New Entry'}</h2>

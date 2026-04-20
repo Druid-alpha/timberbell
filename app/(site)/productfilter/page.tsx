@@ -45,6 +45,30 @@ function ProductFilterContent() {
   const [filterProducts, setFilterProducts] = useState<Product[]>([])
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
+  function buildFilterUrl(next: {
+    query?: string
+    category?: string
+    minPrice?: string
+    maxPrice?: string
+    colors?: string[]
+    materials?: string[]
+    sort?: string
+    page?: number
+  }) {
+    const params = new URLSearchParams()
+    if (next.query) params.set('q', next.query)
+    if (next.category) params.set('category', next.category)
+    if (next.minPrice && next.minPrice !== DEFAULT_MIN_PRICE) params.set('minPrice', next.minPrice)
+    if (next.maxPrice && Number(next.maxPrice) < priceCeiling) params.set('maxPrice', next.maxPrice)
+    if (next.colors?.length) params.set('colors', next.colors.join(','))
+    if (next.materials?.length) params.set('materials', next.materials.join(','))
+    if (next.sort) params.set('sort', next.sort)
+    if ((next.page || 1) > 1) params.set('page', String(next.page))
+    params.set('limit', '12')
+    const qs = params.toString()
+    return `/productfilter${qs ? `?${qs}` : ''}`
+  }
+
   const priceCeiling = useMemo(() => {
     const highest = Math.max(
       ...filterProducts.map((product) => Number(product.finalPrice ?? product.price ?? 0)),
@@ -85,7 +109,7 @@ function ProductFilterContent() {
       const [catRes, prodRes, filterRes] = await Promise.all([
         fetch('/api/categories'),
         fetch(url),
-        fetch('/api/products?limit=100'),
+        fetch('/api/products'),
       ])
       const catJson = await catRes.json()
       const prodJson = await prodRes.json()
@@ -129,18 +153,8 @@ function ProductFilterContent() {
 
   function applyFilters() {
     setPage(1)
-    const params = new URLSearchParams()
-    if (search) params.set('q', search)
-    if (category) params.set('category', category)
-    if (minPrice && minPrice !== DEFAULT_MIN_PRICE) params.set('minPrice', minPrice)
-    if (maxPrice && Number(maxPrice) < priceCeiling) params.set('maxPrice', maxPrice)
-    if (colors.length) params.set('colors', colors.join(','))
-    if (materials.length) params.set('materials', materials.join(','))
-    if (sort) params.set('sort', sort)
-    params.set('limit', '12')
-    const qs = params.toString()
     setMobileFiltersOpen(false)
-    router.push(`/productfilter${qs ? `?${qs}` : ''}`)
+    router.push(buildFilterUrl({ query: search, category, minPrice, maxPrice, colors, materials, sort, page: 1 }))
   }
 
   function clearFilters() {
@@ -153,6 +167,24 @@ function ProductFilterContent() {
     setPage(1)
     setMobileFiltersOpen(false)
     router.push('/productfilter')
+  }
+
+  function applyBudget(nextMaxPrice: string) {
+    setMaxPrice(nextMaxPrice)
+    setPage(1)
+    router.replace(
+      buildFilterUrl({
+        query,
+        category,
+        minPrice,
+        maxPrice: nextMaxPrice,
+        colors,
+        materials,
+        sort,
+        page: 1,
+      }),
+      { scroll: false }
+    )
   }
 
   const colorOptions = useMemo(() => {
@@ -276,7 +308,7 @@ function ProductFilterContent() {
             max={priceCeiling}
             step={priceStep}
             value={Number(maxPrice || priceCeiling)}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            onChange={(e) => applyBudget(e.target.value)}
             className="w-full"
           />
           <div className="flex items-center justify-between text-[11px] text-[#8C7A6B]">
