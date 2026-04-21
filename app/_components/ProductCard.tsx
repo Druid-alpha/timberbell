@@ -176,13 +176,13 @@ export default function ProductCard({
             <img
               src={primaryImage}
               alt={product.name}
-              className={`h-full w-full object-cover transition duration-700 ${secondaryImage && secondaryImage !== primaryImage ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
+              className={`h-full w-full bg-[#F7F1E8] object-contain p-2 transition duration-700 ${secondaryImage && secondaryImage !== primaryImage ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`}
             />
             {secondaryImage && secondaryImage !== primaryImage && (
               <img
                 src={secondaryImage}
                 alt={product.name}
-                className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-700 group-hover:opacity-100 group-hover:scale-105"
+                className="absolute inset-0 h-full w-full bg-[#F7F1E8] object-contain p-2 opacity-0 transition duration-700 group-hover:opacity-100 group-hover:scale-105"
               />
             )}
           </>

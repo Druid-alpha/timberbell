@@ -172,7 +172,7 @@ export default function HomePage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="flex flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:gap-4 sm:pt-2"
+                        className="flex flex-col gap-3 pt-6 sm:flex-row sm:flex-wrap sm:gap-4 sm:pt-2"
                       >
                         <Link
                           href="/productfilter"

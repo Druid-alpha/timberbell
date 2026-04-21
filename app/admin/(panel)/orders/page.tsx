@@ -25,6 +25,8 @@ type Order = {
   paymentProvider?: string
   total: number
   subtotal: number
+  catalogDiscountTotal?: number
+  couponDiscountTotal?: number
   discountTotal: number
   createdAt: string
   updatedAt?: string
@@ -56,6 +58,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Order | null>(null)
   const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [notice, setNotice] = useState('')
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [trackingStageDraft, setTrackingStageDraft] = useState('processing')
@@ -67,8 +70,13 @@ export default function AdminOrdersPage() {
     setTrackingNoteDraft(order.trackingNote || '')
   }
 
-  async function loadOrders(selectedId?: string | null) {
-    const res = await fetch('/api/admin/orders', { cache: 'no-store' })
+  async function loadOrders(selectedId?: string | null, next?: { search?: string; filter?: string }) {
+    const activeSearch = next?.search ?? search
+    const activeFilter = next?.filter ?? filter
+    const params = new URLSearchParams({ limit: '80' })
+    if (activeSearch.trim()) params.set('q', activeSearch.trim())
+    if (activeFilter && activeFilter !== 'all') params.set('status', activeFilter)
+    const res = await fetch(`/api/admin/orders?${params.toString()}`, { cache: 'no-store' })
     const json = await res.json().catch(() => ({}))
     const nextOrders = json?.orders || []
     setOrders(nextOrders)
@@ -129,11 +137,7 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const filteredOrders = useMemo(() => {
-    if (filter === 'all') return orders
-    if (filter === 'paid') return orders.filter((o) => o.status === 'paid' || o.paymentStatus === 'paid')
-    return orders.filter((o) => o.status === filter)
-  }, [orders, filter])
+  const filteredOrders = useMemo(() => orders, [orders])
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -142,18 +146,48 @@ export default function AdminOrdersPage() {
           <h1 className="font-display text-4xl text-[#2B2119]">Fulfillment Engine</h1>
           <p className="mt-1 text-sm text-[#8C7A6B]">Audit atelier orders and control production progress in one place.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  loadOrders(undefined, { search: e.currentTarget.value, filter })
+                }
+              }}
+              placeholder="Search by customer, item, order ref, status"
+              className="w-[15rem] max-w-full bg-transparent text-sm outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => loadOrders(undefined, { search, filter })}
+              className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+            >
+              Search
+            </button>
+          </div>
           <div className="flex flex-wrap rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-1">
             {['all', 'pending_payment', 'pending', 'paid', 'processing', 'shipped'].map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f)
+                  loadOrders(undefined, { search, filter: f })
+                }}
                 className={`rounded-xl px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-all ${filter === f ? 'bg-[#7C4E2F] text-white shadow-lg' : 'text-[#8C7A6B] hover:text-[#2B2119]'}`}
               >
                 {f.replace('_', ' ')}
               </button>
             ))}
           </div>
+          <a
+            href="/api/admin/orders/export"
+            className="rounded-full border border-[#E6D9C8] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#F4EEE4]"
+          >
+            Export Orders
+          </a>
         </div>
       </div>
 
@@ -361,7 +395,15 @@ export default function AdminOrdersPage() {
                       <span>{formatMoney(selected.subtotal)}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
-                      <span>Studio Discount</span>
+                      <span>Catalog Discount</span>
+                      <span>-{formatMoney(selected.catalogDiscountTotal ?? 0)}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
+                      <span>Coupon Discount</span>
+                      <span>-{formatMoney(selected.couponDiscountTotal ?? Math.max(0, Number(selected.discountTotal || 0) - Number(selected.catalogDiscountTotal || 0)))}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
+                      <span>Total Discount</span>
                       <span>-{formatMoney(selected.discountTotal)}</span>
                     </div>
                     <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
@@ -432,7 +474,7 @@ export default function AdminOrdersPage() {
                   </div>
 
                   <div className="mt-12 space-y-3">
-                    <button onClick={() => deleteOrder(selected.id)} className="w-full rounded-2xl border border-red-100 py-3 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50">Delete Order</button>
+                    <button disabled={busyKey === selected.id} onClick={() => deleteOrder(selected.id)} className="w-full rounded-2xl border border-red-100 py-3 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50 disabled:opacity-60">{busyKey === selected.id ? 'Deleting...' : 'Delete Order'}</button>
                     <button onClick={() => downloadOrderDocument(selected.id, 'receipt')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Export Receipt</button>
                     <button onClick={() => downloadOrderDocument(selected.id, 'invoice')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Generate Invoice</button>
                   </div>

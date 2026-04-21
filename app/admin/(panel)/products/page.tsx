@@ -144,6 +144,7 @@ const emptyForm: ProductForm = {
 }
 
 const defaultPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
+const emptyPalette: string[] = []
 
 function slugify(value: string) {
   return value
@@ -212,7 +213,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [images, setImages] = useState<ProductImage[]>([])
-  const [palette, setPalette] = useState<string[]>(defaultPalette)
+  const [palette, setPalette] = useState<string[]>(emptyPalette)
   const [variants, setVariants] = useState<Variant[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -242,6 +243,7 @@ export default function AdminProductsPage() {
   const isSlugSuggested = slugify(form.name) === form.slug
   const totalPages = Math.max(1, Math.ceil(total / 12))
   const isStandaloneEdit = editorMode && Boolean(editParam)
+  const isFocusedEditor = editorMode
 
   async function loadProducts(next?: { page?: number; search?: string; category?: string }) {
     const targetPage = next?.page ?? page
@@ -284,7 +286,7 @@ export default function AdminProductsPage() {
         setBaselinePayload(null)
         setForm(emptyForm)
         setImages([])
-        setPalette(defaultPalette)
+        setPalette(emptyPalette)
         setVariants([])
         setError('')
       }
@@ -416,7 +418,7 @@ export default function AdminProductsPage() {
     if (res.ok) {
       setForm(emptyForm)
       setImages([])
-      setPalette(defaultPalette)
+      setPalette(emptyPalette)
       setVariants([])
       setEditingId(null)
       setBaselinePayload(null)
@@ -453,7 +455,7 @@ export default function AdminProductsPage() {
       dimensions: p.dimensions || '',
     })
     const nextImages = dedupeImages(p.images || [])
-    const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : defaultPalette
+    const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : emptyPalette
     const nextVariants = (p.variants || []).map((variant) => ({
         ...variant,
         price: variant.price ? String(variant.price) : '',
@@ -512,7 +514,7 @@ export default function AdminProductsPage() {
     setEditingId(null)
     setForm(emptyForm)
     setImages([])
-    setPalette(defaultPalette)
+    setPalette(emptyPalette)
     setVariants([])
     setBaselinePayload(null)
     setError('')
@@ -719,13 +721,13 @@ export default function AdminProductsPage() {
          <div>
             <h1 className="font-display text-4xl text-[#2B2119]">{isStandaloneEdit ? 'Edit Catalog Piece' : 'Design Catalog'}</h1>
             <p className="mt-1 text-sm text-[#8C7A6B]">
-              {isStandaloneEdit
+              {isFocusedEditor
                 ? 'Update one product in its own editing space, then return to the catalog when you are done.'
                 : 'Manage your studio&apos;s curated pieces, discounts, colors, and variants.'}
             </p>
          </div>
          <div className="flex items-center gap-3">
-            {isStandaloneEdit ? (
+            {isFocusedEditor ? (
               <Link
                 href="/admin/products"
                 className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white"
@@ -740,9 +742,20 @@ export default function AdminProductsPage() {
          </div>
       </div>
 
-      <div className={`grid gap-10 ${isStandaloneEdit ? 'xl:grid-cols-1' : 'min-[1700px]:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]'}`}>
+      {!isFocusedEditor ? (
+        <div className="px-2 md:hidden">
+          <Link
+            href="/admin/products?view=editor"
+            className="inline-flex w-full items-center justify-center rounded-full bg-[#2B2119] px-5 py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-lg"
+          >
+            Create New Entry
+          </Link>
+        </div>
+      ) : null}
+
+      <div className={`grid gap-10 ${isFocusedEditor ? 'xl:grid-cols-1' : 'min-[1700px]:grid-cols-[minmax(0,1.15fr)_minmax(320px,420px)]'}`}>
          {/* Catalog Feed */}
-         {!isStandaloneEdit ? (
+         {!isFocusedEditor ? (
          <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-[#E6D9C8] pb-4">
                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -877,7 +890,7 @@ export default function AdminProductsPage() {
          ) : null}
 
          {/* Command Sidebar Form */}
-         <div className="min-w-0 space-y-6 min-[1700px]:sticky min-[1700px]:top-10 min-[1700px]:self-start">
+         <div className={`${isFocusedEditor ? 'block' : 'hidden md:block'} min-w-0 space-y-6 min-[1700px]:sticky min-[1700px]:top-10 min-[1700px]:self-start`}>
             <div className="rounded-[40px] border border-[#E6D9C8] bg-white p-6 shadow-2xl shadow-[#C5A070]/5 sm:p-8">
                <div className="mb-8 flex items-center justify-between gap-4">
                   <h2 className="font-display text-2xl text-[#2B2119]">{editingId ? 'Edit Piece' : 'New Entry'}</h2>
@@ -967,7 +980,12 @@ export default function AdminProductsPage() {
                   </div>
 
                   <div className="rounded-3xl bg-[#F4EEE4]/50 p-5 sm:p-6">
-                     <div className="flex items-center justify-between gap-4"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Palette Colors</p><div className="flex items-center gap-3"><span className="text-[9px] text-[#8C7A6B]">Use 1 to 3 colors</span>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Palette</button> : null}</div></div>
+                     <div className="flex items-center justify-between gap-4"><p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Palette Colors</p><div className="flex items-center gap-3"><span className="text-[9px] text-[#8C7A6B]">Pick only the colors you want to set</span>{editingId ? <button type="submit" className="rounded-full border border-[#C5A070] px-3 py-1.5 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Save Palette</button> : null}</div></div>
+                     {palette.length === 0 ? (
+                       <div className="mt-4 rounded-2xl border border-dashed border-[#DCCBB7] bg-white/70 p-4 text-sm text-[#8C7A6B]">
+                         No palette colors selected yet. Add only the shades you want shoppers to see.
+                       </div>
+                     ) : null}
                      <div className="mt-4 grid gap-4 sm:grid-cols-3">
                         {palette.map((color, index) => (
                            <div key={`palette-${index}`} className="rounded-2xl border border-[#E6D9C8] bg-white p-3">
@@ -1227,7 +1245,7 @@ export default function AdminProductsPage() {
 
       <AnimatePresence>
          {quickUpdate ? (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -1239,7 +1257,7 @@ export default function AdminProductsPage() {
                   initial={{ opacity: 0, scale: 0.96, y: 16 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: 16 }}
-                  className="relative w-full max-w-xl rounded-[36px] border border-[#E6D9C8] bg-white p-6 shadow-2xl sm:p-8"
+                  className="relative my-4 w-full max-w-xl rounded-[36px] border border-[#E6D9C8] bg-white p-5 shadow-2xl sm:my-0 sm:p-8"
                >
                   <div className="flex items-start justify-between gap-4">
                      <div>
@@ -1314,10 +1332,10 @@ export default function AdminProductsPage() {
                               }}
                               className="w-full rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3 text-left transition hover:border-[#C5A070] hover:bg-white"
                             >
-                              <div className="flex items-start justify-between gap-3">
+                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                                 <div className="min-w-0">
                                   <p className="truncate text-sm font-bold text-[#2B2119]">{variant.name || 'Untitled variant'}</p>
-                                  <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+                                  <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#8C7A6B]">
                                     {variant.stockCount || '0'} in stock
                                     {variant.discountType && variant.discountValue
                                       ? ` • ${variant.discountType === 'percentage' ? `${variant.discountValue}% off` : `${formatMoney(Number(variant.discountValue) || 0)} off`}`
@@ -1349,7 +1367,7 @@ export default function AdminProductsPage() {
 
       <AnimatePresence>
          {variantQuickUpdate ? (
-            <div className="fixed inset-0 z-[75] flex items-center justify-center p-4 sm:p-6">
+            <div className="fixed inset-0 z-[75] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-6">
                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -1361,7 +1379,7 @@ export default function AdminProductsPage() {
                   initial={{ opacity: 0, scale: 0.96, y: 16 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: 16 }}
-                  className="relative w-full max-w-lg rounded-[36px] border border-[#E6D9C8] bg-white p-6 shadow-2xl sm:p-8"
+                  className="relative my-4 w-full max-w-lg rounded-[36px] border border-[#E6D9C8] bg-white p-5 shadow-2xl sm:my-0 sm:p-8"
                >
                   <div className="flex items-start justify-between gap-4">
                      <div>

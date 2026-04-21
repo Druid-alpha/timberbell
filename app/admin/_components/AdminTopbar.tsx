@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import AdminOrderPulse from './AdminOrderPulse'
 
 export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void }) {
   const pathname = usePathname()
@@ -43,6 +44,7 @@ export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void
       </div>
 
       <div className="flex items-center gap-4 self-end sm:self-auto">
+        <AdminOrderPulse />
         <button
           type="button"
           onClick={() => {

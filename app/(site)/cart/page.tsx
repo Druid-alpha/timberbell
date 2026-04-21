@@ -253,8 +253,8 @@ export default function CartPage() {
         />
       </div>
 
-      <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-8">
+      <div className="grid min-w-0 gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="min-w-0 space-y-8">
           {activeItems.length > 0 && timeLeft > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -299,20 +299,20 @@ export default function CartPage() {
                       <img src={getItemImage(item)} alt="" className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">{item.product?.category}</p>
+                      <p className="truncate text-[10px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">{item.product?.category}</p>
                       <h3 className="break-words text-lg font-display text-[#2B2119]">{item.product?.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {getItemLabel(item) ? (
-                          <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">
+                          <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">
                             {getItemLabel(item)}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">
+                          <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
                             Main Piece
                           </span>
                         )}
                         {item.color ? (
-                          <span className="inline-flex items-center gap-2 rounded-full border border-[#E6D9C8] px-3 py-1 text-[10px] uppercase tracking-widest text-[#6B594A]">
+                          <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-[#E6D9C8] px-3 py-1 text-[10px] uppercase tracking-[0.12em] text-[#6B594A]">
                             <span className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: item.color }} />
                             Selected Color
                           </span>
@@ -323,7 +323,7 @@ export default function CartPage() {
                           <button
                             type="button"
                             onClick={() => switchItemVariant(getItemKey(item))}
-                            className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                            className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                           >
                             Main Product
                           </button>
@@ -332,7 +332,7 @@ export default function CartPage() {
                               key={variant.id}
                               type="button"
                               onClick={() => switchItemVariant(getItemKey(item), variant.id)}
-                              className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                              className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                             >
                               {variant.name}
                             </button>
@@ -348,8 +348,8 @@ export default function CartPage() {
                         <button onClick={() => updateItem(getItemKey(item), { quantity: item.quantity + 1 })} className="h-8 w-8 rounded-full bg-[#F4EEE4] transition hover:bg-[#E6D9C8]">+</button>
                       </div>
                       <div className="flex flex-wrap gap-4 sm:justify-end">
-                        <button onClick={() => updateItem(getItemKey(item), { saved: true })} className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B] transition-colors hover:text-[#7C4E2F]">Save for later</button>
-                        <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[10px] font-bold uppercase tracking-widest text-red-800 hover:underline">Remove</button>
+                        <button onClick={() => updateItem(getItemKey(item), { saved: true })} className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B] transition-colors hover:text-[#7C4E2F]">Save for later</button>
+                        <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[10px] font-bold uppercase tracking-[0.12em] text-red-800 hover:underline">Remove</button>
                       </div>
                     </div>
                   </motion.div>
@@ -389,7 +389,7 @@ export default function CartPage() {
                             <button
                               type="button"
                               onClick={() => switchItemVariant(getItemKey(item))}
-                              className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                              className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${!item.variantId ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                             >
                               Main
                             </button>
@@ -398,7 +398,7 @@ export default function CartPage() {
                                 key={variant.id}
                                 type="button"
                                 onClick={() => switchItemVariant(getItemKey(item), variant.id)}
-                                className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
+                                className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.12em] transition-all active:scale-[0.98] ${item.variantId === variant.id ? 'translate-y-[1px] border-[#7C4E2F] bg-[#2B2119] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]' : 'border-[#E6D9C8] bg-white text-[#6B594A] hover:border-[#7C4E2F]'}`}
                               >
                                 {variant.name}
                               </button>
@@ -406,8 +406,8 @@ export default function CartPage() {
                           </div>
                         ) : null}
                         <div className="mt-2 flex flex-wrap items-center gap-3">
-                          <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">Add back to bundle</button>
-                          <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[9px] font-bold uppercase tracking-widest text-red-800 hover:underline">Remove</button>
+                          <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">Add back to bundle</button>
+                          <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[9px] font-bold uppercase tracking-[0.12em] text-red-800 hover:underline">Remove</button>
                         </div>
                       </div>
                     </motion.div>
@@ -418,7 +418,7 @@ export default function CartPage() {
           )}
         </div>
 
-        <div className="h-fit space-y-6 lg:sticky lg:top-28">
+        <div className="min-w-0 h-fit space-y-6 lg:sticky lg:top-28">
           <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 sm:p-8">
             <h2 className="mb-6 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Summary</h2>
             <div className="space-y-4">
@@ -436,7 +436,7 @@ export default function CartPage() {
               </div>
               <Link
                 href="/checkout"
-                className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white transition-all ${activeItems.length > 0 ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'cursor-not-allowed bg-[#D8C7B3]'}`}
+                className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition-all ${activeItems.length > 0 ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'cursor-not-allowed bg-[#D8C7B3]'}`}
                 onClick={(e) => activeItems.length === 0 && e.preventDefault()}
               >
                 Proceed to checkout

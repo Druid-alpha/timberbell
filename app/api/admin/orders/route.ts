@@ -12,8 +12,45 @@ export async function GET(request: NextRequest) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
+  const { searchParams } = request.nextUrl
+  const q = String(searchParams.get('q') || '').trim()
+  const status = String(searchParams.get('status') || '').trim()
+  const limit = Math.min(200, Math.max(1, Number(searchParams.get('limit') || 50)))
+  const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const filter: Record<string, any> = {}
+
+  if (status && status !== 'all') {
+    filter.$or = [{ status }, { paymentStatus: status }]
+  }
+
+  if (q) {
+    const tokens = q.split(/\s+/).map((token) => token.trim()).filter(Boolean)
+    const searchRules = tokens.map((token) => {
+      const term = { $regex: escapeRegex(token), $options: 'i' }
+      return {
+        $or: [
+          { 'customer.name': term },
+          { 'customer.email': term },
+          { paymentReference: term },
+          { trackingNote: term },
+          { 'items.name': term },
+          { 'items.variantName': term },
+          { status: term },
+          { paymentStatus: term },
+        ],
+      }
+    })
+
+    if (filter.$or) {
+      filter.$and = [{ $or: filter.$or }, ...searchRules]
+      delete filter.$or
+    } else {
+      filter.$and = searchRules
+    }
+  }
+
   const db = await (await import('@/lib/db')).getDb()
-  const orders = await db.collection('orders').find({}).sort({ createdAt: -1 }).limit(50).toArray()
+  const orders = await db.collection('orders').find(filter).sort({ createdAt: -1 }).limit(limit).toArray()
 
   return Response.json({
     orders: orders.map((order) => ({

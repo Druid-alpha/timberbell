@@ -13,17 +13,32 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(24, Math.max(1, Number(searchParams.get('limit') || 12)))
   const db = await (await import('@/lib/db')).getDb()
   const filter: Record<string, any> = {}
+  const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
   if (category) {
     filter.category = category
   }
 
   if (q) {
-    filter.$or = [
-      { name: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } },
-      { slug: { $regex: q, $options: 'i' } },
-    ]
+    const tokens = q.split(/\s+/).map((token) => token.trim()).filter(Boolean)
+    filter.$and = tokens.map((token) => {
+      const term = { $regex: escapeRegex(token), $options: 'i' }
+      return {
+        $or: [
+          { name: term },
+          { description: term },
+          { slug: term },
+          { category: term },
+          { badge: term },
+          { materials: term },
+          { finishes: term },
+          { leadTime: term },
+          { dimensions: term },
+          { 'variants.name': term },
+          { 'variants.sku': term },
+        ],
+      }
+    })
   }
 
   const total = await db.collection('products').countDocuments(filter)
