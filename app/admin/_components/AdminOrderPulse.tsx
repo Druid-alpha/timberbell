@@ -41,11 +41,15 @@ export default function AdminOrderPulse() {
   const [seenAt, setSeenAt] = useState<string | null>(null)
 
   useEffect(() => {
-    let active = true
     const stored = window.localStorage.getItem(STORAGE_KEY)
     setSeenAt(stored)
+  }, [])
 
-    async function loadSummary(currentSeenAt?: string | null, isInitial = false) {
+  useEffect(() => {
+    let active = true
+    let isInitialLoad = true
+
+    async function loadSummary(currentSeenAt?: string | null) {
       const params = new URLSearchParams()
       if (currentSeenAt) params.set('since', currentSeenAt)
       const query = params.toString()
@@ -55,12 +59,12 @@ export default function AdminOrderPulse() {
 
       setSummary(data)
 
-      if (isInitial && !currentSeenAt && data.lastActivityAt) {
+      if (isInitialLoad && !currentSeenAt && data.lastActivityAt) {
         window.localStorage.setItem(STORAGE_KEY, data.lastActivityAt)
         setSeenAt(data.lastActivityAt)
       }
 
-      if (data.newCounts?.total > 0 && 'Notification' in window && Notification.permission === 'granted') {
+      if (!isInitialLoad && data.newCounts?.total > 0 && 'Notification' in window && Notification.permission === 'granted') {
         new Notification('New Timberbell admin activity', {
           body: [
             data.newCounts.orders ? `${data.newCounts.orders} order${data.newCounts.orders > 1 ? 's' : ''}` : null,
@@ -69,9 +73,11 @@ export default function AdminOrderPulse() {
           ].filter(Boolean).join(' • '),
         })
       }
+
+      isInitialLoad = false
     }
 
-    void loadSummary(stored, true)
+    void loadSummary(seenAt)
     const interval = window.setInterval(() => {
       void loadSummary(window.localStorage.getItem(STORAGE_KEY))
     }, 30000)
@@ -80,28 +86,31 @@ export default function AdminOrderPulse() {
       active = false
       window.clearInterval(interval)
     }
-  }, [])
+  }, [seenAt])
 
   const badgeCount = useMemo(() => Number(summary?.newCounts?.total || 0), [summary])
 
   function markSeen() {
-    if (summary?.lastActivityAt) {
-      window.localStorage.setItem(STORAGE_KEY, summary.lastActivityAt)
-      setSeenAt(summary.lastActivityAt)
-      setSummary((current) =>
-        current
-          ? {
-              ...current,
-              newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
-            }
-          : current
-      )
-    }
+    if (!summary?.lastActivityAt) return
+    window.localStorage.setItem(STORAGE_KEY, summary.lastActivityAt)
+    setSeenAt(summary.lastActivityAt)
+    setSummary((current) =>
+      current
+        ? {
+            ...current,
+            newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
+          }
+        : current
+    )
   }
 
-  function toggleOpen() {
+  function openPanel() {
     markSeen()
-    setOpen((current) => !current)
+    setOpen(true)
+  }
+
+  function closePanel() {
+    setOpen(false)
   }
 
   async function enableAlerts() {
@@ -114,7 +123,7 @@ export default function AdminOrderPulse() {
     <div className="relative sm:static">
       <button
         type="button"
-        onClick={toggleOpen}
+        onClick={() => (open ? closePanel() : openPanel())}
         title="Admin activity"
         className="relative flex h-10 min-w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-3 transition hover:bg-[#FCFAF6]"
       >
@@ -129,103 +138,114 @@ export default function AdminOrderPulse() {
       </button>
 
       {open ? (
-        <div className="fixed left-1/2 top-20 z-20 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[20rem] sm:translate-x-0">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
-              <h3 className="mt-1 font-display text-xl text-[#2B2119]">What&apos;s new</h3>
+        <>
+          <button
+            type="button"
+            aria-label="Close admin activity"
+            onClick={closePanel}
+            className="fixed inset-0 z-[19] bg-black/20 backdrop-blur-[1px] sm:hidden"
+          />
+          <div className="fixed left-1/2 top-20 z-20 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[20rem] sm:translate-x-0">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
+                <h3 className="mt-1 font-display text-xl text-[#2B2119]">What&apos;s new</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">
+                  {badgeCount} new
+                </span>
+                <button
+                  type="button"
+                  onClick={closePanel}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E6D9C8] text-[#8C7A6B] transition hover:bg-[#FCFAF6]"
+                  aria-label="Close activity panel"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">
-              {badgeCount} new
-            </span>
-          </div>
 
-          <div className="mt-4 space-y-3">
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
-                Orders
-                {summary?.newCounts?.orders ? ` • ${summary.newCounts.orders} new` : ''}
-              </p>
-              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestOrder?.customerName || 'No recent order'}</p>
-              {summary?.latestOrder ? (
-                <p className="mt-1 text-xs text-[#8C7A6B]">
-                  {summary.latestOrder.status.replace('_', ' ')} • {formatMoney(summary.latestOrder.total)}
+            <div className="mt-4 space-y-3">
+              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                  Orders
+                  {summary?.newCounts?.orders ? ` • ${summary.newCounts.orders} new` : ''}
                 </p>
-              ) : null}
+                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestOrder?.customerName || 'No recent order'}</p>
+                {summary?.latestOrder ? (
+                  <p className="mt-1 text-xs text-[#8C7A6B]">
+                    {summary.latestOrder.status.replace('_', ' ')} • {formatMoney(summary.latestOrder.total)}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                  Refunds
+                  {summary?.newCounts?.refunds ? ` • ${summary.newCounts.refunds} new` : ''}
+                </p>
+                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestRefund?.customerName || 'No recent refund'}</p>
+                {summary?.latestRefund ? (
+                  <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestRefund.status.replace('_', ' ')}</p>
+                ) : null}
+              </div>
+
+              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                  New Users
+                  {summary?.newCounts?.users ? ` • ${summary.newCounts.users} new` : ''}
+                </p>
+                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestUser?.name || 'No recent user'}</p>
+                {summary?.latestUser ? (
+                  <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestUser.email}</p>
+                ) : null}
+              </div>
             </div>
 
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+            {'Notification' in window && Notification.permission !== 'granted' ? (
+              <button
+                type="button"
+                onClick={enableAlerts}
+                className="mt-4 w-full rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#FCFAF6]"
+              >
+                Enable Browser Alerts
+              </button>
+            ) : null}
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <Link
+                href="/admin/orders"
+                onClick={closePanel}
+                className="inline-flex items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+              >
+                Orders
+              </Link>
+              <Link
+                href="/admin/refunds"
+                onClick={closePanel}
+                className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
+              >
                 Refunds
-                {summary?.newCounts?.refunds ? ` • ${summary.newCounts.refunds} new` : ''}
-              </p>
-              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestRefund?.customerName || 'No recent refund'}</p>
-              {summary?.latestRefund ? (
-                <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestRefund.status.replace('_', ' ')}</p>
-              ) : null}
+              </Link>
+              <Link
+                href="/admin/users"
+                onClick={closePanel}
+                className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
+              >
+                Users
+              </Link>
             </div>
 
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
-                New Users
-                {summary?.newCounts?.users ? ` • ${summary.newCounts.users} new` : ''}
+            {seenAt ? (
+              <p className="mt-3 text-center text-[10px] text-[#8C7A6B]">
+                Last checked {new Date(seenAt).toLocaleString()}
               </p>
-              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestUser?.name || 'No recent user'}</p>
-              {summary?.latestUser ? (
-                <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestUser.email}</p>
-              ) : null}
-            </div>
+            ) : null}
           </div>
-
-          {'Notification' in window && Notification.permission !== 'granted' ? (
-            <button
-              type="button"
-              onClick={enableAlerts}
-              className="mt-4 w-full rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#FCFAF6]"
-            >
-              Enable Browser Alerts
-            </button>
-          ) : null}
-
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Link
-              href="/admin/orders"
-              onClick={() => {
-                markSeen()
-                setOpen(false)
-              }}
-              className="inline-flex items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-            >
-              Orders
-            </Link>
-            <Link
-              href="/admin/refunds"
-              onClick={() => {
-                markSeen()
-                setOpen(false)
-              }}
-              className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
-            >
-              Refunds
-            </Link>
-            <Link
-              href="/admin/users"
-              onClick={() => {
-                markSeen()
-                setOpen(false)
-              }}
-              className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
-            >
-              Users
-            </Link>
-          </div>
-
-          {seenAt ? (
-            <p className="mt-3 text-center text-[10px] text-[#8C7A6B]">
-              Last checked {new Date(seenAt).toLocaleString()}
-            </p>
-          ) : null}
-        </div>
+        </>
       ) : null}
     </div>
   )
