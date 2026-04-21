@@ -77,18 +77,38 @@ export default function QuickViewModal({ product }: { product: Product }) {
   const stockStatus = displayVariant?.stockStatus ?? product.stockStatus
 
   useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow
+    const previousBodyOverflowX = document.body.style.overflowX
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    const previousHtmlOverflowX = document.documentElement.style.overflowX
+
     document.body.style.overflow = 'hidden'
+    document.body.style.overflowX = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    document.documentElement.style.overflowX = 'hidden'
+
     return () => {
-      document.body.style.overflow = 'unset'
+      document.body.style.overflow = previousBodyOverflow
+      document.body.style.overflowX = previousBodyOverflowX
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.documentElement.style.overflowX = previousHtmlOverflowX
     }
   }, [])
 
+  function releasePageOverflow() {
+    document.body.style.overflow = 'unset'
+    document.body.style.overflowX = 'hidden'
+    document.documentElement.style.overflow = 'unset'
+    document.documentElement.style.overflowX = 'hidden'
+  }
+
   function close() {
+    releasePageOverflow()
     router.back()
   }
 
   function openFullDetails() {
-    document.body.style.overflow = 'unset'
+    releasePageOverflow()
     window.location.assign(`/products/${product.id}`)
   }
 
@@ -133,8 +153,8 @@ export default function QuickViewModal({ product }: { product: Product }) {
           variantName: displayVariant?.name,
           color: displayVariant?.color,
         }))
-        close()
-        setTimeout(() => router.push('/cart'), 300)
+        releasePageOverflow()
+        router.push('/cart')
         return
       }
 

@@ -57,13 +57,17 @@ export default function AdminOrderPulse() {
     }
   }, [])
 
-  const badgeCount = useMemo(() => unseenCount || pendingCount, [pendingCount, unseenCount])
+  const badgeCount = useMemo(() => unseenCount, [unseenCount])
 
-  function toggleOpen() {
+  function markLatestSeen() {
     if (latestOrder?.id) {
       window.localStorage.setItem(STORAGE_KEY, latestOrder.id)
     }
     setUnseenCount(0)
+  }
+
+  function toggleOpen() {
+    markLatestSeen()
     setOpen((current) => !current)
   }
 
@@ -92,7 +96,7 @@ export default function AdminOrderPulse() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-20 mt-3 w-[20rem] max-w-[calc(100vw-2rem)] rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl">
+        <div className="absolute left-1/2 z-20 mt-3 w-[min(20rem,calc(100vw-1rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:left-auto sm:right-0 sm:w-[20rem] sm:translate-x-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Order Pulse</p>
@@ -129,7 +133,10 @@ export default function AdminOrderPulse() {
 
           <Link
             href="/admin/orders"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              markLatestSeen()
+              setOpen(false)
+            }}
             className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
           >
             Open Fulfillment
