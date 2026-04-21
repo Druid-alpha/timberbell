@@ -1,12 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import AdminOrderPulse from './AdminOrderPulse'
 
 export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void }) {
   const pathname = usePathname()
-  const router = useRouter()
   const segments = pathname.split('/').filter(Boolean).slice(1)
 
   return (
@@ -45,20 +44,6 @@ export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void
 
       <div className="flex items-center gap-4 self-end sm:self-auto">
         <AdminOrderPulse />
-        <button
-          type="button"
-          onClick={() => {
-            router.refresh()
-            router.replace(pathname)
-          }}
-          title="Refresh admin data"
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] transition hover:bg-white"
-        >
-          <svg className="h-4 w-4 text-[#8C7A6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 9a8 8 0 00-13.66-4.95L4 6M4 15a8 8 0 0013.66 4.95L20 18" />
-          </svg>
-        </button>
         <Link href="/admin/users" title="Open admin users" className="block h-10 w-10 rounded-full bg-[#E6D9C8] p-0.5 shadow-md">
           <div className="flex h-full w-full items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#7C4E2F]">AD</div>
         </Link>

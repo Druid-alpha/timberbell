@@ -78,7 +78,7 @@ export default function AdminOrderPulse() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative sm:static">
       <button
         type="button"
         onClick={toggleOpen}
@@ -96,7 +96,7 @@ export default function AdminOrderPulse() {
       </button>
 
       {open ? (
-        <div className="absolute left-1/2 z-20 mt-3 w-[min(20rem,calc(100vw-1rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:left-auto sm:right-0 sm:w-[20rem] sm:translate-x-0">
+        <div className="fixed left-1/2 top-20 z-20 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[20rem] sm:translate-x-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Order Pulse</p>

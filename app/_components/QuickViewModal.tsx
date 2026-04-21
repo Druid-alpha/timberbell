@@ -4,9 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
 import { getOptimizedImageUrl } from '@/lib/utils/image'
-import { useAppDispatch } from '@/lib/redux/hooks'
-import { addItem } from '@/lib/redux/cartSlice'
-import { ensureReservationCountdown } from '@/lib/reservation'
 
 type Product = {
   id: string
@@ -38,11 +35,9 @@ type Product = {
 
 export default function QuickViewModal({ product }: { product: Product }) {
   const router = useRouter()
-  const dispatch = useAppDispatch()
   const [selectionMode, setSelectionMode] = useState<'main' | 'variant'>(product.variants?.length ? 'main' : 'main')
   const [activeVariantId, setActiveVariantId] = useState<string | null>(product.variants?.[0]?.id ?? null)
   const [activeImage, setActiveImage] = useState(getOptimizedImageUrl(product.images?.[0]?.url || product.variants?.[0]?.image?.url || ''))
-  const [status, setStatus] = useState('')
 
   const selectedVariant = useMemo(
     () => product.variants?.find((variant) => variant.id === activeVariantId) ?? null,
@@ -122,47 +117,6 @@ export default function QuickViewModal({ product }: { product: Product }) {
     setSelectionMode('variant')
     setActiveVariantId(variantId)
     setActiveImage(getOptimizedImageUrl(nextVariant?.image?.url || product.images?.[0]?.url || ''))
-  }
-
-  async function handleAddToCart() {
-    setStatus('')
-    try {
-      const res = await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product.id,
-          purchaseType: displayVariant ? 'variant' : 'main',
-          variantId: displayVariant?.id,
-          variantName: displayVariant?.name ?? null,
-          color: displayVariant?.color ?? null,
-          quantity: 1,
-        }),
-      })
-
-      if (res.ok) {
-        ensureReservationCountdown()
-        dispatch(addItem({
-          productId: product.id,
-          purchaseType: displayVariant ? 'variant' : 'main',
-          variantId: displayVariant?.id,
-          name: product.name,
-          price: displayPrice,
-          quantity: 1,
-          imageUrl: getOptimizedImageUrl(displayVariant?.image?.url || product.images?.[0]?.url),
-          variantName: displayVariant?.name,
-          color: displayVariant?.color,
-        }))
-        releasePageOverflow()
-        router.push('/cart')
-        return
-      }
-
-      const data = await res.json().catch(() => ({}))
-      setStatus(data?.message || 'Unable to add this item right now.')
-    } catch {
-      setStatus('Unable to add this item right now. Please check your connection and try again.')
-    }
   }
 
   const isUnavailable = stockStatus === 'out_of_stock' || availableStock === 0
@@ -294,24 +248,16 @@ export default function QuickViewModal({ product }: { product: Product }) {
                       : availableStock && availableStock <= 5
                         ? `Only ${availableStock} left in stock.`
                         : selectionMode === 'variant'
-                          ? 'Variant ready to add to cart.'
-                          : 'Main product ready to add to cart.'}
+                          ? 'Variant ready to review.'
+                          : 'Main product ready to review.'}
                 </div>
-                <button
-                  onClick={handleAddToCart}
-                  disabled={isUnavailable}
-                  className="block w-full max-w-full rounded-full bg-[#7C4E2F] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-white transition hover:bg-[#6A3F24] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#B99982]"
-                >
-                  {isUnavailable ? 'Out of Stock' : selectionMode === 'variant' ? 'Add Variant to Cart' : 'Add Product to Cart'}
-                </button>
                 <button
                   type="button"
                   onClick={openFullDetails}
-                  className="block w-full max-w-full rounded-full border border-[#E6D9C8] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#7C4E2F] transition hover:bg-[#F4EEE4] active:scale-[0.99]"
+                  className={`block w-full max-w-full rounded-full px-3 py-3 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-[0.99] ${isUnavailable ? 'border border-[#E6D9C8] text-[#7C4E2F] hover:bg-[#F4EEE4]' : 'bg-[#7C4E2F] text-white hover:bg-[#6A3F24]'}`}
                 >
-                  View Full Details
+                  {isUnavailable ? 'View Full Details' : selectionMode === 'variant' ? 'Choose Variant In Full Details' : 'Open Product Details'}
                 </button>
-                {status ? <p className="text-center text-xs text-[#7C4E2F]">{status}</p> : null}
               </div>
             </div>
           </div>
