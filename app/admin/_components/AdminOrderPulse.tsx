@@ -4,70 +4,103 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { formatMoney } from '@/lib/utils/format'
 
-type OrderSummary = {
-  id: string
-  customerName: string
-  total: number
-  createdAt?: string
-  status: string
+type ActivitySummary = {
+  latestOrder: {
+    id: string
+    customerName: string
+    total: number
+    createdAt?: string
+    status: string
+  } | null
+  latestRefund: {
+    id: string
+    customerName: string
+    createdAt?: string
+    status: string
+  } | null
+  latestUser: {
+    id: string
+    name: string
+    email: string
+    createdAt?: string
+  } | null
+  newCounts: {
+    orders: number
+    refunds: number
+    users: number
+    total: number
+  }
+  lastActivityAt: string | null
 }
 
-const STORAGE_KEY = 'timberbell_admin_last_seen_order'
+const STORAGE_KEY = 'timberbell_admin_activity_seen_at'
 
 export default function AdminOrderPulse() {
-  const [latestOrder, setLatestOrder] = useState<OrderSummary | null>(null)
-  const [pendingCount, setPendingCount] = useState(0)
-  const [unseenCount, setUnseenCount] = useState(0)
+  const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
+  const [seenAt, setSeenAt] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
-    let isFirstLoad = true
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    setSeenAt(stored)
 
-    async function loadSummary() {
-      const res = await fetch('/api/admin/orders/summary', { cache: 'no-store' })
-      const data = await res.json().catch(() => ({}))
-      if (!active || !res.ok) return
+    async function loadSummary(currentSeenAt?: string | null, isInitial = false) {
+      const params = new URLSearchParams()
+      if (currentSeenAt) params.set('since', currentSeenAt)
+      const query = params.toString()
+      const res = await fetch(`/api/admin/orders/summary${query ? `?${query}` : ''}`, { cache: 'no-store' })
+      const data = await res.json().catch(() => null)
+      if (!active || !res.ok || !data) return
 
-      const nextLatest = data.latestOrder ?? null
-      const lastSeen = window.localStorage.getItem(STORAGE_KEY)
-      setPendingCount(Number(data.pendingCount || 0))
-      setLatestOrder(nextLatest)
+      setSummary(data)
 
-      if (nextLatest?.id) {
-        if (isFirstLoad) {
-          if (!lastSeen) window.localStorage.setItem(STORAGE_KEY, nextLatest.id)
-          isFirstLoad = false
-        } else if (lastSeen && lastSeen !== nextLatest.id) {
-          setUnseenCount((count) => count + 1)
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('New Timberbell order', {
-              body: `${nextLatest.customerName} placed ${formatMoney(nextLatest.total)}`,
-            })
-          }
-        }
+      if (isInitial && !currentSeenAt && data.lastActivityAt) {
+        window.localStorage.setItem(STORAGE_KEY, data.lastActivityAt)
+        setSeenAt(data.lastActivityAt)
+      }
+
+      if (data.newCounts?.total > 0 && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('New Timberbell admin activity', {
+          body: [
+            data.newCounts.orders ? `${data.newCounts.orders} order${data.newCounts.orders > 1 ? 's' : ''}` : null,
+            data.newCounts.refunds ? `${data.newCounts.refunds} refund${data.newCounts.refunds > 1 ? 's' : ''}` : null,
+            data.newCounts.users ? `${data.newCounts.users} user${data.newCounts.users > 1 ? 's' : ''}` : null,
+          ].filter(Boolean).join(' • '),
+        })
       }
     }
 
-    void loadSummary()
-    const interval = window.setInterval(loadSummary, 30000)
+    void loadSummary(stored, true)
+    const interval = window.setInterval(() => {
+      void loadSummary(window.localStorage.getItem(STORAGE_KEY))
+    }, 30000)
+
     return () => {
       active = false
       window.clearInterval(interval)
     }
   }, [])
 
-  const badgeCount = useMemo(() => unseenCount, [unseenCount])
+  const badgeCount = useMemo(() => Number(summary?.newCounts?.total || 0), [summary])
 
-  function markLatestSeen() {
-    if (latestOrder?.id) {
-      window.localStorage.setItem(STORAGE_KEY, latestOrder.id)
+  function markSeen() {
+    if (summary?.lastActivityAt) {
+      window.localStorage.setItem(STORAGE_KEY, summary.lastActivityAt)
+      setSeenAt(summary.lastActivityAt)
+      setSummary((current) =>
+        current
+          ? {
+              ...current,
+              newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
+            }
+          : current
+      )
     }
-    setUnseenCount(0)
   }
 
   function toggleOpen() {
-    markLatestSeen()
+    markSeen()
     setOpen((current) => !current)
   }
 
@@ -82,7 +115,7 @@ export default function AdminOrderPulse() {
       <button
         type="button"
         onClick={toggleOpen}
-        title="Order pulse"
+        title="Admin activity"
         className="relative flex h-10 min-w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-3 transition hover:bg-[#FCFAF6]"
       >
         <svg className="h-4 w-4 text-[#8C7A6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,27 +132,50 @@ export default function AdminOrderPulse() {
         <div className="fixed left-1/2 top-20 z-20 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[20rem] sm:translate-x-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Order Pulse</p>
-              <h3 className="mt-1 font-display text-xl text-[#2B2119]">Fulfillment radar</h3>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
+              <h3 className="mt-1 font-display text-xl text-[#2B2119]">What&apos;s new</h3>
             </div>
             <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">
-              {pendingCount} active
+              {badgeCount} new
             </span>
           </div>
 
-          {latestOrder ? (
-            <div className="mt-4 rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-              <p className="text-sm font-bold text-[#2B2119]">{latestOrder.customerName}</p>
-              <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#8C7A6B]">
-                {latestOrder.status.replace('_', ' ')} • {formatMoney(latestOrder.total)}
+          <div className="mt-4 space-y-3">
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                Orders
+                {summary?.newCounts?.orders ? ` • ${summary.newCounts.orders} new` : ''}
               </p>
-              <p className="mt-1 text-xs text-[#8C7A6B]">
-                {latestOrder.createdAt ? new Date(latestOrder.createdAt).toLocaleString() : 'Just now'}
-              </p>
+              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestOrder?.customerName || 'No recent order'}</p>
+              {summary?.latestOrder ? (
+                <p className="mt-1 text-xs text-[#8C7A6B]">
+                  {summary.latestOrder.status.replace('_', ' ')} • {formatMoney(summary.latestOrder.total)}
+                </p>
+              ) : null}
             </div>
-          ) : (
-            <p className="mt-4 text-sm text-[#8C7A6B]">No new orders yet.</p>
-          )}
+
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                Refunds
+                {summary?.newCounts?.refunds ? ` • ${summary.newCounts.refunds} new` : ''}
+              </p>
+              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestRefund?.customerName || 'No recent refund'}</p>
+              {summary?.latestRefund ? (
+                <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestRefund.status.replace('_', ' ')}</p>
+              ) : null}
+            </div>
+
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
+                New Users
+                {summary?.newCounts?.users ? ` • ${summary.newCounts.users} new` : ''}
+              </p>
+              <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestUser?.name || 'No recent user'}</p>
+              {summary?.latestUser ? (
+                <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestUser.email}</p>
+              ) : null}
+            </div>
+          </div>
 
           {'Notification' in window && Notification.permission !== 'granted' ? (
             <button
@@ -131,16 +187,44 @@ export default function AdminOrderPulse() {
             </button>
           ) : null}
 
-          <Link
-            href="/admin/orders"
-            onClick={() => {
-              markLatestSeen()
-              setOpen(false)
-            }}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-          >
-            Open Fulfillment
-          </Link>
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <Link
+              href="/admin/orders"
+              onClick={() => {
+                markSeen()
+                setOpen(false)
+              }}
+              className="inline-flex items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
+            >
+              Orders
+            </Link>
+            <Link
+              href="/admin/refunds"
+              onClick={() => {
+                markSeen()
+                setOpen(false)
+              }}
+              className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
+            >
+              Refunds
+            </Link>
+            <Link
+              href="/admin/users"
+              onClick={() => {
+                markSeen()
+                setOpen(false)
+              }}
+              className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
+            >
+              Users
+            </Link>
+          </div>
+
+          {seenAt ? (
+            <p className="mt-3 text-center text-[10px] text-[#8C7A6B]">
+              Last checked {new Date(seenAt).toLocaleString()}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </div>
