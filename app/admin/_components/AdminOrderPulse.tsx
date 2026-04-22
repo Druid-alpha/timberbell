@@ -116,38 +116,6 @@ export default function AdminOrderPulse() {
     }, Math.max(1400, queue.length * 1300))
   }
 
-  async function enableSound() {
-    window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
-    setSoundArmed(true)
-    const audioContext = getAudioContext()
-    if (audioContext?.state === 'suspended') {
-      await audioContext.resume().catch(() => null)
-    }
-
-    if (!audioContext || audioContext.state === 'closed') return
-
-    const oscillator = audioContext.createOscillator()
-    const gain = audioContext.createGain()
-    const now = audioContext.currentTime
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
-    oscillator.type = 'sine'
-    oscillator.frequency.setValueAtTime(988, now)
-    oscillator.connect(gain)
-    gain.connect(audioContext.destination)
-    oscillator.start(now)
-    oscillator.stop(now + 0.22)
-    window.setTimeout(() => {
-      gain.disconnect()
-    }, 300)
-  }
-
-  async function testSound() {
-    await enableSound()
-    await playNotificationQueue(['orders'])
-  }
-
   useEffect(() => {
     let active = true
 
@@ -340,29 +308,6 @@ export default function AdminOrderPulse() {
               {badgeCount}
             </span>
           ) : null}
-        </button>
-        <button
-          type="button"
-          onClick={() => void (soundArmed ? testSound() : enableSound())}
-          title={soundArmed ? 'Test notification sound' : 'Enable notification sound'}
-          aria-label={soundArmed ? 'Test notification sound' : 'Enable notification sound'}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
-            soundArmed
-              ? 'border-[#B7D8BF] bg-[#EEF8F0] text-[#2E6A3E] hover:bg-white'
-              : 'border-[#C5A070] bg-[#FCFAF6] text-[#7C4E2F] hover:bg-white'
-          }`}
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 5 6 9H3v6h3l5 4V5Z" strokeLinecap="round" strokeLinejoin="round" />
-            {soundArmed ? (
-              <>
-                <path d="M15.5 8.5a5 5 0 0 1 0 7" strokeLinecap="round" />
-                <path d="M18.5 6a8.5 8.5 0 0 1 0 12" strokeLinecap="round" />
-              </>
-            ) : (
-              <path d="M4 4l16 16" strokeLinecap="round" />
-            )}
-          </svg>
         </button>
       </div>
 
