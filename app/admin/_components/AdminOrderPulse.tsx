@@ -58,7 +58,52 @@ export default function AdminOrderPulse() {
   const previousOrderCountRef = useRef(0)
   const previousRefundCountRef = useRef(0)
   const previousUserCountRef = useRef(0)
+  const audioContextRef = useRef<AudioContext | null>(null)
   const pollMs = 5000
+
+  async function playNotificationQueue(queue: Array<'orders' | 'refunds' | 'users'>) {
+    if (typeof window === 'undefined') return
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+
+    const audioContext = audioContextRef.current ?? new AudioContextClass()
+    audioContextRef.current = audioContext
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume().catch(() => null)
+    }
+    if (audioContext.state === 'closed') return
+
+    const now = audioContext.currentTime
+    const gain = audioContext.createGain()
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02)
+    gain.connect(audioContext.destination)
+
+    queue.forEach((type, queueIndex) => {
+      const startAt = now + queueIndex * 1.1
+      const pattern =
+        type === 'orders'
+          ? { frequencies: [1046, 1318, 1567, 1318], wave: 'sine' as OscillatorType, length: 0.16, gap: 0.18 }
+          : type === 'refunds'
+            ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.14, gap: 0.18 }
+            : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.12, gap: 0.16 }
+
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * pattern.gap + 0.28)
+
+      pattern.frequencies.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator()
+        oscillator.type = pattern.wave
+        oscillator.frequency.setValueAtTime(frequency, startAt + index * pattern.gap)
+        oscillator.connect(gain)
+        oscillator.start(startAt + index * pattern.gap)
+        oscillator.stop(startAt + index * pattern.gap + pattern.length)
+      })
+    })
+
+    window.setTimeout(() => {
+      gain.disconnect()
+    }, Math.max(1400, queue.length * 1300))
+  }
 
   useEffect(() => {
     let active = true
@@ -109,7 +154,7 @@ export default function AdminOrderPulse() {
     if (shouldPlayOrder) queue.push('orders')
     if (shouldPlayRefund) queue.push('refunds')
     if (shouldPlayUser) queue.push('users')
-    if (queue.length) playNotificationQueue(queue)
+    if (queue.length) void playNotificationQueue(queue)
   }, [summary, soundArmed])
 
   useEffect(() => {
@@ -146,21 +191,46 @@ export default function AdminOrderPulse() {
   useEffect(() => {
     if (soundArmed) return
 
-    function armSound() {
+    function getAudioContext() {
+      if (audioContextRef.current) return audioContextRef.current
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioContextClass) return null
+      audioContextRef.current = new AudioContextClass()
+      return audioContextRef.current
+    }
+
+    async function armSound() {
       window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
       setSoundArmed(true)
+      const audioContext = getAudioContext()
+      if (audioContext?.state === 'suspended') {
+        await audioContext.resume().catch(() => null)
+      }
       window.removeEventListener('pointerdown', armSound)
+      window.removeEventListener('touchstart', armSound)
       window.removeEventListener('keydown', armSound)
     }
 
     window.addEventListener('pointerdown', armSound)
+    window.addEventListener('touchstart', armSound, { passive: true })
     window.addEventListener('keydown', armSound)
 
     return () => {
       window.removeEventListener('pointerdown', armSound)
+      window.removeEventListener('touchstart', armSound)
       window.removeEventListener('keydown', armSound)
     }
   }, [soundArmed])
+
+  useEffect(() => {
+    return () => {
+      const audioContext = audioContextRef.current
+      if (audioContext) {
+        void audioContext.close().catch(() => null)
+        audioContextRef.current = null
+      }
+    }
+  }, [])
 
   function markSeen(section: AdminActivitySection | 'all') {
     if (!summary) return
@@ -189,44 +259,6 @@ export default function AdminOrderPulse() {
 
   function togglePanel() {
     setOpen((current) => !current)
-  }
-
-  function playNotificationQueue(queue: Array<'orders' | 'refunds' | 'users'>) {
-    if (typeof window === 'undefined') return
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return
-
-    const audioContext = new AudioContextClass()
-    const now = audioContext.currentTime
-    const gain = audioContext.createGain()
-    gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02)
-    gain.connect(audioContext.destination)
-
-    queue.forEach((type, queueIndex) => {
-      const startAt = now + queueIndex * 1.1
-      const pattern =
-        type === 'orders'
-          ? { frequencies: [1046, 1318, 1567, 1318], wave: 'sine' as OscillatorType, length: 0.16, gap: 0.18 }
-          : type === 'refunds'
-            ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.14, gap: 0.18 }
-            : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.12, gap: 0.16 }
-
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * pattern.gap + 0.28)
-
-      pattern.frequencies.forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator()
-        oscillator.type = pattern.wave
-        oscillator.frequency.setValueAtTime(frequency, startAt + index * pattern.gap)
-        oscillator.connect(gain)
-        oscillator.start(startAt + index * pattern.gap)
-        oscillator.stop(startAt + index * pattern.gap + pattern.length)
-      })
-    })
-
-    window.setTimeout(() => {
-      void audioContext.close().catch(() => null)
-    }, Math.max(1400, queue.length * 1300))
   }
 
   const sections = [

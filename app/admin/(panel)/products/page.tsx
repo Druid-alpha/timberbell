@@ -7,6 +7,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
 import { getOptimizedImageUrl } from '@/lib/utils/image'
 import ConfirmDialog from '@/app/_components/ConfirmDialog'
+import { PRODUCT_COLOR_OPTIONS } from '@/lib/constants/product-colors'
+import { getColorName, normalizeHexColor } from '@/lib/utils/color-name'
 
 type ProductImage = {
   url: string
@@ -144,7 +146,7 @@ const emptyForm: ProductForm = {
   dimensions: '',
 }
 
-const defaultPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
+const defaultPalette = ['#f4e7d2', '#d8c7b3', '#c59a6b']
 const emptyPalette: string[] = []
 
 function slugify(value: string) {
@@ -175,6 +177,11 @@ function dedupeImages(items: ProductImage[]) {
     return true
   })
 }
+
+function getSafeColorHex(value?: string | null, fallback = '#c59a6b') {
+  return normalizeHexColor(value) || fallback
+}
+
 function createVariant(): Variant {
   return {
     id: `variant-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -231,6 +238,27 @@ export default function AdminProductsPage() {
   const badgeOptions = useMemo(() => optionSets.badges, [optionSets.badges])
   const leadTimeOptions = useMemo(() => optionSets.leadTimes, [optionSets.leadTimes])
   const colorOptions = useMemo(() => optionSets.colors, [optionSets.colors])
+  const availableColorChoices = useMemo(
+    () => {
+      const prioritized = colorOptions.length ? colorOptions : PRODUCT_COLOR_OPTIONS.map((color) => color.hex)
+      const merged = [...prioritized, ...PRODUCT_COLOR_OPTIONS.map((color) => color.hex)]
+      const seen = new Set<string>()
+
+      return merged
+        .map((value) => getSafeColorHex(value, ''))
+        .filter(Boolean)
+        .filter((hex) => {
+          if (seen.has(hex)) return false
+          seen.add(hex)
+          return true
+        })
+        .map((hex) => ({
+          hex,
+          name: getColorName(hex),
+        }))
+    },
+    [colorOptions]
+  )
   const finalPreviewPrice = useMemo(() => {
     const basePrice = Number(form.price) || 0
     const discountValue = Number(form.discountValue) || 0
@@ -461,7 +489,7 @@ export default function AdminProductsPage() {
       dimensions: p.dimensions || '',
     })
     const nextImages = dedupeImages(p.images || [])
-    const nextPalette = p.palette?.length ? p.palette.slice(0, 3) : emptyPalette
+    const nextPalette = p.palette?.length ? p.palette.slice(0, 3).map((color) => getSafeColorHex(color, '#f4e7d2')) : emptyPalette
     const nextVariants = (p.variants || []).map((variant) => ({
         ...variant,
         price: variant.price ? String(variant.price) : '',
@@ -499,7 +527,7 @@ export default function AdminProductsPage() {
         discountType: variant.discountType || undefined,
         discountValue: variant.discountValue ? Number(variant.discountValue) : undefined,
         stockCount: variant.stockCount ? Number(variant.stockCount) : undefined,
-        color: variant.color || undefined,
+        color: variant.color ? getSafeColorHex(variant.color) : undefined,
         materials: variant.materials || [],
         finishes: variant.finishes || [],
         specifications: variant.specifications || [],
@@ -552,6 +580,16 @@ export default function AdminProductsPage() {
     )
   }
 
+  function updatePaletteColor(index: number, value: string) {
+    const nextColor = getSafeColorHex(value, '#c59a6b')
+    setPalette((current) => current.map((entry, i) => (i === index ? nextColor : entry)))
+  }
+
+  function updateQuickVariantColor(value: string) {
+    if (!variantQuickUpdate) return
+    setVariantQuickUpdate({ ...variantQuickUpdate, color: getSafeColorHex(value, '#c59a6b') })
+  }
+
   function replacePrimaryImage(image: ProductImage) {
     setImages((current) => dedupeImages(current.length ? [image, ...current.slice(1)] : [image]))
   }
@@ -592,7 +630,7 @@ export default function AdminProductsPage() {
       productName: product.name,
       name: variant.name,
       sku: variant.sku || '',
-      color: variant.color || '',
+      color: getSafeColorHex(variant.color),
       price: variant.price || '',
       discountType: variant.discountType || '',
       discountValue: variant.discountValue || '',
@@ -622,7 +660,7 @@ export default function AdminProductsPage() {
             stockCount: variantQuickUpdate.stockCount ? Number(variantQuickUpdate.stockCount) : undefined,
             stockStatus: variantQuickUpdate.stockStatus,
             sku: variantQuickUpdate.sku || undefined,
-            color: variantQuickUpdate.color || undefined,
+            color: variantQuickUpdate.color ? getSafeColorHex(variantQuickUpdate.color) : undefined,
           }
         : variant
     )
@@ -657,7 +695,7 @@ export default function AdminProductsPage() {
               stockCount: variantQuickUpdate.stockCount,
               stockStatus: variantQuickUpdate.stockStatus,
               sku: variantQuickUpdate.sku,
-              color: variantQuickUpdate.color,
+              color: getSafeColorHex(variantQuickUpdate.color),
             }
           : variant
       )
@@ -681,7 +719,7 @@ export default function AdminProductsPage() {
         productName: product.name,
         name: variant.name,
         sku: variant.sku || '',
-        color: variant.color || '',
+        color: getSafeColorHex(variant.color),
         price: variant.price ? String(variant.price) : '',
         discountType: variant.discountType || '',
         discountValue: variant.discountValue ? String(variant.discountValue) : '',
@@ -888,10 +926,37 @@ export default function AdminProductsPage() {
                   ))}
                </AnimatePresence>
             </div>
-            <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
-               <button type="button" onClick={() => loadProducts({ page: Math.max(1, page - 1), search, category: categoryFilter })} disabled={page <= 1} className="rounded-full border border-[#E6D9C8] px-4 py-2 disabled:opacity-40">Prev</button>
-               <span>Page {page} / {totalPages}</span>
-               <button type="button" onClick={() => loadProducts({ page: Math.min(totalPages, page + 1), search, category: categoryFilter })} disabled={page >= totalPages} className="rounded-full border border-[#E6D9C8] px-4 py-2 disabled:opacity-40">Next</button>
+            <div className="rounded-3xl border border-[#E6D9C8] bg-white px-4 py-3 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
+               <div className="flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => loadProducts({ page: Math.max(1, page - 1), search, category: categoryFilter })}
+                    disabled={page <= 1}
+                    className={`min-w-[7.5rem] rounded-full border px-4 py-2 font-bold transition ${
+                      page <= 1
+                        ? 'cursor-not-allowed border-[#EEE3D6] bg-[#F8F4EE] text-[#B9A998]'
+                        : 'border-[#C5A070] bg-[#FCFAF6] text-[#7C4E2F] shadow-sm hover:bg-[#F4EEE4]'
+                    }`}
+                  >
+                    {'< Previous'}
+                  </button>
+                  <span className="text-center">Page {page} / {totalPages}</span>
+                  <button
+                    type="button"
+                    onClick={() => loadProducts({ page: Math.min(totalPages, page + 1), search, category: categoryFilter })}
+                    disabled={page >= totalPages}
+                    className={`min-w-[7.5rem] rounded-full border px-4 py-2 font-bold transition ${
+                      page >= totalPages
+                        ? 'cursor-not-allowed border-[#EEE3D6] bg-[#F8F4EE] text-[#B9A998]'
+                        : 'border-[#2B2119] bg-[#2B2119] text-white shadow-sm hover:bg-[#3B2E24]'
+                    }`}
+                  >
+                    {'Next >'}
+                  </button>
+               </div>
+               <p className="mt-2 text-center text-[9px] normal-case tracking-normal text-[#8C7A6B]">
+                  {page > 1 ? 'A previous page is available.' : 'You are on the first page.'} {page < totalPages ? 'A next page is available.' : 'You are on the last page.'}
+               </p>
             </div>
          </div>
          ) : null}
@@ -998,9 +1063,13 @@ export default function AdminProductsPage() {
                            <div key={`palette-${index}`} className="rounded-2xl border border-[#E6D9C8] bg-white p-3">
                               <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Color {index + 1}</label>
                               <div className="mt-3 flex items-center gap-3">
-                                 <input type="color" value={color} onChange={(e) => setPalette((current) => current.map((entry, i) => (i === index ? e.target.value : entry)))} className="h-11 w-12 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
-                                 <input value={color} onChange={(e) => setPalette((current) => current.map((entry, i) => (i === index ? e.target.value : entry)))} className="h-11 flex-1 rounded-xl border border-[#E6D9C8] px-3 text-sm outline-none" />
+                                 <span className="h-11 w-12 rounded-xl border border-[#E6D9C8]" style={{ backgroundColor: color }} />
+                                 <div className="flex flex-1 items-center gap-2">
+                                   <input type="color" value={getSafeColorHex(color, '#f4e7d2')} onChange={(e) => updatePaletteColor(index, e.target.value)} className="h-11 w-14 rounded-xl border border-[#E6D9C8] bg-white p-1" />
+                                   <input value={getSafeColorHex(color, '#f4e7d2')} onChange={(e) => updatePaletteColor(index, e.target.value)} list="product-color-suggestions" placeholder="#f4e7d2" className="h-11 flex-1 rounded-xl border border-[#E6D9C8] px-3 text-sm outline-none" />
+                                 </div>
                               </div>
+                              <p className="mt-2 text-[10px] text-[#8C7A6B]">{getColorName(color)} • {getSafeColorHex(color, '#f4e7d2')}</p>
                               {palette.length > 1 ? (
                                 <button type="button" onClick={() => setPalette((current) => current.filter((_, i) => i !== index))} className="mt-3 text-[10px] font-bold uppercase tracking-widest text-red-500">Remove</button>
                               ) : null}
@@ -1012,22 +1081,22 @@ export default function AdminProductsPage() {
                      ) : null}
                      {colorOptions.length > 0 ? (
                        <div className="mt-4 flex flex-wrap gap-2">
-                          {colorOptions.slice(0, 12).map((color) => (
+                          {availableColorChoices.slice(0, 12).map((color) => (
                             <button
-                              key={color}
+                              key={color.hex}
                               type="button"
-                              title={color}
+                              title={color.name}
                               onClick={() =>
                                 setPalette((current) => {
-                                  if (current.includes(color)) return current
-                                  if (current.length >= 3) return [current[0], current[1], color].filter(Boolean)
-                                  return [...current, color]
+                                  if (current.includes(color.hex)) return current
+                                  if (current.length >= 3) return [current[0], current[1], color.hex].filter(Boolean)
+                                  return [...current, color.hex]
                                 })
                               }
                               className="flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#6B594A]"
                             >
-                              <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color }} />
-                              Add
+                              <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: color.hex }} />
+                              {color.name}
                             </button>
                           ))}
                        </div>
@@ -1130,8 +1199,11 @@ export default function AdminProductsPage() {
                               </div>
                               <div className="mt-3 grid gap-4 sm:grid-cols-[auto_1fr]">
                                 <div className="flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3 py-2">
-                                  <input type="color" value={variant.color || '#c59a6b'} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-transparent p-1" />
-                                  <input value={variant.color || ''} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} placeholder="#c59a6b" className="h-9 w-28 text-sm outline-none" />
+                                  <span className="h-9 w-10 rounded-xl border border-[#E6D9C8]" style={{ backgroundColor: getSafeColorHex(variant.color) }} />
+                                  <div className="flex items-center gap-2">
+                                    <input type="color" value={getSafeColorHex(variant.color)} onChange={(e) => updateVariant(variant.id, { color: e.target.value })} className="h-9 w-10 rounded-xl border border-[#E6D9C8] bg-white p-1" />
+                                    <input value={getSafeColorHex(variant.color)} onChange={(e) => updateVariant(variant.id, { color: getSafeColorHex(e.target.value) })} list="product-color-suggestions" placeholder="#c59a6b" className="h-9 w-32 text-sm outline-none" />
+                                  </div>
                                 </div>
                                 <div className="rounded-2xl border border-[#E6D9C8] p-3">
                                   <p className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Variant Image</p>
@@ -1397,7 +1469,11 @@ export default function AdminProductsPage() {
                      </div>
                      <div>
                         <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Color</label>
-                        <input type="text" value={variantQuickUpdate.color} onChange={(e) => setVariantQuickUpdate({ ...variantQuickUpdate, color: e.target.value })} placeholder="#c59a6b" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] px-4 text-sm outline-none" />
+                        <div className="mt-2 flex items-center gap-3 rounded-2xl border border-[#E6D9C8] px-3">
+                           <input type="color" value={getSafeColorHex(variantQuickUpdate.color)} onChange={(e) => updateQuickVariantColor(e.target.value)} className="h-10 w-12 rounded-xl border border-[#E6D9C8] bg-white p-1" />
+                           <input value={getSafeColorHex(variantQuickUpdate.color)} onChange={(e) => updateQuickVariantColor(e.target.value)} list="product-color-suggestions" placeholder="#c59a6b" className="h-12 w-full text-sm outline-none" />
+                        </div>
+                        <p className="mt-2 text-[10px] text-[#8C7A6B]">{getColorName(variantQuickUpdate.color)}</p>
                      </div>
                      <div>
                         <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Discount Type</label>
@@ -1433,6 +1509,13 @@ export default function AdminProductsPage() {
             </div>
          ) : null}
       </AnimatePresence>
+      <datalist id="product-color-suggestions">
+        {availableColorChoices.map((option) => (
+          <option key={option.hex} value={option.hex}>
+            {option.name}
+          </option>
+        ))}
+      </datalist>
       <ConfirmDialog
          open={Boolean(deleteTargetId)}
          title="Delete product?"

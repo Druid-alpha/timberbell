@@ -1,25 +1,25 @@
-const NAMED_COLORS = [
-  { name: 'White', hex: '#ffffff' },
-  { name: 'Ivory', hex: '#f4e7d2' },
-  { name: 'Cream', hex: '#f2ebdd' },
-  { name: 'Sand', hex: '#e6d8c7' },
-  { name: 'Beige', hex: '#d8c7b3' },
-  { name: 'Taupe', hex: '#b8a48c' },
-  { name: 'Mocha', hex: '#8c7a6b' },
-  { name: 'Walnut', hex: '#8b6a4e' },
-  { name: 'Brown', hex: '#6b4f3a' },
-  { name: 'Terracotta', hex: '#c59a6b' },
-  { name: 'Olive', hex: '#8b9a78' },
-  { name: 'Green', hex: '#5d7a5a' },
-  { name: 'Blue', hex: '#6f8fa8' },
-  { name: 'Gray', hex: '#8e8e8e' },
-  { name: 'Charcoal', hex: '#5b5a52' },
-  { name: 'Black', hex: '#1f1f1f' },
-]
+import { PRODUCT_COLOR_OPTIONS } from '@/lib/constants/product-colors'
+
+export function normalizeHexColor(hex?: string | null) {
+  const clean = String(hex || '').trim().replace(/^#/, '')
+  if (!clean) return null
+
+  if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+    return `#${clean
+      .split('')
+      .map((char) => `${char}${char}`)
+      .join('')
+      .toLowerCase()}`
+  }
+
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null
+  return `#${clean.toLowerCase()}`
+}
 
 function hexToRgb(hex: string) {
-  const clean = hex.replace('#', '').trim()
-  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return null
+  const normalized = normalizeHexColor(hex)
+  if (!normalized) return null
+  const clean = normalized.slice(1)
 
   return {
     r: parseInt(clean.slice(0, 2), 16),
@@ -28,31 +28,87 @@ function hexToRgb(hex: string) {
   }
 }
 
+function rgbToHsl(r: number, g: number, b: number) {
+  const red = r / 255
+  const green = g / 255
+  const blue = b / 255
+  const max = Math.max(red, green, blue)
+  const min = Math.min(red, green, blue)
+  const lightness = (max + min) / 2
+  const delta = max - min
+
+  if (delta === 0) {
+    return { h: 0, s: 0, l: lightness * 100 }
+  }
+
+  const saturation =
+    lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min)
+
+  let hue = 0
+  switch (max) {
+    case red:
+      hue = (green - blue) / delta + (green < blue ? 6 : 0)
+      break
+    case green:
+      hue = (blue - red) / delta + 2
+      break
+    default:
+      hue = (red - green) / delta + 4
+      break
+  }
+
+  return {
+    h: Math.round(hue * 60),
+    s: Math.round(saturation * 100),
+    l: Math.round(lightness * 100),
+  }
+}
+
 export function getColorName(hex?: string | null) {
-  if (!hex) return 'Natural'
-  const rgb = hexToRgb(hex)
-  if (!rgb) return hex
+  const normalized = normalizeHexColor(hex)
+  if (!normalized) return 'Natural'
 
-  let closest = { name: hex, distance: Number.POSITIVE_INFINITY }
+  const exactMatch = PRODUCT_COLOR_OPTIONS.find((color) => color.hex === normalized)
+  if (exactMatch) return exactMatch.name
 
-  for (const color of NAMED_COLORS) {
-    const candidate = hexToRgb(color.hex)
-    if (!candidate) continue
-    const distance =
-      (rgb.r - candidate.r) ** 2 +
-      (rgb.g - candidate.g) ** 2 +
-      (rgb.b - candidate.b) ** 2
+  const rgb = hexToRgb(normalized)
+  if (!rgb) return normalized
 
-    if (distance < closest.distance) {
-      closest = { name: color.name, distance }
-    }
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
+
+  if (hsl.s <= 8) {
+    if (hsl.l >= 94) return 'Snow White'
+    if (hsl.l >= 84) return 'Pearl Gray'
+    if (hsl.l >= 68) return 'Silver Gray'
+    if (hsl.l >= 42) return 'Slate Gray'
+    if (hsl.l >= 22) return 'Charcoal Gray'
+    return 'Onyx Black'
   }
 
-  if (closest.distance > 900) {
-    return `Custom ${hex.toUpperCase()}`
-  }
+  let tone = 'Classic'
+  if (hsl.l >= 86) tone = 'Pale'
+  else if (hsl.l >= 72) tone = hsl.s <= 35 ? 'Powder' : 'Soft'
+  else if (hsl.l <= 18) tone = 'Midnight'
+  else if (hsl.l <= 32) tone = 'Deep'
+  else if (hsl.s >= 78) tone = 'Vivid'
+  else if (hsl.s <= 28) tone = 'Muted'
 
-  return closest.name
+  let family = 'Rose'
+  if (hsl.h < 15 || hsl.h >= 345) family = 'Red'
+  else if (hsl.h < 35) family = 'Orange'
+  else if (hsl.h < 50) family = 'Amber'
+  else if (hsl.h < 70) family = 'Yellow'
+  else if (hsl.h < 95) family = 'Lime'
+  else if (hsl.h < 150) family = 'Green'
+  else if (hsl.h < 175) family = 'Teal'
+  else if (hsl.h < 200) family = 'Cyan'
+  else if (hsl.h < 220) family = 'Sky'
+  else if (hsl.h < 250) family = 'Blue'
+  else if (hsl.h < 275) family = 'Indigo'
+  else if (hsl.h < 310) family = 'Violet'
+  else if (hsl.h < 345) family = 'Rose'
+
+  return `${tone} ${family}`
 }
 
 const COLOR_FAMILY_SWATCHES: Record<string, string> = {
@@ -65,8 +121,32 @@ const COLOR_FAMILY_SWATCHES: Record<string, string> = {
   Black: '#1f1f1f',
 }
 
-export function getColorFamily(hex?: string | null) {
+function getGeneratedColorFamily(hex?: string | null) {
   const rgb = hex ? hexToRgb(hex) : null
+  if (!rgb) return 'Beige'
+
+  const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b)
+  if (hsl.s <= 8) {
+    if (hsl.l >= 80) return 'White'
+    if (hsl.l >= 35) return 'Gray'
+    return 'Black'
+  }
+
+  if (hsl.h < 15 || hsl.h >= 345) return 'Brown'
+  if (hsl.h < 55) return 'Brown'
+  if (hsl.h < 80) return 'Beige'
+  if (hsl.h < 175) return 'Green'
+  if (hsl.h < 250) return 'Blue'
+  if (hsl.h < 345) return 'Gray'
+  return 'Beige'
+}
+
+export function getColorFamily(hex?: string | null) {
+  const normalized = normalizeHexColor(hex)
+  const exactMatch = PRODUCT_COLOR_OPTIONS.find((color) => color.hex === normalized)
+  if (exactMatch) return exactMatch.family
+
+  const rgb = normalized ? hexToRgb(normalized) : null
   if (rgb) {
     let closestFamily = { name: 'Beige', distance: Number.POSITIVE_INFINITY }
     for (const [family, swatch] of Object.entries(COLOR_FAMILY_SWATCHES)) {
@@ -85,15 +165,7 @@ export function getColorFamily(hex?: string | null) {
     return closestFamily.name
   }
 
-  const name = getColorName(hex)
-  if (['White', 'Ivory', 'Cream'].includes(name)) return 'White'
-  if (['Sand', 'Beige', 'Taupe'].includes(name)) return 'Beige'
-  if (['Mocha', 'Walnut', 'Brown', 'Terracotta'].includes(name)) return 'Brown'
-  if (['Olive', 'Green'].includes(name)) return 'Green'
-  if (['Blue'].includes(name)) return 'Blue'
-  if (['Gray'].includes(name)) return 'Gray'
-  if (['Black', 'Charcoal'].includes(name)) return 'Black'
-  return name
+  return getGeneratedColorFamily(normalized)
 }
 
 export function getColorFamilySwatch(family: string) {
