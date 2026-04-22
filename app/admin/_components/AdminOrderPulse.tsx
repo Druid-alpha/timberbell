@@ -1,8 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  ADMIN_ACTIVITY_EVENT,
+  notifyAdminActivitySeen,
+  readAdminActivitySeenAt,
+  type AdminActivitySection,
+} from '@/lib/adminActivity'
 
 type ActivitySummary = {
   latestOrder: {
@@ -33,48 +38,49 @@ type ActivitySummary = {
   lastActivityAt: string | null
 }
 
-const STORAGE_KEY = 'timberbell_admin_activity_seen_at'
+const SOUND_ARMED_KEY = 'timberbell_admin_activity_sound_armed'
 
-function readSeenAt() {
-  if (typeof window === 'undefined') return null
-  return window.localStorage.getItem(STORAGE_KEY)
+function readSoundArmed() {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(SOUND_ARMED_KEY) === 'true'
 }
 
 export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
-  const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
-  const pathname = usePathname()
+  const [seenAt, setSeenAt] = useState<Record<AdminActivitySection, string | null>>(() => ({
+    orders: readAdminActivitySeenAt('orders'),
+    refunds: readAdminActivitySeenAt('refunds'),
+    users: readAdminActivitySeenAt('users'),
+  }))
+  const [soundArmed, setSoundArmed] = useState<boolean>(() => readSoundArmed())
+  const initializedRef = useRef(false)
+  const previousOrderCountRef = useRef(0)
+  const previousRefundCountRef = useRef(0)
+  const previousUserCountRef = useRef(0)
 
   useEffect(() => {
     let active = true
-    let firstLoad = true
 
-    async function loadSummary(currentSeenAt: string | null) {
+    async function loadSummary(currentSeenAt: Record<AdminActivitySection, string | null>) {
       const params = new URLSearchParams()
-      if (currentSeenAt) params.set('since', currentSeenAt)
+      if (currentSeenAt.orders) params.set('sinceOrders', currentSeenAt.orders)
+      if (currentSeenAt.refunds) params.set('sinceRefunds', currentSeenAt.refunds)
+      if (currentSeenAt.users) params.set('sinceUsers', currentSeenAt.users)
       const res = await fetch(`/api/admin/orders/summary${params.toString() ? `?${params.toString()}` : ''}`, { cache: 'no-store' })
       const data = await res.json().catch(() => null)
       if (!active || !res.ok || !data) return
 
-      if (firstLoad && !currentSeenAt && data.lastActivityAt) {
-        window.localStorage.setItem(STORAGE_KEY, data.lastActivityAt)
-        setSeenAt(data.lastActivityAt)
-        setSummary({
-          ...data,
-          newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
-        })
-        firstLoad = false
-        return
-      }
-
       setSummary(data)
-      firstLoad = false
     }
 
     void loadSummary(seenAt)
     const interval = window.setInterval(() => {
-      void loadSummary(readSeenAt())
+      void loadSummary({
+        orders: readAdminActivitySeenAt('orders'),
+        refunds: readAdminActivitySeenAt('refunds'),
+        users: readAdminActivitySeenAt('users'),
+      })
     }, 30000)
 
     return () => {
@@ -86,39 +92,140 @@ export default function AdminOrderPulse() {
   const badgeCount = useMemo(() => Number(summary?.newCounts?.total || 0), [summary])
 
   useEffect(() => {
-    if (open && summary?.lastActivityAt && badgeCount > 0) {
-      markSeen()
-    }
-  }, [open, summary?.lastActivityAt, badgeCount])
+    if (!summary) return
+    const nextOrderCount = Number(summary.newCounts?.orders || 0)
+    const nextRefundCount = Number(summary.newCounts?.refunds || 0)
+    const nextUserCount = Number(summary.newCounts?.users || 0)
+    const shouldPlayOrder = initializedRef.current && soundArmed && nextOrderCount > previousOrderCountRef.current
+    const shouldPlayRefund = initializedRef.current && soundArmed && nextRefundCount > previousRefundCountRef.current
+    const shouldPlayUser = initializedRef.current && soundArmed && nextUserCount > previousUserCountRef.current
+    previousOrderCountRef.current = nextOrderCount
+    previousRefundCountRef.current = nextRefundCount
+    previousUserCountRef.current = nextUserCount
+    initializedRef.current = true
+
+    const queue: Array<'orders' | 'refunds' | 'users'> = []
+    if (shouldPlayOrder) queue.push('orders')
+    if (shouldPlayRefund) queue.push('refunds')
+    if (shouldPlayUser) queue.push('users')
+    if (queue.length) playNotificationQueue(queue)
+  }, [summary, soundArmed])
 
   useEffect(() => {
-    if (!pathname || badgeCount <= 0) return
-    if (['/admin/orders', '/admin/fulfillment', '/admin/refunds', '/admin/users'].some((path) => pathname.startsWith(path))) {
-      markSeen()
+    function handleSeenEvent(event: Event) {
+      const detail = (event as CustomEvent<{ section?: AdminActivitySection; value?: string }>).detail
+      if (!detail?.section || !detail?.value) return
+      const section = detail.section as AdminActivitySection
+      const value = detail.value
+      setSeenAt((current) => ({ ...current, [section]: value || null }))
+      setSummary((current) =>
+        current
+          ? {
+              ...current,
+              newCounts: {
+                ...current.newCounts,
+                [section]: 0,
+                total:
+                  (section === 'orders' ? 0 : Number(current.newCounts.orders || 0)) +
+                  (section === 'refunds' ? 0 : Number(current.newCounts.refunds || 0)) +
+                  (section === 'users' ? 0 : Number(current.newCounts.users || 0)),
+              },
+            }
+          : current
+      )
     }
-  }, [pathname, badgeCount, summary?.lastActivityAt])
 
-  function markSeen() {
-    if (!summary?.lastActivityAt) return
-    window.localStorage.setItem(STORAGE_KEY, summary.lastActivityAt)
-    setSeenAt(summary.lastActivityAt)
-    setSummary((current) =>
-      current
-        ? {
-            ...current,
-            newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
-          }
-        : current
-    )
+    window.addEventListener(ADMIN_ACTIVITY_EVENT, handleSeenEvent as EventListener)
+
+    return () => {
+      window.removeEventListener(ADMIN_ACTIVITY_EVENT, handleSeenEvent as EventListener)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (soundArmed) return
+
+    function armSound() {
+      window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
+      setSoundArmed(true)
+      window.removeEventListener('pointerdown', armSound)
+      window.removeEventListener('keydown', armSound)
+    }
+
+    window.addEventListener('pointerdown', armSound)
+    window.addEventListener('keydown', armSound)
+
+    return () => {
+      window.removeEventListener('pointerdown', armSound)
+      window.removeEventListener('keydown', armSound)
+    }
+  }, [soundArmed])
+
+  function markSeen(section: AdminActivitySection | 'all') {
+    if (!summary) return
+
+    if (section === 'all') {
+      ;(['orders', 'refunds', 'users'] as AdminActivitySection[]).forEach((entry) => {
+        const value =
+          entry === 'orders'
+            ? summary.latestOrder?.createdAt || null
+            : entry === 'refunds'
+              ? summary.latestRefund?.createdAt || null
+              : summary.latestUser?.createdAt || null
+        notifyAdminActivitySeen(entry, value)
+      })
+      return
+    }
+
+    const value =
+      section === 'orders'
+        ? summary.latestOrder?.createdAt || null
+        : section === 'refunds'
+          ? summary.latestRefund?.createdAt || null
+          : summary.latestUser?.createdAt || null
+    notifyAdminActivitySeen(section, value)
   }
 
   function togglePanel() {
-    if (open) {
-      setOpen(false)
-      return
-    }
-    markSeen()
-    setOpen(true)
+    setOpen((current) => !current)
+  }
+
+  function playNotificationQueue(queue: Array<'orders' | 'refunds' | 'users'>) {
+    if (typeof window === 'undefined') return
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return
+
+    const audioContext = new AudioContextClass()
+    const now = audioContext.currentTime
+    const gain = audioContext.createGain()
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02)
+    gain.connect(audioContext.destination)
+
+    queue.forEach((type, queueIndex) => {
+      const startAt = now + queueIndex * 0.72
+      const pattern =
+        type === 'orders'
+          ? { frequencies: [880, 1174], wave: 'sine' as OscillatorType, length: 0.12 }
+          : type === 'refunds'
+            ? { frequencies: [659, 523, 659], wave: 'triangle' as OscillatorType, length: 0.1 }
+            : { frequencies: [523, 659, 784], wave: 'square' as OscillatorType, length: 0.08 }
+
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * 0.16 + 0.18)
+
+      pattern.frequencies.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator()
+        oscillator.type = pattern.wave
+        oscillator.frequency.setValueAtTime(frequency, startAt + index * 0.16)
+        oscillator.connect(gain)
+        oscillator.start(startAt + index * 0.16)
+        oscillator.stop(startAt + index * 0.16 + pattern.length)
+      })
+    })
+
+    window.setTimeout(() => {
+      void audioContext.close().catch(() => null)
+    }, Math.max(800, queue.length * 900))
   }
 
   const sections = [
@@ -180,16 +287,27 @@ export default function AdminOrderPulse() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
                 <h3 className="mt-1 font-display text-xl text-[#2B2119]">{badgeCount > 0 ? `${badgeCount} new` : 'You are up to date'}</h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E6D9C8] text-[#8C7A6B] transition hover:bg-[#FCFAF6]"
-                aria-label="Close activity panel"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {badgeCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => markSeen('all')}
+                    className="rounded-full border border-[#E6D9C8] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#FCFAF6]"
+                  >
+                    Mark all seen
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E6D9C8] text-[#8C7A6B] transition hover:bg-[#FCFAF6]"
+                  aria-label="Close activity panel"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {badgeCount > 0 ? (
@@ -201,7 +319,7 @@ export default function AdminOrderPulse() {
                       key={section.key}
                       href={section.href}
                       onClick={() => {
-                        markSeen()
+                        markSeen(section.key as AdminActivitySection)
                         setOpen(false)
                       }}
                       className="block rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 transition hover:bg-white"

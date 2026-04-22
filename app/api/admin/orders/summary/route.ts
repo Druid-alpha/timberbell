@@ -13,8 +13,12 @@ export async function GET(request: NextRequest) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
-  const sinceParam = request.nextUrl.searchParams.get('since')
-  const sinceDate = sinceParam ? toDate(sinceParam) : null
+  const sinceOrdersParam = request.nextUrl.searchParams.get('sinceOrders')
+  const sinceRefundsParam = request.nextUrl.searchParams.get('sinceRefunds')
+  const sinceUsersParam = request.nextUrl.searchParams.get('sinceUsers')
+  const sinceOrdersDate = sinceOrdersParam ? toDate(sinceOrdersParam) : null
+  const sinceRefundsDate = sinceRefundsParam ? toDate(sinceRefundsParam) : null
+  const sinceUsersDate = sinceUsersParam ? toDate(sinceUsersParam) : null
   const db = await getDb()
 
   const [latestOrder, latestRefund, latestUser] = await Promise.all([
@@ -23,14 +27,11 @@ export async function GET(request: NextRequest) {
     db.collection('users').find({}).sort({ createdAt: -1 }).limit(1).next(),
   ])
 
-  const counts =
-    sinceDate
-      ? await Promise.all([
-          db.collection('orders').countDocuments({ createdAt: { $gt: sinceDate } }),
-          db.collection('refunds').countDocuments({ createdAt: { $gt: sinceDate } }),
-          db.collection('users').countDocuments({ createdAt: { $gt: sinceDate } }),
-        ])
-      : [0, 0, 0]
+  const counts = await Promise.all([
+    sinceOrdersDate ? db.collection('orders').countDocuments({ createdAt: { $gt: sinceOrdersDate } }) : 0,
+    sinceRefundsDate ? db.collection('refunds').countDocuments({ createdAt: { $gt: sinceRefundsDate } }) : 0,
+    sinceUsersDate ? db.collection('users').countDocuments({ createdAt: { $gt: sinceUsersDate } }) : 0,
+  ])
 
   const latestDates = [latestOrder?.createdAt, latestRefund?.createdAt, latestUser?.createdAt]
     .map(toDate)

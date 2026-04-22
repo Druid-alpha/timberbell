@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { TRACKING_STAGES, getTrackingEntries, getTrackingStageLabel, normalizeTrackingStage } from '@/lib/orderTracking'
 import ConfirmDialog from '@/app/_components/ConfirmDialog'
+import { notifyAdminActivitySeen } from '@/lib/adminActivity'
 
 type OrderItem = {
   productId: string
@@ -70,6 +71,7 @@ export default function AdminOrdersPage() {
     setSelected(order)
     setTrackingStageDraft(normalizeTrackingStage(order.trackingStage))
     setTrackingNoteDraft(order.trackingNote || '')
+    notifyAdminActivitySeen('orders', order.createdAt)
   }
 
   async function loadOrders(selectedId?: string | null, next?: { search?: string; filter?: string }) {
@@ -184,16 +186,10 @@ export default function AdminOrdersPage() {
             ))}
           </div>
           <a
-            href="/api/admin/orders/export"
-            className="rounded-full border border-[#E6D9C8] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#F4EEE4]"
-          >
-            Export Orders
-          </a>
-          <a
             href="/api/admin/sales-report/export"
             className="rounded-full border border-[#E6D9C8] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#F4EEE4]"
           >
-            Export Sales Report
+            Export Fulfillment Report
           </a>
         </div>
       </div>
