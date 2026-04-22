@@ -45,13 +45,13 @@ const heroSlides = [
 const categoryBanners = [
   {
     title: 'Dining stories',
-    detail: 'Warm oak, textured linens, and sculptural silhouettes.',
-    image: '/lifestyle-1.svg',
+    detail: 'Warm oak, soft light, and elegant hosting moments.',
+    image: '/hero banner4.jpeg',
   },
   {
     title: 'Living calm',
-    detail: 'Soft seating and serene palettes for slow evenings.',
-    image: '/lifestyle-2.svg',
+    detail: 'Soft seating, warm texture, and a quieter rhythm at home.',
+    image: '/hero banner 5.jpeg',
   },
 ]
 
@@ -120,7 +120,26 @@ export default function HomePage() {
   }, [])
 
   const featured = useMemo(() => products.slice(0, 6), [products])
-  const categoryPreview = categories.slice(0, 6)
+  const categoryPreview = useMemo(() => {
+    const preferredOrder = ['living', 'bedroom', 'dining', 'entry']
+    return [...categories]
+      .sort((left, right) => preferredOrder.indexOf(left.slug) - preferredOrder.indexOf(right.slug))
+      .slice(0, 4)
+  }, [categories])
+
+  const categoryImages: Record<string, string> = {
+    living: '/living.jpeg',
+    bedroom: '/bedroom.jpeg',
+    dining: '/dining.jpeg',
+    entry: '/entry.jpeg',
+  }
+
+  const categoryCopy: Record<string, string> = {
+    living: 'Soft forms for slow evenings.',
+    bedroom: 'Quiet comfort for rest.',
+    dining: 'Gather beautifully every day.',
+    entry: 'A graceful welcome home.',
+  }
 
   return (
     <div className="space-y-24 pb-24">
@@ -220,27 +239,32 @@ export default function HomePage() {
             View all categories
           </Link>
         </div>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {categoryPreview.slice(0, 3).map((category) => (
+        <div className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {categoryPreview.map((category) => (
             <Link
               key={category.id}
               href={`/productfilter?category=${category.slug}`}
-              className="group relative h-64 overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:shadow-xl hover:-translate-y-1"
+              className="group relative h-64 overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:-translate-y-1 hover:shadow-xl"
             >
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style={{ backgroundImage: `url(${categoryImages[category.slug] || '/livingroom-chairs-table.jpg'})` }}
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,16,12,0.15)_0%,rgba(22,16,12,0.7)_100%)]" />
               <div className="relative z-10 flex h-full flex-col justify-between">
                 <div>
-                   <div className="text-[10px] uppercase tracking-[0.4em] text-[#8C7A6B] font-bold group-hover:text-[#7C4E2F] transition-colors">
+                   <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/70 transition-colors group-hover:text-white">
                     {category.name}
                   </div>
-                  <div className="mt-3 font-display text-3xl text-[#2B2119]">
-                    {category.description || 'Natural essence'}
+                  <div className="mt-2 max-w-[14rem] font-display text-[1.55rem] leading-tight text-[#F9F3EA] sm:text-[1.75rem]">
+                    {categoryCopy[category.slug] || category.description || 'Natural essence'}
                   </div>
                 </div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F]">
+                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#F5E6D2]">
                    Explore Collection &rarr;
                 </div>
               </div>
-              <div className="absolute -right-4 -bottom-4 h-32 w-32 rounded-full bg-[#F4EEE4] transition-transform group-hover:scale-150" />
+              <div className="absolute -right-4 -bottom-4 h-32 w-32 rounded-full bg-white/20 blur-md transition-transform group-hover:scale-150" />
             </Link>
           ))}
         </div>
@@ -281,8 +305,7 @@ export default function HomePage() {
             >
               <motion.div
                 style={{ 
-                  y: y1,
-                  backgroundImage: `url(${banner.image})`,
+                  backgroundImage: `url("${banner.image}")`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}

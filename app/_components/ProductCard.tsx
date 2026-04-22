@@ -163,14 +163,14 @@ export default function ProductCard({
 
   return (
     <article
-      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[22px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_16px_34px_-28px_rgba(55,32,15,0.42)] transition hover:-translate-y-1 hover:shadow-[0_24px_48px_-36px_rgba(55,32,15,0.5)] arkwood-reveal"
+      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[20px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_14px_28px_-24px_rgba(55,32,15,0.38)] transition hover:-translate-y-1 hover:shadow-[0_22px_42px_-34px_rgba(55,32,15,0.45)] arkwood-reveal"
       onMouseEnter={() => setIsCardHovered(true)}
       onMouseLeave={() => {
         setIsCardHovered(false)
         setHoveredVariantId(null)
       }}
     >
-      <Link href={`/products/${product.id}`} className="relative block h-48 w-full overflow-hidden sm:h-52 md:h-56">
+      <Link href={`/products/${product.id}`} className="relative block h-44 w-full overflow-hidden sm:h-48 md:h-52">
         {primaryImage ? (
           <>
             <img
@@ -234,13 +234,13 @@ export default function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-3 pb-3.5 pt-3 sm:px-3.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 px-3 pb-3 pt-2.5 sm:px-3.5">
         <div className="space-y-2">
           <div className="min-w-0">
-            <p className="mb-1.5 truncate text-[8px] font-semibold uppercase tracking-[0.22em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.26em]">
+            <p className="mb-1 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.22em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2.2rem] break-words text-[0.92rem] font-semibold leading-snug text-[#2B2119]">
+            <h3 className="line-clamp-2 min-h-[2rem] break-words text-[0.88rem] font-semibold leading-snug text-[#2B2119] sm:text-[0.92rem]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
@@ -248,8 +248,8 @@ export default function ProductCard({
           </div>
           <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B]">Price</p>
-              <div className="truncate font-display text-[1.02rem] text-[#2B2119] sm:text-[1.1rem]">{formatMoney(price)}</div>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">Price</p>
+              <div className="truncate font-display text-[0.98rem] text-[#2B2119] sm:text-[1.06rem]">{formatMoney(price)}</div>
             </div>
             {product.price > price ? (
               <div className="shrink-0 text-right">
@@ -260,31 +260,25 @@ export default function ProductCard({
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-between gap-2 rounded-[18px] border border-[#E6D9C8]/70 bg-white/70 px-2.5 py-2">
-          <div className="min-w-0">
-            <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-[#8C7A6B]">Palette</p>
-            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 overflow-hidden">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
             {visiblePalette.map((color, index) => (
               <span
                 key={`${product.id}-grid-${index}`}
-                className="h-3 w-3 shrink-0 rounded-full border border-black/10 sm:h-3.5 sm:w-3.5"
+                className="h-3 w-3 shrink-0 rounded-full border border-black/10"
                 style={{ backgroundColor: color }}
               />
             ))}
             {extraPaletteCount ? (
-                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-[#F8F3EC] px-1 text-[7px] font-bold text-[#7C4E2F]">
+              <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[7px] font-bold text-[#7C4E2F]">
                 +{extraPaletteCount}
               </span>
             ) : null}
           </div>
-          </div>
           {variants.length ? (
-            <div className="shrink-0 text-right">
-              <p className="text-[8px] font-semibold uppercase tracking-[0.16em] text-[#8C7A6B]">Options</p>
-              <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7C4E2F]">
-                {variants.length} variants
-              </span>
-            </div>
+            <span className="shrink-0 text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">
+              {variants.length} options
+            </span>
           ) : null}
         </div>
 

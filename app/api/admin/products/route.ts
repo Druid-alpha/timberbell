@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { isAdminRequest } from '@/lib/admin'
+import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS, isSupportedFurnitureCategory } from '@/lib/catalog-taxonomy'
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -12,7 +13,9 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, Number(searchParams.get('page') || 1))
   const limit = Math.min(24, Math.max(1, Number(searchParams.get('limit') || 12)))
   const db = await (await import('@/lib/db')).getDb()
-  const filter: Record<string, any> = {}
+  const filter: Record<string, any> = {
+    category: { $in: [...FURNITURE_CATEGORY_SLUGS, ...FURNITURE_CATEGORY_NAMES] },
+  }
   const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
   if (category) {
@@ -32,7 +35,6 @@ export async function GET(request: NextRequest) {
           { badge: term },
           { materials: term },
           { finishes: term },
-          { leadTime: term },
           { dimensions: term },
           { 'variants.name': term },
           { 'variants.sku': term },
@@ -73,6 +75,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ message: 'name, price, and category are required' }, { status: 400 })
   }
 
+  if (!isSupportedFurnitureCategory(body.category)) {
+    return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
+  }
+
   const db = await (await import('@/lib/db')).getDb()
   const result = await db.collection('products').insertOne({
     name: body.name,
@@ -92,7 +98,6 @@ export async function POST(request: NextRequest) {
     badge: body.badge,
     rating: body.rating ?? 0,
     reviewCount: body.reviewCount ?? 0,
-    leadTime: body.leadTime ?? 'TBD',
     dimensions: body.dimensions ?? 'TBD',
     palette: body.palette ?? [],
     images: body.images ?? [],

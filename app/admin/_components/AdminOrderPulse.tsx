@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { formatMoney } from '@/lib/utils/format'
 
 type ActivitySummary = {
   latestOrder: {
@@ -35,51 +34,45 @@ type ActivitySummary = {
 
 const STORAGE_KEY = 'timberbell_admin_activity_seen_at'
 
+function readSeenAt() {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(STORAGE_KEY)
+}
+
 export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
-  const [seenAt, setSeenAt] = useState<string | null>(null)
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY)
-    setSeenAt(stored)
-  }, [])
+  const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
 
   useEffect(() => {
     let active = true
-    let isInitialLoad = true
+    let firstLoad = true
 
-    async function loadSummary(currentSeenAt?: string | null) {
+    async function loadSummary(currentSeenAt: string | null) {
       const params = new URLSearchParams()
       if (currentSeenAt) params.set('since', currentSeenAt)
-      const query = params.toString()
-      const res = await fetch(`/api/admin/orders/summary${query ? `?${query}` : ''}`, { cache: 'no-store' })
+      const res = await fetch(`/api/admin/orders/summary${params.toString() ? `?${params.toString()}` : ''}`, { cache: 'no-store' })
       const data = await res.json().catch(() => null)
       if (!active || !res.ok || !data) return
 
-      setSummary(data)
-
-      if (isInitialLoad && !currentSeenAt && data.lastActivityAt) {
+      if (firstLoad && !currentSeenAt && data.lastActivityAt) {
         window.localStorage.setItem(STORAGE_KEY, data.lastActivityAt)
         setSeenAt(data.lastActivityAt)
-      }
-
-      if (!isInitialLoad && data.newCounts?.total > 0 && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification('New Timberbell admin activity', {
-          body: [
-            data.newCounts.orders ? `${data.newCounts.orders} order${data.newCounts.orders > 1 ? 's' : ''}` : null,
-            data.newCounts.refunds ? `${data.newCounts.refunds} refund${data.newCounts.refunds > 1 ? 's' : ''}` : null,
-            data.newCounts.users ? `${data.newCounts.users} user${data.newCounts.users > 1 ? 's' : ''}` : null,
-          ].filter(Boolean).join(' • '),
+        setSummary({
+          ...data,
+          newCounts: { orders: 0, refunds: 0, users: 0, total: 0 },
         })
+        firstLoad = false
+        return
       }
 
-      isInitialLoad = false
+      setSummary(data)
+      firstLoad = false
     }
 
     void loadSummary(seenAt)
     const interval = window.setInterval(() => {
-      void loadSummary(window.localStorage.getItem(STORAGE_KEY))
+      void loadSummary(readSeenAt())
     }, 30000)
 
     return () => {
@@ -104,26 +97,47 @@ export default function AdminOrderPulse() {
     )
   }
 
-  function openPanel() {
+  function togglePanel() {
+    if (open) {
+      setOpen(false)
+      return
+    }
     markSeen()
     setOpen(true)
   }
 
-  function closePanel() {
-    setOpen(false)
-  }
-
-  async function enableAlerts() {
-    if ('Notification' in window) {
-      await Notification.requestPermission()
-    }
-  }
+  const sections = [
+    {
+      key: 'orders',
+      title: 'Orders',
+      href: '/admin/orders',
+      count: summary?.newCounts?.orders || 0,
+      name: summary?.latestOrder?.customerName || 'No new order',
+      meta: summary?.latestOrder?.status || '',
+    },
+    {
+      key: 'refunds',
+      title: 'Refunds',
+      href: '/admin/refunds',
+      count: summary?.newCounts?.refunds || 0,
+      name: summary?.latestRefund?.customerName || 'No new refund',
+      meta: summary?.latestRefund?.status || '',
+    },
+    {
+      key: 'users',
+      title: 'New Users',
+      href: '/admin/users',
+      count: summary?.newCounts?.users || 0,
+      name: summary?.latestUser?.name || 'No new user',
+      meta: summary?.latestUser?.email || '',
+    },
+  ]
 
   return (
     <div className="relative sm:static">
       <button
         type="button"
-        onClick={() => (open ? closePanel() : openPanel())}
+        onClick={togglePanel}
         title="Admin activity"
         className="relative flex h-10 min-w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-3 transition hover:bg-[#FCFAF6]"
       >
@@ -142,108 +156,50 @@ export default function AdminOrderPulse() {
           <button
             type="button"
             aria-label="Close admin activity"
-            onClick={closePanel}
+            onClick={() => setOpen(false)}
             className="fixed inset-0 z-[19] bg-black/20 backdrop-blur-[1px] sm:hidden"
           />
           <div className="fixed left-1/2 top-20 z-20 w-[min(20rem,calc(100vw-1.5rem))] -translate-x-1/2 rounded-[28px] border border-[#E6D9C8] bg-white p-4 shadow-2xl sm:absolute sm:right-0 sm:top-full sm:mt-3 sm:w-[20rem] sm:translate-x-0">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
-                <h3 className="mt-1 font-display text-xl text-[#2B2119]">What&apos;s new</h3>
+                <h3 className="mt-1 font-display text-xl text-[#2B2119]">{badgeCount > 0 ? `${badgeCount} new` : 'You are up to date'}</h3>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#F4EEE4] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">
-                  {badgeCount} new
-                </span>
-                <button
-                  type="button"
-                  onClick={closePanel}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E6D9C8] text-[#8C7A6B] transition hover:bg-[#FCFAF6]"
-                  aria-label="Close activity panel"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
-                  Orders
-                  {summary?.newCounts?.orders ? ` • ${summary.newCounts.orders} new` : ''}
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestOrder?.customerName || 'No recent order'}</p>
-                {summary?.latestOrder ? (
-                  <p className="mt-1 text-xs text-[#8C7A6B]">
-                    {summary.latestOrder.status.replace('_', ' ')} • {formatMoney(summary.latestOrder.total)}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
-                  Refunds
-                  {summary?.newCounts?.refunds ? ` • ${summary.newCounts.refunds} new` : ''}
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestRefund?.customerName || 'No recent refund'}</p>
-                {summary?.latestRefund ? (
-                  <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestRefund.status.replace('_', ' ')}</p>
-                ) : null}
-              </div>
-
-              <div className="rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">
-                  New Users
-                  {summary?.newCounts?.users ? ` • ${summary.newCounts.users} new` : ''}
-                </p>
-                <p className="mt-1 text-sm font-bold text-[#2B2119]">{summary?.latestUser?.name || 'No recent user'}</p>
-                {summary?.latestUser ? (
-                  <p className="mt-1 text-xs text-[#8C7A6B]">{summary.latestUser.email}</p>
-                ) : null}
-              </div>
-            </div>
-
-            {'Notification' in window && Notification.permission !== 'granted' ? (
               <button
                 type="button"
-                onClick={enableAlerts}
-                className="mt-4 w-full rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#FCFAF6]"
+                onClick={() => setOpen(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#E6D9C8] text-[#8C7A6B] transition hover:bg-[#FCFAF6]"
+                aria-label="Close activity panel"
               >
-                Enable Browser Alerts
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
-            ) : null}
-
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              <Link
-                href="/admin/orders"
-                onClick={closePanel}
-                className="inline-flex items-center justify-center rounded-full bg-[#2B2119] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-white"
-              >
-                Orders
-              </Link>
-              <Link
-                href="/admin/refunds"
-                onClick={closePanel}
-                className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
-              >
-                Refunds
-              </Link>
-              <Link
-                href="/admin/users"
-                onClick={closePanel}
-                className="inline-flex items-center justify-center rounded-full border border-[#E6D9C8] px-4 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119]"
-              >
-                Users
-              </Link>
             </div>
 
-            {seenAt ? (
-              <p className="mt-3 text-center text-[10px] text-[#8C7A6B]">
-                Last checked {new Date(seenAt).toLocaleString()}
-              </p>
-            ) : null}
+            {badgeCount > 0 ? (
+              <div className="mt-4 space-y-3">
+                {sections
+                  .filter((section) => section.count > 0)
+                  .map((section) => (
+                    <Link
+                      key={section.key}
+                      href={section.href}
+                      onClick={() => setOpen(false)}
+                      className="block rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 transition hover:bg-white"
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">{section.title}</p>
+                      <p className="mt-1 text-sm font-bold text-[#2B2119]">{section.name}</p>
+                      <p className="mt-1 text-xs text-[#8C7A6B]">{section.count} new</p>
+                      {section.meta ? <p className="mt-1 text-xs text-[#8C7A6B]">{section.meta.replaceAll('_', ' ')}</p> : null}
+                    </Link>
+                  ))}
+              </div>
+            ) : (
+              <div className="mt-4 rounded-3xl border border-dashed border-[#E6D9C8] bg-[#FCFAF6] px-4 py-6 text-center text-sm text-[#8C7A6B]">
+                No unseen orders, refunds, or new users right now.
+              </div>
+            )}
           </div>
         </>
       ) : null}

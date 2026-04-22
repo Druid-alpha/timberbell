@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import ConfirmDialog from '@/app/_components/ConfirmDialog'
 
 type Review = {
   id: string
@@ -18,6 +19,7 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -40,7 +42,6 @@ export default function AdminReviewsPage() {
   useEffect(() => { load() }, [])
 
   async function handleDelete(id: string) {
-    if (!confirm('Permanently remove this community note?')) return
     setDeletingId(id)
     const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' })
     if (res.ok) {
@@ -97,7 +98,7 @@ export default function AdminReviewsPage() {
                            </Link>
                         </div>
                         <button 
-                           onClick={() => handleDelete(r.id)}
+                           onClick={() => setDeleteTargetId(r.id)}
                            disabled={deletingId === r.id}
                            className="rounded-full border border-red-50 p-2.5 text-red-400 transition hover:bg-red-50 hover:text-red-600"
                         >
@@ -117,6 +118,20 @@ export default function AdminReviewsPage() {
             <p className="text-sm text-[#8C7A6B] italic font-display">The community vault is currently empty.</p>
          </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTargetId)}
+        title="Delete review?"
+        description="This removes the review from the product feedback list."
+        confirmLabel="Delete Review"
+        tone="danger"
+        busy={Boolean(deleteTargetId && deletingId === deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (!deleteTargetId) return
+          void handleDelete(deleteTargetId).finally(() => setDeleteTargetId(null))
+        }}
+      />
     </div>
   )
 }

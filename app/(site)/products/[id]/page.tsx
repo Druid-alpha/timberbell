@@ -277,8 +277,7 @@ export default function ProductDetailPage() {
   const availableStock = displayVariant?.stockCount ?? product.inventoryCount ?? 0
   const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
   const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
-  const displayFinishes = displayVariant?.finishes?.length ? displayVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Hand-finished studio treatment'
-  const displayLeadTime = displayStockStatus === 'preorder' ? `Preorder - ${product.leadTime || '2-4 weeks'}` : product.leadTime || '2-4 weeks'
+  const displayFinishes = displayVariant?.finishes?.length ? displayVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Furniture-grade finish'
   const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
 
   return (
@@ -292,9 +291,9 @@ export default function ProductDetailPage() {
           ]}
         />
         <SectionHeading
-          eyebrow="Timberbell Atelier"
+          eyebrow="Timberbell Furniture"
           title={selectedTitle}
-          description="Refined proportions and honest materials, built for generations."
+          description="Refined proportions and honest materials chosen for everyday living."
         />
       </div>
 
@@ -496,7 +495,7 @@ export default function ProductDetailPage() {
                 <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
                   <div className={`h-1.5 w-1.5 rounded-full ${(availableStock > 5 || displayStockStatus === 'preorder') ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
                   {displayStockStatus === 'preorder'
-                    ? 'Available on preorder'
+                    ? 'Available for preorder'
                     : availableStock > 5
                       ? 'In stock and ready to ship'
                       : `Only ${availableStock} left - items in cart are reserved for 10 min`}
@@ -504,7 +503,7 @@ export default function ProductDetailPage() {
                 <div className="rounded-2xl border border-[#E6D9C8]/60 bg-white/50 px-4 py-3 text-[10px] text-[#6B594A]">
                   <p className="font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Shipping & Availability</p>
                   <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <span>Lead time: {displayLeadTime}</span>
+                    <span>{displayStockStatus === 'preorder' ? 'Preorder available' : 'Ready for dispatch once ordered'}</span>
                     <span>Secure delivery arranged at checkout</span>
                   </div>
                 </div>
@@ -539,8 +538,8 @@ export default function ProductDetailPage() {
               </p>
             </div>
             <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 shadow-sm">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Lead Time</p>
-              <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayLeadTime}</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Availability</p>
+              <p className="mt-2 text-sm font-medium text-[#2B2119]">{displayStockStatus === 'preorder' ? 'Preorder' : 'Available to order'}</p>
             </div>
           </div>
         </div>

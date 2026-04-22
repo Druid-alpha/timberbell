@@ -20,28 +20,28 @@ export type TrackingEntry = {
 
 const TRACKING_STAGE_DETAILS: Record<TrackingStage, { label: string; detail: string }> = {
   processing: {
-    label: 'Processing',
-    detail: 'Order received and being reviewed by our concierge.',
+    label: 'Order Confirmed',
+    detail: 'Payment is confirmed and the order is being prepared for fulfillment.',
   },
   wood_selection: {
-    label: 'Wood Selection',
-    detail: 'Selecting premium hardwoods and matching the best grain pattern for your piece.',
+    label: 'Stock Allocated',
+    detail: 'Items have been reserved and the order is being lined up for dispatch.',
   },
   crafting: {
-    label: 'Crafting',
-    detail: 'Your furniture is being shaped, joined, and finished by the workshop team.',
+    label: 'Packed',
+    detail: 'The order has been packed and prepared for handoff to delivery.',
   },
   quality_check: {
-    label: 'Quality Check',
-    detail: 'Final inspection of structure, finish, and overall presentation before dispatch.',
+    label: 'Dispatch Scheduled',
+    detail: 'Delivery timing is being confirmed and the shipment is queued for release.',
   },
   in_transit: {
     label: 'In Transit',
-    detail: 'The order has left the studio and is on its way to the delivery address.',
+    detail: 'The order is on the way to the delivery address.',
   },
   delivered: {
     label: 'Delivered',
-    detail: 'The order has been completed and handed over successfully.',
+    detail: 'The order has been delivered successfully.',
   },
 }
 

@@ -48,6 +48,10 @@ export function getColorName(hex?: string | null) {
     }
   }
 
+  if (closest.distance > 900) {
+    return `Custom ${hex.toUpperCase()}`
+  }
+
   return closest.name
 }
 
@@ -62,6 +66,25 @@ const COLOR_FAMILY_SWATCHES: Record<string, string> = {
 }
 
 export function getColorFamily(hex?: string | null) {
+  const rgb = hex ? hexToRgb(hex) : null
+  if (rgb) {
+    let closestFamily = { name: 'Beige', distance: Number.POSITIVE_INFINITY }
+    for (const [family, swatch] of Object.entries(COLOR_FAMILY_SWATCHES)) {
+      const candidate = hexToRgb(swatch)
+      if (!candidate) continue
+      const distance =
+        (rgb.r - candidate.r) ** 2 +
+        (rgb.g - candidate.g) ** 2 +
+        (rgb.b - candidate.b) ** 2
+
+      if (distance < closestFamily.distance) {
+        closestFamily = { name: family, distance }
+      }
+    }
+
+    return closestFamily.name
+  }
+
   const name = getColorName(hex)
   if (['White', 'Ivory', 'Cream'].includes(name)) return 'White'
   if (['Sand', 'Beige', 'Taupe'].includes(name)) return 'Beige'

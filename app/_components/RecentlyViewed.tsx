@@ -10,8 +10,28 @@ export default function RecentlyViewed() {
   const [items, setItems] = useState<any[]>([])
 
   useEffect(() => {
-    const viewed = parseJsonArray(localStorage.getItem('recentlyViewed'))
-    setItems(viewed)
+    let active = true
+
+    async function loadViewed() {
+      const viewed = parseJsonArray<{ id: string; name?: string; category?: string; price?: number; imageUrl?: string }>(localStorage.getItem('recentlyViewed'))
+      if (!viewed.length) {
+        if (active) setItems([])
+        return
+      }
+
+      const responses = await Promise.all(
+        viewed.map((item) => fetch(`/api/products/${item.id}`).then((res) => ({ ok: res.ok, item })).catch(() => ({ ok: false, item })))
+      )
+
+      const valid = responses.filter((entry) => entry.ok).map((entry) => entry.item)
+      localStorage.setItem('recentlyViewed', JSON.stringify(valid))
+      if (active) setItems(valid)
+    }
+
+    void loadViewed()
+    return () => {
+      active = false
+    }
   }, [])
 
   if (items.length === 0) return null

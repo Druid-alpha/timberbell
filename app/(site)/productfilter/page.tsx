@@ -192,7 +192,7 @@ function ProductFilterContent() {
       ...(product.palette ?? []),
       ...((product.variants ?? []).map((variant) => variant.color).filter(Boolean) as string[]),
     ])
-    return Array.from(new Set(allColors.map((color) => getColorFamily(color)))).slice(0, 8)
+    return Array.from(new Set(allColors.map((color) => getColorFamily(color)))).sort()
   }, [filterProducts])
 
   const materialOptions = useMemo(() => {
@@ -200,7 +200,14 @@ function ProductFilterContent() {
       ...(product.materials ?? []),
       ...((product.variants ?? []).flatMap((variant) => variant.materials ?? [])),
     ])
-    return Array.from(new Set(allMaterials)).sort()
+    const normalized = new Map<string, string>()
+    allMaterials.forEach((material) => {
+      const clean = String(material || '').trim()
+      if (!clean) return
+      const key = clean.toLowerCase()
+      if (!normalized.has(key)) normalized.set(key, clean)
+    })
+    return Array.from(normalized.values()).sort((left, right) => left.localeCompare(right))
   }, [filterProducts])
 
   const filtersContent = (

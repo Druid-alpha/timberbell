@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { formatMoney } from '@/lib/utils/format'
-import { motion } from 'framer-motion'
 
 type Metrics = {
   products: number
@@ -53,12 +52,12 @@ export default function AdminOverviewPage() {
     load()
   }, [])
 
-  if (loading) return <div className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Calibrating studio metrics...</div>
+  if (loading) return <div className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Loading store metrics...</div>
 
   const metrics = [
-    { label: 'Total Catalog', value: data?.metrics.products ?? 0, sub: 'Pieces in circulation' },
-    { label: 'Active Curators', value: data?.metrics.users ?? 0, sub: 'Registered members' },
-    { label: 'Completed Orders', value: data?.metrics.orders ?? 0, sub: 'Fulfilled bundles' },
+    { label: 'Total Catalog', value: data?.metrics.products ?? 0, sub: 'Products listed for sale' },
+    { label: 'Customers', value: data?.metrics.users ?? 0, sub: 'Registered shoppers' },
+    { label: 'Orders', value: data?.metrics.orders ?? 0, sub: 'Checkout activity' },
     { label: 'Admins', value: data?.metrics.admins ?? 0, sub: 'Panel access accounts' },
   ]
 
@@ -84,9 +83,9 @@ export default function AdminOverviewPage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_0.4fr]">
          <div className="space-y-6">
             <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
-               <h2 className="font-display text-2xl text-[#2B2119]">Live Pulse</h2>
+               <h2 className="font-display text-2xl text-[#2B2119]">Recent Orders</h2>
                <div className="flex items-center gap-2 rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">
-                  Real-time activity
+                  Latest checkout activity
                </div>
             </div>
             
@@ -114,8 +113,8 @@ export default function AdminOverviewPage() {
                <table className="hidden min-w-[680px] w-full text-left md:table">
                   <thead className="bg-[#FCFAF6] border-b border-[#E6D9C8]">
                      <tr>
-                        <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Fulfillment</th>
-                        <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Curator</th>
+                        <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Order</th>
+                        <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Customer</th>
                         <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Value</th>
                         <th className="px-8 py-4 text-[9px] uppercase tracking-widest text-[#8C7A6B]">Status</th>
                      </tr>
@@ -147,7 +146,7 @@ export default function AdminOverviewPage() {
          </div>
 
          <div className="space-y-6">
-            <h2 className="font-display text-2xl text-[#2B2119] px-2">Community</h2>
+            <h2 className="font-display text-2xl text-[#2B2119] px-2">Customer Reviews</h2>
             <div className="space-y-4">
                {data?.recentReviews?.map((r: Review) => (
                   <div key={r.id} className="rounded-3xl border border-[#E6D9C8] bg-white p-5 shadow-sm transition hover:shadow-md">
@@ -165,19 +164,6 @@ export default function AdminOverviewPage() {
                      <p className="mt-3 text-[9px] font-bold uppercase tracking-widest text-[#C5A070]">{r.customer}</p>
                   </div>
                ))}
-            </div>
-            <div className="rounded-[32px] bg-[#2B2119] p-6 text-white shadow-xl">
-               <p className="text-[8px] uppercase tracking-[0.3em] opacity-60">System Health</p>
-               <h4 className="mt-2 text-sm font-semibold">Inventory Level</h4>
-               <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                  <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: '84%' }}
-                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                     className="h-full bg-[#C5A070]" 
-                  />
-               </div>
-               <p className="mt-2 text-[9px] text-white/60">{data?.metrics.products ?? 0} products currently tracked in the catalog.</p>
             </div>
          </div>
       </div>

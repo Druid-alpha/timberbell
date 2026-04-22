@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ConfirmDialog from '@/app/_components/ConfirmDialog'
 
 type User = {
   id: string
@@ -19,6 +20,7 @@ type User = {
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
 
   async function loadUsers() {
     const res = await fetch('/api/admin/users', { cache: 'no-store' })
@@ -39,7 +41,6 @@ export default function AdminUsersPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Permanently remove this curator from the vault?')) return
     await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
     setUsers(prev => prev.filter(u => u.id !== id))
   }
@@ -94,7 +95,7 @@ export default function AdminUsersPage() {
                         <p className="mt-1 text-[9px] text-[#8C7A6B]">Last login: {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : 'Never'}</p>
                      </div>
                      <button
-                        onClick={() => handleDelete(u.id)}
+                        onClick={() => setDeleteTargetId(u.id)}
                         className="rounded-full border border-red-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-400 transition hover:bg-red-50 hover:text-red-600"
                      >
                         Purge
@@ -168,7 +169,7 @@ export default function AdminUsersPage() {
                         </td>
                         <td className="px-8 py-6 text-right">
                            <button 
-                              onClick={() => handleDelete(u.id)}
+                              onClick={() => setDeleteTargetId(u.id)}
                               className="rounded-full border border-red-50 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-400 transition hover:bg-red-50 hover:text-red-600"
                            >
                               Purge
@@ -181,6 +182,19 @@ export default function AdminUsersPage() {
          </table>
          </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(deleteTargetId)}
+        title="Delete user?"
+        description="This removes the user account from the admin customer list."
+        confirmLabel="Delete User"
+        tone="danger"
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (!deleteTargetId) return
+          void handleDelete(deleteTargetId).finally(() => setDeleteTargetId(null))
+        }}
+      />
     </div>
   )
 }

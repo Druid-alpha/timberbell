@@ -1,3 +1,5 @@
+import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS } from '@/lib/catalog-taxonomy'
+
 export async function GET() {
   const { isAdminCookieValid, getAdminCookieName } = await import('@/lib/admin')
   const { cookies } = await import('next/headers')
@@ -8,9 +10,10 @@ export async function GET() {
   }
 
   const db = await (await import('@/lib/db')).getDb()
+  const productFilter = { category: { $in: [...FURNITURE_CATEGORY_SLUGS, ...FURNITURE_CATEGORY_NAMES] } }
   const [productsCount, categoriesCount, ordersCount, usersCount, adminsCount, recentOrders, recentReviews] = await Promise.all([
-    db.collection('products').countDocuments(),
-    db.collection('categories').countDocuments(),
+    db.collection('products').countDocuments(productFilter),
+    db.collection('categories').countDocuments({ slug: { $in: FURNITURE_CATEGORY_SLUGS } }),
     db.collection('orders').countDocuments(),
     db.collection('users').countDocuments(),
     db.collection('users').countDocuments({ role: 'admin' }),

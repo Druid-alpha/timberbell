@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { TRACKING_STAGES, getTrackingEntries, getTrackingStageLabel, normalizeTrackingStage } from '@/lib/orderTracking'
+import ConfirmDialog from '@/app/_components/ConfirmDialog'
 
 type OrderItem = {
   productId: string
@@ -61,6 +62,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState('')
   const [notice, setNotice] = useState('')
   const [busyKey, setBusyKey] = useState<string | null>(null)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [trackingStageDraft, setTrackingStageDraft] = useState('processing')
   const [trackingNoteDraft, setTrackingNoteDraft] = useState('')
 
@@ -120,7 +122,6 @@ export default function AdminOrdersPage() {
   }
 
   async function deleteOrder(id: string) {
-    if (!confirm('Delete this order from fulfillment history?')) return
     setBusyKey(id)
     setNotice('')
     const res = await fetch('/api/admin/orders', {
@@ -143,8 +144,8 @@ export default function AdminOrdersPage() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col gap-4 px-2 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <h1 className="font-display text-4xl text-[#2B2119]">Fulfillment Engine</h1>
-          <p className="mt-1 text-sm text-[#8C7A6B]">Audit atelier orders and control production progress in one place.</p>
+          <h1 className="font-display text-4xl text-[#2B2119]">Order Management</h1>
+          <p className="mt-1 text-sm text-[#8C7A6B]">Review orders, update delivery progress, and export sales records in one place.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-full border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3">
@@ -187,6 +188,12 @@ export default function AdminOrdersPage() {
             className="rounded-full border border-[#E6D9C8] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#F4EEE4]"
           >
             Export Orders
+          </a>
+          <a
+            href="/api/admin/sales-report/export"
+            className="rounded-full border border-[#E6D9C8] bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#2B2119] transition hover:bg-[#F4EEE4]"
+          >
+            Export Sales Report
           </a>
         </div>
       </div>
@@ -241,8 +248,8 @@ export default function AdminOrdersPage() {
               <tr>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Reference</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Client</th>
-                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Fulfillment</th>
-                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Production Stage</th>
+                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Status</th>
+                <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Tracking Stage</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Payment</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Investment</th>
                 <th className="px-8 py-5 text-[10px] uppercase tracking-widest text-[#8C7A6B]">Action</th>
@@ -308,7 +315,7 @@ export default function AdminOrdersPage() {
                           Details
                         </button>
                         <button
-                          onClick={() => deleteOrder(o.id)}
+                          onClick={() => setDeleteTargetId(o.id)}
                           disabled={busyKey === o.id}
                           className="rounded-full border border-red-100 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50 disabled:opacity-60"
                         >
@@ -324,7 +331,7 @@ export default function AdminOrdersPage() {
         </div>
         {!loading && filteredOrders.length === 0 ? (
           <div className="py-20 text-center">
-            <p className="font-display text-sm italic text-[#8C7A6B]">No orders awaiting fulfillment in this vault.</p>
+            <p className="font-display text-sm italic text-[#8C7A6B]">No orders found for this view.</p>
           </div>
         ) : null}
       </div>
@@ -349,8 +356,8 @@ export default function AdminOrdersPage() {
                 <div className="p-6 sm:p-10">
                   <div className="flex items-center justify-between border-b border-[#F4EEE4] pb-6">
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">Order Manifest</p>
-                      <h2 className="mt-1 font-display text-3xl text-[#2B2119]">Logistics Flow</h2>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#C5A070]">Order Details</p>
+                      <h2 className="mt-1 font-display text-3xl text-[#2B2119]">Delivery Flow</h2>
                       <p className="mt-2 break-all text-[10px] uppercase tracking-widest text-[#8C7A6B]">
                         Ref: {selected.id}
                       </p>
@@ -428,7 +435,7 @@ export default function AdminOrdersPage() {
                     </div>
 
                     <div className="border-t border-[#F4EEE4] pt-6">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Production Tracker</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Tracking Updates</p>
                       <div className="mt-4 space-y-3">
                         <select
                           value={trackingStageDraft}
@@ -474,7 +481,7 @@ export default function AdminOrdersPage() {
                   </div>
 
                   <div className="mt-12 space-y-3">
-                    <button disabled={busyKey === selected.id} onClick={() => deleteOrder(selected.id)} className="w-full rounded-2xl border border-red-100 py-3 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50 disabled:opacity-60">{busyKey === selected.id ? 'Deleting...' : 'Delete Order'}</button>
+                    <button disabled={busyKey === selected.id} onClick={() => setDeleteTargetId(selected.id)} className="w-full rounded-2xl border border-red-100 py-3 text-[9px] font-bold uppercase tracking-widest text-red-700 transition hover:bg-red-50 disabled:opacity-60">{busyKey === selected.id ? 'Deleting...' : 'Delete Order'}</button>
                     <button onClick={() => downloadOrderDocument(selected.id, 'receipt')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Export Receipt</button>
                     <button onClick={() => downloadOrderDocument(selected.id, 'invoice')} className="w-full rounded-2xl border border-[#E6D9C8] py-3 text-[9px] font-bold uppercase tracking-widest text-[#2B2119] transition hover:bg-white hover:shadow-md">Generate Invoice</button>
                   </div>
@@ -484,6 +491,20 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={Boolean(deleteTargetId)}
+        title="Delete order?"
+        description="This removes the order from admin records. Use this only when you are sure the order should no longer appear in fulfillment history."
+        confirmLabel="Delete Order"
+        tone="danger"
+        busy={Boolean(deleteTargetId && busyKey === deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          if (!deleteTargetId) return
+          void deleteOrder(deleteTargetId).finally(() => setDeleteTargetId(null))
+        }}
+      />
     </div>
   )
 }

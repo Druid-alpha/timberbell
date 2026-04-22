@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db'
 import type { Category, Product, Review } from '@/types/catalog'
 import { computeFinalPrice } from '@/lib/utils/pricing'
 import { getColorFamily } from '@/lib/utils/color-name'
+import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS } from '@/lib/catalog-taxonomy'
 
 const fallbackPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
 
@@ -37,7 +38,6 @@ const normalizeProduct = (doc: any): Product => ({
   badge: doc.badge,
   rating: doc.rating ?? 0,
   reviewCount: doc.reviewCount ?? 0,
-  leadTime: doc.leadTime ?? 'TBD',
   dimensions: doc.dimensions ?? 'TBD',
   palette: doc.palette?.length ? doc.palette : fallbackPalette,
   images: doc.images ?? [],
@@ -99,7 +99,7 @@ async function attachReviewStats(db: any, rows: any[]) {
 
 export async function getCategories() {
   const db = await getDb()
-  const rows = await db.collection('categories').find({}).sort({ name: 1 }).toArray()
+  const rows = await db.collection('categories').find({ slug: { $in: FURNITURE_CATEGORY_SLUGS } }).sort({ name: 1 }).toArray()
   return rows.map(normalizeCategory)
 }
 
@@ -114,7 +114,9 @@ export async function getProducts(params?: {
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating'
 }) {
   const db = await getDb()
-  const filter: Record<string, any> = {}
+  const filter: Record<string, any> = {
+    category: { $in: [...FURNITURE_CATEGORY_SLUGS, ...FURNITURE_CATEGORY_NAMES] },
+  }
 
   if (params?.category) {
     const categoryRows = await db
@@ -192,7 +194,7 @@ export async function getFeaturedProducts(limit = 6) {
   const db = await getDb()
   const rows = await db
     .collection('products')
-    .find({})
+    .find({ category: { $in: [...FURNITURE_CATEGORY_SLUGS, ...FURNITURE_CATEGORY_NAMES] } })
     .sort({ rating: -1, createdAt: -1 })
     .limit(limit)
     .toArray()

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
 import { getOptimizedImageUrl } from '@/lib/utils/image'
+import ConfirmDialog from '@/app/_components/ConfirmDialog'
 
 type ProductImage = {
   url: string
@@ -216,6 +217,7 @@ export default function AdminProductsPage() {
   const [palette, setPalette] = useState<string[]>(emptyPalette)
   const [variants, setVariants] = useState<Variant[]>([])
   const [saving, setSaving] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -575,7 +577,6 @@ export default function AdminProductsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Permanently remove this piece from the catalog?')) return
     await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
     setProducts(prev => prev.filter(p => p.id !== id))
   }
@@ -736,7 +737,7 @@ export default function AdminProductsPage() {
               </Link>
             ) : (
               <span className="rounded-full bg-[#FCFAF6] border border-[#E6D9C8] px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-[#7C4E2F]">
-                 {products.length} Total Pieces
+                 {total} Total Products
               </span>
             )}
          </div>
@@ -869,7 +870,7 @@ export default function AdminProductsPage() {
                                     Edit
                                  </button>
                                  <button 
-                                    onClick={() => handleDelete(p.id)}
+                                    onClick={() => setDeleteTargetId(p.id)}
                                     className="rounded-full border border-red-50 text-red-500 px-3 py-2 text-[9px] font-bold uppercase tracking-widest transition hover:bg-red-50"
                                  >
                                     Delete
@@ -1212,19 +1213,6 @@ export default function AdminProductsPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Lead Time</label>
-                      <input list="leadtime-options" value={form.leadTime} onChange={(e) => setForm({ ...form, leadTime: e.target.value })} placeholder="2-4 weeks" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
-                      {leadTimeOptions.length > 0 ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {leadTimeOptions.map((leadTime) => (
-                            <button key={leadTime} type="button" onClick={() => setForm({ ...form, leadTime })} className={`rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest ${form.leadTime === leadTime ? 'border-[#7C4E2F] bg-[#7C4E2F] text-white' : 'border-[#E6D9C8] bg-white text-[#6B594A]'}`}>
-                              {leadTime}
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div>
                       <label className="text-[9px] font-bold uppercase tracking-widest text-[#8C7A6B]">Dimensions</label>
                       <input value={form.dimensions} onChange={(e) => setForm({ ...form, dimensions: e.target.value })} placeholder="78W x 34D x 30H in" className="mt-2 h-12 w-full rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 text-sm outline-none" />
                       <p className="mt-2 text-[10px] text-[#8C7A6B]">Use one clear marketplace-style size string so shoppers can compare options quickly.</p>
@@ -1234,8 +1222,6 @@ export default function AdminProductsPage() {
                   <datalist id="badge-options">{badgeOptions.map((badge) => <option key={badge} value={badge} />)}</datalist>
                   <datalist id="material-options">{materialOptions.map((material) => <option key={material} value={material} />)}</datalist>
                   <datalist id="finish-options">{finishOptions.map((finish) => <option key={finish} value={finish} />)}</datalist>
-                  <datalist id="leadtime-options">{leadTimeOptions.map((leadTime) => <option key={leadTime} value={leadTime} />)}</datalist>
-
                   {error ? <p className="text-center text-[10px] font-bold text-red-500">{error}</p> : null}
                   <button disabled={saving} className="h-14 w-full rounded-full bg-[#2B2119] text-[11px] font-bold uppercase tracking-[0.3em] text-[#FDFCFB] shadow-xl shadow-[#2B2119]/20 transition-all hover:scale-[1.02] disabled:opacity-50">{saving ? 'Synchronizing...' : (editingId ? 'Save Piece' : 'Register Piece')}</button>
                </form>
@@ -1441,6 +1427,18 @@ export default function AdminProductsPage() {
             </div>
          ) : null}
       </AnimatePresence>
+      <ConfirmDialog
+         open={Boolean(deleteTargetId)}
+         title="Delete product?"
+         description="This removes the product from the catalog."
+         confirmLabel="Delete Product"
+         tone="danger"
+         onClose={() => setDeleteTargetId(null)}
+         onConfirm={() => {
+           if (!deleteTargetId) return
+           void handleDelete(deleteTargetId).finally(() => setDeleteTargetId(null))
+         }}
+      />
     </div>
   )
 }
