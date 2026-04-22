@@ -50,7 +50,6 @@ function readSoundArmed() {
 export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
-  const [soundNotice, setSoundNotice] = useState('')
   const [seenAt, setSeenAt] = useState<Record<AdminActivitySection, string | null>>(() => ({
     orders: readAdminActivitySeenAt('orders'),
     refunds: readAdminActivitySeenAt('refunds'),
@@ -95,7 +94,7 @@ export default function AdminOrderPulse() {
       const startAt = now + queueIndex * 1.1
       const pattern =
         type === 'orders'
-          ? { frequencies: [1046, 1318, 1567, 1318], wave: 'sine' as OscillatorType, length: 0.16, gap: 0.18 }
+          ? { frequencies: [1046, 1318, 1567, 1318, 1174, 1567], wave: 'sine' as OscillatorType, length: 0.24, gap: 0.22 }
           : type === 'refunds'
             ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.14, gap: 0.18 }
             : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.12, gap: 0.16 }
@@ -139,7 +138,6 @@ export default function AdminOrderPulse() {
     gain.connect(audioContext.destination)
     oscillator.start(now)
     oscillator.stop(now + 0.22)
-    setSoundNotice('Sound enabled')
     window.setTimeout(() => {
       gain.disconnect()
     }, 300)
@@ -148,7 +146,6 @@ export default function AdminOrderPulse() {
   async function testSound() {
     await enableSound()
     await playNotificationQueue(['orders'])
-    setSoundNotice('Test sound played')
   }
 
   useEffect(() => {
@@ -270,12 +267,6 @@ export default function AdminOrderPulse() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!soundNotice) return
-    const timeout = window.setTimeout(() => setSoundNotice(''), 2200)
-    return () => window.clearTimeout(timeout)
-  }, [soundNotice])
-
   function markSeen(section: AdminActivitySection | 'all') {
     if (!summary) return
 
@@ -350,34 +341,30 @@ export default function AdminOrderPulse() {
             </span>
           ) : null}
         </button>
-        {!soundArmed ? (
-          <button
-            type="button"
-            onClick={() => void enableSound()}
-            className="rounded-full border border-[#C5A070] bg-[#FCFAF6] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white"
-          >
-            Enable Sound
-          </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => void testSound()}
-              className="rounded-full border border-[#B7D8BF] bg-[#EEF8F0] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#2E6A3E] transition hover:bg-white"
-            >
-              Sound On
-            </button>
-            <button
-              type="button"
-              onClick={() => void testSound()}
-              className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#FCFAF6]"
-            >
-              Test Sound
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          onClick={() => void (soundArmed ? testSound() : enableSound())}
+          title={soundArmed ? 'Test notification sound' : 'Enable notification sound'}
+          aria-label={soundArmed ? 'Test notification sound' : 'Enable notification sound'}
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition ${
+            soundArmed
+              ? 'border-[#B7D8BF] bg-[#EEF8F0] text-[#2E6A3E] hover:bg-white'
+              : 'border-[#C5A070] bg-[#FCFAF6] text-[#7C4E2F] hover:bg-white'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 5 6 9H3v6h3l5 4V5Z" strokeLinecap="round" strokeLinejoin="round" />
+            {soundArmed ? (
+              <>
+                <path d="M15.5 8.5a5 5 0 0 1 0 7" strokeLinecap="round" />
+                <path d="M18.5 6a8.5 8.5 0 0 1 0 12" strokeLinecap="round" />
+              </>
+            ) : (
+              <path d="M4 4l16 16" strokeLinecap="round" />
+            )}
+          </svg>
+        </button>
       </div>
-      {soundNotice ? <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#2E6A3E]">{soundNotice}</p> : null}
 
       {open ? (
         <>
@@ -392,7 +379,6 @@ export default function AdminOrderPulse() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
                 <h3 className="mt-1 font-display text-xl text-[#2B2119]">{badgeCount > 0 ? `${badgeCount} new` : 'You are up to date'}</h3>
-                <p className="mt-2 text-[11px] text-[#8C7A6B]">{soundArmed ? 'Notification sound is enabled. Use Test Sound to confirm it on this phone.' : 'Tap Enable Sound to hear alerts on mobile.'}</p>
               </div>
               <div className="flex items-center gap-2">
                 {badgeCount > 0 ? (
