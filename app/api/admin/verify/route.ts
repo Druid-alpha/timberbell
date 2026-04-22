@@ -1,5 +1,14 @@
 import { NextRequest } from 'next/server'
-import { getAdminCookieName, getAdminToken, isAdminKeyValid } from '@/lib/admin'
+import { getAdminCookieName, getAdminToken, isAdminCookieValid, isAdminKeyValid } from '@/lib/admin'
+
+export async function GET(request: NextRequest) {
+  const cookieValue = request.cookies.get(getAdminCookieName())?.value
+  if (!isAdminCookieValid(cookieValue)) {
+    return Response.json({ ok: false }, { status: 401 })
+  }
+
+  return Response.json({ ok: true })
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null)

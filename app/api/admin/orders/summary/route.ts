@@ -22,18 +22,47 @@ export async function GET(request: NextRequest) {
   const db = await getDb()
 
   const [latestOrder, latestRefund, latestUser] = await Promise.all([
-    db.collection('orders').find({}).sort({ createdAt: -1 }).limit(1).next(),
+    db
+      .collection('orders')
+      .aggregate([
+        {
+          $addFields: {
+            activityAt: { $ifNull: ['$paidAt', '$createdAt'] },
+          },
+        },
+        { $sort: { activityAt: -1, createdAt: -1 } },
+        { $limit: 1 },
+      ])
+      .next(),
     db.collection('refunds').find({}).sort({ createdAt: -1 }).limit(1).next(),
     db.collection('users').find({}).sort({ createdAt: -1 }).limit(1).next(),
   ])
 
   const counts = await Promise.all([
-    sinceOrdersDate ? db.collection('orders').countDocuments({ createdAt: { $gt: sinceOrdersDate } }) : db.collection('orders').countDocuments({}),
+    sinceOrdersDate
+      ? db
+          .collection('orders')
+          .aggregate([
+            {
+              $addFields: {
+                activityAt: { $ifNull: ['$paidAt', '$createdAt'] },
+              },
+            },
+            {
+              $match: {
+                activityAt: { $gt: sinceOrdersDate },
+              },
+            },
+            { $count: 'count' },
+          ])
+          .toArray()
+          .then((result) => Number(result[0]?.count || 0))
+      : db.collection('orders').countDocuments({}),
     sinceRefundsDate ? db.collection('refunds').countDocuments({ createdAt: { $gt: sinceRefundsDate } }) : db.collection('refunds').countDocuments({}),
     sinceUsersDate ? db.collection('users').countDocuments({ createdAt: { $gt: sinceUsersDate } }) : db.collection('users').countDocuments({}),
   ])
 
-  const latestDates = [latestOrder?.createdAt, latestRefund?.createdAt, latestUser?.createdAt]
+  const latestDates = [latestOrder?.activityAt || latestOrder?.createdAt, latestRefund?.createdAt, latestUser?.createdAt]
     .map(toDate)
     .filter((value): value is Date => Boolean(value))
     .sort((left, right) => right.getTime() - left.getTime())
@@ -45,7 +74,9 @@ export async function GET(request: NextRequest) {
           customerName: latestOrder.customer?.name || 'Customer',
           total: Number(latestOrder.total || 0),
           createdAt: latestOrder.createdAt,
+          activityAt: latestOrder.activityAt || latestOrder.paidAt || latestOrder.createdAt,
           status: latestOrder.status || 'pending',
+          paymentStatus: latestOrder.paymentStatus || 'unpaid',
         }
       : null,
     latestRefund: latestRefund

@@ -15,7 +15,9 @@ type ActivitySummary = {
     customerName: string
     total: number
     createdAt?: string
+    activityAt?: string
     status: string
+    paymentStatus?: string
   } | null
   latestRefund: {
     id: string
@@ -48,6 +50,7 @@ function readSoundArmed() {
 export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
+  const [soundNotice, setSoundNotice] = useState('')
   const [seenAt, setSeenAt] = useState<Record<AdminActivitySection, string | null>>(() => ({
     orders: readAdminActivitySeenAt('orders'),
     refunds: readAdminActivitySeenAt('refunds'),
@@ -136,9 +139,16 @@ export default function AdminOrderPulse() {
     gain.connect(audioContext.destination)
     oscillator.start(now)
     oscillator.stop(now + 0.22)
+    setSoundNotice('Sound enabled')
     window.setTimeout(() => {
       gain.disconnect()
     }, 300)
+  }
+
+  async function testSound() {
+    await enableSound()
+    await playNotificationQueue(['orders'])
+    setSoundNotice('Test sound played')
   }
 
   useEffect(() => {
@@ -260,6 +270,12 @@ export default function AdminOrderPulse() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!soundNotice) return
+    const timeout = window.setTimeout(() => setSoundNotice(''), 2200)
+    return () => window.clearTimeout(timeout)
+  }, [soundNotice])
+
   function markSeen(section: AdminActivitySection | 'all') {
     if (!summary) return
 
@@ -267,7 +283,7 @@ export default function AdminOrderPulse() {
       ;(['orders', 'refunds', 'users'] as AdminActivitySection[]).forEach((entry) => {
         const value =
           entry === 'orders'
-            ? summary.latestOrder?.createdAt || null
+            ? summary.latestOrder?.activityAt || summary.latestOrder?.createdAt || null
             : entry === 'refunds'
               ? summary.latestRefund?.createdAt || null
               : summary.latestUser?.createdAt || null
@@ -278,7 +294,7 @@ export default function AdminOrderPulse() {
 
     const value =
       section === 'orders'
-        ? summary.latestOrder?.createdAt || null
+        ? summary.latestOrder?.activityAt || summary.latestOrder?.createdAt || null
         : section === 'refunds'
           ? summary.latestRefund?.createdAt || null
           : summary.latestUser?.createdAt || null
@@ -343,11 +359,25 @@ export default function AdminOrderPulse() {
             Enable Sound
           </button>
         ) : (
-          <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">
-            Sound On
-          </span>
+          <>
+            <button
+              type="button"
+              onClick={() => void testSound()}
+              className="rounded-full border border-[#B7D8BF] bg-[#EEF8F0] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#2E6A3E] transition hover:bg-white"
+            >
+              Sound On
+            </button>
+            <button
+              type="button"
+              onClick={() => void testSound()}
+              className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#FCFAF6]"
+            >
+              Test Sound
+            </button>
+          </>
         )}
       </div>
+      {soundNotice ? <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#2E6A3E]">{soundNotice}</p> : null}
 
       {open ? (
         <>
@@ -362,7 +392,7 @@ export default function AdminOrderPulse() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
                 <h3 className="mt-1 font-display text-xl text-[#2B2119]">{badgeCount > 0 ? `${badgeCount} new` : 'You are up to date'}</h3>
-                <p className="mt-2 text-[11px] text-[#8C7A6B]">{soundArmed ? 'Notification sound is enabled.' : 'Tap Enable Sound to hear alerts on mobile.'}</p>
+                <p className="mt-2 text-[11px] text-[#8C7A6B]">{soundArmed ? 'Notification sound is enabled. Use Test Sound to confirm it on this phone.' : 'Tap Enable Sound to hear alerts on mobile.'}</p>
               </div>
               <div className="flex items-center gap-2">
                 {badgeCount > 0 ? (
@@ -405,6 +435,9 @@ export default function AdminOrderPulse() {
                       <p className="mt-1 text-sm font-bold text-[#2B2119]">{section.name}</p>
                       <p className="mt-1 text-xs text-[#8C7A6B]">{section.count} new</p>
                       {section.meta ? <p className="mt-1 text-xs text-[#8C7A6B]">{section.meta.replaceAll('_', ' ')}</p> : null}
+                      {section.key === 'orders' && summary?.latestOrder?.paymentStatus ? (
+                        <p className="mt-1 text-xs text-[#8C7A6B]">Payment: {summary.latestOrder.paymentStatus.replaceAll('_', ' ')}</p>
+                      ) : null}
                     </Link>
                   ))}
               </div>

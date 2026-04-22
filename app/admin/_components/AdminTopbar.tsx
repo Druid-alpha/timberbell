@@ -1,7 +1,5 @@
 'use client'
 
-import AdminOrderPulse from './AdminOrderPulse'
-
 export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -24,10 +22,6 @@ export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void
           </div>
           <p className="mt-1 text-xs text-[#8C7A6B]">Orders, refunds, customers, and catalog in one calm workspace.</p>
         </div>
-      </div>
-
-      <div className="flex items-center gap-4 self-end sm:self-auto">
-        <AdminOrderPulse />
       </div>
     </div>
   )
