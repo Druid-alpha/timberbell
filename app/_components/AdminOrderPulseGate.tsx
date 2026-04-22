@@ -27,9 +27,5 @@ export default function AdminOrderPulseGate() {
 
   if (!checked || !isAdminSession) return null
 
-  return (
-    <div className="fixed right-3 top-3 z-[90] sm:right-5 sm:top-5">
-      <AdminOrderPulse />
-    </div>
-  )
+  return <AdminOrderPulse />
 }

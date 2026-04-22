@@ -3,7 +3,6 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
 import { ToastProvider } from "@/app/_components/ToastProvider";
-import AdminOrderPulseGate from "@/app/_components/AdminOrderPulseGate";
 
 const body = Inter({
   subsets: ["latin"],
@@ -34,7 +33,6 @@ export default function RootLayout({
       <body className={`${body.variable} ${display.variable} antialiased`}>
         <ReduxProvider>
           <ToastProvider>
-            <AdminOrderPulseGate />
             {children}
           </ToastProvider>
         </ReduxProvider>
