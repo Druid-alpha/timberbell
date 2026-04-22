@@ -11,9 +11,9 @@ import Breadcrumb from '@/app/_components/Breadcrumb'
 import RelatedProducts from '@/app/_components/RelatedProducts'
 import { useToast } from '@/app/_components/ToastProvider'
 import { ensureReservationCountdown } from '@/lib/reservation'
-import { parseJsonArray } from '@/lib/utils/safe-json'
 import { getColorName } from '@/lib/utils/color-name'
 import { getOptimizedImageUrl } from '@/lib/utils/image'
+import { getRecentlyViewedStorageKey, readRecentlyViewed, writeRecentlyViewed } from '@/lib/utils/recentlyViewed'
 
 type ProductReview = {
   id: string
@@ -74,7 +74,9 @@ export default function ProductDetailPage() {
         
         // Track recently viewed
         if (res.ok && data) {
-          const viewed = parseJsonArray<any>(localStorage.getItem('recentlyViewed'))
+          const storageKey = await getRecentlyViewedStorageKey()
+          if (!active) return
+          const viewed = readRecentlyViewed(storageKey)
           const newItem = {
             id: data.id,
             name: data.name,
@@ -83,7 +85,7 @@ export default function ProductDetailPage() {
             imageUrl: getOptimizedImageUrl(data.images?.[0]?.url)
           }
           const filtered = viewed.filter((item: any) => item.id !== data.id)
-          localStorage.setItem('recentlyViewed', JSON.stringify([newItem, ...filtered].slice(0, 10)))
+          writeRecentlyViewed(storageKey, [newItem, ...filtered].slice(0, 10))
         }
       }
     }

@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/services/users'
 import { hashPassword, signToken } from '@/lib/auth'
 import { createEmailVerification } from '@/lib/services/authTokens'
-import { generateToken, hashToken } from '@/lib/utils/tokens'
+import { hashToken } from '@/lib/utils/tokens'
 import { sendEmail } from '@/lib/email'
 import { verificationEmailTemplate, welcomeEmailTemplate } from '@/lib/emailTemplates'
+import { generateOtpCode } from '@/lib/utils/otp'
 
 const appUrl = process.env.APP_URL || 'http://localhost:3000'
 
@@ -37,30 +38,30 @@ export async function POST(request: Request) {
     avatarUrl: body.avatarUrl ?? null,
   })
 
-  const verificationToken = generateToken()
+  const verificationToken = generateOtpCode()
   await createEmailVerification(
     userId,
     hashToken(verificationToken),
-    new Date(Date.now() + 1000 * 60 * 60 * 24)
+    new Date(Date.now() + 1000 * 60 * 10)
   )
 
-  const verifyUrl = `${appUrl}/verify?token=${verificationToken}`
+  const verifyUrl = `${appUrl}/verify?email=${encodeURIComponent(normalizedEmail)}`
   await sendEmail({
     to: normalizedEmail,
     subject: 'Verify your Timberbell account',
-    html: verificationEmailTemplate(verifyUrl),
+    html: verificationEmailTemplate({ code: verificationToken, verifyUrl }),
   })
 
   await sendEmail({
     to: normalizedEmail,
-    subject: `Welcome to Timberbell, ${body.name}`,
-    html: welcomeEmailTemplate(body.name),
+    subject: `Welcome to Timberbell, ${nameFallback}`,
+    html: welcomeEmailTemplate(nameFallback),
   })
 
   const token = signToken({ id: userId, email: normalizedEmail })
   const response = NextResponse.json({
     user: { id: userId, name: nameFallback, email: normalizedEmail, emailVerified: false },
-    message: 'Verification email sent',
+    message: 'Verification code sent to your email.',
   })
 
   response.cookies.set('token', token, {

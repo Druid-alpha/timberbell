@@ -11,7 +11,6 @@ import {
   getReservationTimeLeft,
   subscribeToReservationUpdates,
 } from '@/lib/reservation'
-import AdminOrderPulseGate from '@/app/_components/AdminOrderPulseGate'
 
 const baseLinks = [
   { href: '/', label: 'Home' },
@@ -304,9 +303,6 @@ export default function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="lg:hidden">
-            <AdminOrderPulseGate />
-          </div>
           <button
             type="button"
             aria-label="Search"

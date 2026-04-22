@@ -121,16 +121,18 @@ export function welcomeEmailTemplate(name: string) {
     <p>We are thrilled to welcome you to our community. At Timberbell, we believe that furniture should do more than fill a space - it should ground your home in natural beauty and calm.</p>
     <p>Explore our curated collections of premium, sustainably sourced pieces designed to create a layered and welcoming environment.</p>
   `
-  return baseHtml('Welcome to Timberbell', body, 'Discover Collections', `${process.env.NEXT_PUBLIC_APP_URL}/collections`)
+  return baseHtml('Welcome to Timberbell', body, 'Discover Collections', `${process.env.APP_URL || 'http://localhost:3000'}/productfilter`)
 }
 
-export function verificationEmailTemplate(verifyUrl: string) {
+export function verificationEmailTemplate(input: { code: string; verifyUrl?: string }) {
   const body = `
     <h1>Verify your email</h1>
     <p>Thank you for creating an account with Timberbell. To ensure the security of your account and start building your curated spaces, please verify your email address.</p>
-    <p style="font-size: 13px; color: ${secondaryTextColor};">This link will expire in 24 hours.</p>
+    <p style="margin-bottom: 12px;">Use this one-time code to verify your account:</p>
+    <p style="margin: 0 0 24px; font-size: 28px; font-weight: 700; letter-spacing: 0.3em; color: ${brandColor}; text-align: center;">${input.code}</p>
+    <p style="font-size: 13px; color: ${secondaryTextColor};">This code will expire in 10 minutes.</p>
   `
-  return baseHtml('Verify your Timberbell account', body, 'Verify Email Address', verifyUrl)
+  return baseHtml('Verify your Timberbell account', body, 'Open Verification', input.verifyUrl)
 }
 
 export function resetEmailTemplate(resetUrl: string) {

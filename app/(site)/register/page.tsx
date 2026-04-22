@@ -1,18 +1,65 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      {open ? (
+        <>
+          <path d="M3 3l18 18" strokeLinecap="round" />
+          <path d="M10.6 10.7a3 3 0 0 0 4.1 4.1" strokeLinecap="round" />
+          <path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c5.6 0 9.4 4.4 10 5.2a.9.9 0 0 1 0 .9 17.6 17.6 0 0 1-4.2 4.5" strokeLinecap="round" />
+          <path d="M6.2 6.3A18 18 0 0 0 2 9.2a.9.9 0 0 0 0 .9C2.6 11 6.4 15.4 12 15.4c.8 0 1.6-.1 2.4-.3" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s3.8-8 10-8 10 8 10 8-3.8 8-10 8-10-8-10-8Z" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 export default function RegisterPage() {
+  const router = useRouter()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [status, setStatus] = useState('')
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const passwordTimerRef = useRef<number | null>(null)
+  const confirmPasswordTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current)
+      if (confirmPasswordTimerRef.current) window.clearTimeout(confirmPasswordTimerRef.current)
+    }
+  }, [])
+
+  function revealPassword(field: 'password' | 'confirm') {
+    if (field === 'password') {
+      setShowPassword(true)
+      if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current)
+      passwordTimerRef.current = window.setTimeout(() => setShowPassword(false), 2000)
+      return
+    }
+
+    setShowConfirmPassword(true)
+    if (confirmPasswordTimerRef.current) window.clearTimeout(confirmPasswordTimerRef.current)
+    confirmPasswordTimerRef.current = window.setTimeout(() => setShowConfirmPassword(false), 2000)
+  }
 
   const uploadAvatar = async (file: File) => {
     setUploading(true)
@@ -42,14 +89,21 @@ export default function RegisterPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+
+    if (password !== confirmPassword) {
+      setStatus('Passwords do not match.')
+      return
+    }
+
     setStatus('Creating your account...')
 
+    const normalizedEmail = email.trim().toLowerCase()
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: `${firstName} ${lastName}`.trim(),
-        email,
+        email: normalizedEmail,
         password,
         avatarUrl,
       }),
@@ -58,7 +112,8 @@ export default function RegisterPage() {
     const data = await res.json().catch(() => ({}))
 
     if (res.ok) {
-      setStatus(data.message || 'Check your inbox to verify your email.')
+      setStatus(data.message || 'Check your inbox for your verification code.')
+      router.push(`/verify?email=${encodeURIComponent(normalizedEmail)}`)
       return
     }
 
@@ -74,7 +129,7 @@ export default function RegisterPage() {
       />
       <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-8 shadow-sm">
-          <div className="flex flex-col items-center gap-6 pb-4 border-b border-[#E6D9C8]/50">
+          <div className="flex flex-col items-center gap-6 border-b border-[#E6D9C8]/50 pb-4">
             <div className="relative group">
               <AnimatePresence mode="wait">
                 <motion.div
@@ -99,9 +154,9 @@ export default function RegisterPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex gap-3">
-              <label className="inline-flex cursor-pointer items-center rounded-full bg-[#7C4E2F] px-6 py-2.5 text-[10px] uppercase tracking-[0.2em] font-bold text-white shadow-sm transition hover:bg-[#5C3A24] active:scale-95">
+              <label className="inline-flex cursor-pointer items-center rounded-full bg-[#7C4E2F] px-6 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-[#5C3A24] active:scale-95">
                 {avatarUrl ? 'Change photo' : 'Upload photo'}
                 <input
                   type="file"
@@ -119,7 +174,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setAvatarUrl(null)}
-                  className="inline-flex items-center rounded-full border border-[#E6D9C8] bg-white px-6 py-2.5 text-[10px] uppercase tracking-[0.2em] font-bold text-[#8C7A6B] transition hover:border-[#7C4E2F] hover:text-[#7C4E2F]"
+                  className="inline-flex items-center rounded-full border border-[#E6D9C8] bg-white px-6 py-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8C7A6B] transition hover:border-[#7C4E2F] hover:text-[#7C4E2F]"
                 >
                   Remove
                 </button>
@@ -131,49 +186,81 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="ml-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-bold">First Name</label>
+                <label className="ml-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">First Name</label>
                 <input
                   required
                   placeholder="e.g. Julian"
                   value={firstName}
                   onChange={(event) => setFirstName(event.target.value)}
-                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] focus:outline-none transition-all placeholder:text-[#D8C7B3]"
+                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm placeholder:text-[#D8C7B3] transition-all focus:border-[#7C4E2F] focus:outline-none"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="ml-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-bold">Last Name</label>
+                <label className="ml-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Last Name</label>
                 <input
                   required
                   placeholder="e.g. Voss"
                   value={lastName}
                   onChange={(event) => setLastName(event.target.value)}
-                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] focus:outline-none transition-all placeholder:text-[#D8C7B3]"
+                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm placeholder:text-[#D8C7B3] transition-all focus:border-[#7C4E2F] focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="ml-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-bold">Email Address</label>
+              <label className="ml-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Email Address</label>
               <input
                 type="email"
                 required
                 placeholder="julian@atelier.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] focus:outline-none transition-all placeholder:text-[#D8C7B3]"
+                className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm placeholder:text-[#D8C7B3] transition-all focus:border-[#7C4E2F] focus:outline-none"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="ml-2 text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B] font-bold">Studio Password</label>
-              <input
-                placeholder="••••••••"
-                type="password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm focus:border-[#7C4E2F] focus:outline-none transition-all placeholder:text-[#D8C7B3]"
-              />
+              <label className="ml-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Studio Password</label>
+              <div className="relative">
+                <input
+                  placeholder="........"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 pr-14 text-sm placeholder:text-[#D8C7B3] transition-all focus:border-[#7C4E2F] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => revealPassword('password')}
+                  className="absolute inset-y-0 right-2 inline-flex items-center justify-center rounded-full px-3 text-[#8C7A6B] transition hover:text-[#7C4E2F]"
+                  aria-label="Show password for 2 seconds"
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="ml-2 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Confirm Password</label>
+              <div className="relative">
+                <input
+                  placeholder="........"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 pr-14 text-sm placeholder:text-[#D8C7B3] transition-all focus:border-[#7C4E2F] focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => revealPassword('confirm')}
+                  className="absolute inset-y-0 right-2 inline-flex items-center justify-center rounded-full px-3 text-[#8C7A6B] transition hover:text-[#7C4E2F]"
+                  aria-label="Show confirm password for 2 seconds"
+                >
+                  <EyeIcon open={showConfirmPassword} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -184,12 +271,12 @@ export default function RegisterPage() {
             >
               <span className="relative z-10">Initialize Membership</span>
             </button>
-            {status && <p className="mt-4 text-center text-xs font-medium text-[#7C4E2F] animate-pulse">{status}</p>}
+            {status && <p className="mt-4 text-center text-xs font-medium text-[#7C4E2F]">{status}</p>}
           </div>
 
           <p className="text-center text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">
             By joining, you agree to our{' '}
-            <Link href="/terms" className="text-[#2B2119] underline font-bold">Terms</Link>
+            <Link href="/terms" className="font-bold text-[#2B2119] underline">Terms</Link>
           </p>
 
           <div className="border-t border-[#E6D9C8]/50 pt-6 text-center">

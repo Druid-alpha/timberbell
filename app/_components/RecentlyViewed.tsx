@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { formatMoney } from '@/lib/utils/format'
 import SectionHeading from './SectionHeading'
-import { parseJsonArray } from '@/lib/utils/safe-json'
+import { getRecentlyViewedStorageKey, readRecentlyViewed, writeRecentlyViewed } from '@/lib/utils/recentlyViewed'
 
 export default function RecentlyViewed() {
   const [items, setItems] = useState<any[]>([])
@@ -13,7 +13,9 @@ export default function RecentlyViewed() {
     let active = true
 
     async function loadViewed() {
-      const viewed = parseJsonArray<{ id: string; name?: string; category?: string; price?: number; imageUrl?: string }>(localStorage.getItem('recentlyViewed'))
+      const storageKey = await getRecentlyViewedStorageKey()
+      if (!active) return
+      const viewed = readRecentlyViewed(storageKey)
       if (!viewed.length) {
         if (active) setItems([])
         return
@@ -24,7 +26,7 @@ export default function RecentlyViewed() {
       )
 
       const valid = responses.filter((entry) => entry.ok).map((entry) => entry.item)
-      localStorage.setItem('recentlyViewed', JSON.stringify(valid))
+      writeRecentlyViewed(storageKey, valid)
       if (active) setItems(valid)
     }
 

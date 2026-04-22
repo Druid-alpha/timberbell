@@ -4,6 +4,9 @@ import { getDb } from '@/lib/db'
 
 export async function createEmailVerification(userId: string, tokenHash: string, expiresAt: Date) {
   const db = await getDb()
+  await db.collection('email_verifications').deleteMany({
+    userId: new ObjectId(userId),
+  })
   await db.collection('email_verifications').insertOne({
     userId: new ObjectId(userId),
     tokenHash,
@@ -12,9 +15,13 @@ export async function createEmailVerification(userId: string, tokenHash: string,
   })
 }
 
-export async function consumeEmailVerification(tokenHash: string) {
+export async function consumeEmailVerification(tokenHash: string, userId?: string) {
   const db = await getDb()
-  const record = await db.collection('email_verifications').findOne({ tokenHash })
+  const query: { tokenHash: string; userId?: ObjectId } = { tokenHash }
+  if (userId) {
+    query.userId = new ObjectId(userId)
+  }
+  const record = await db.collection('email_verifications').findOne(query)
 
   if (!record) {
     return null
