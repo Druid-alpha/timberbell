@@ -61,6 +61,15 @@ export default function AdminOrderPulse() {
   const audioContextRef = useRef<AudioContext | null>(null)
   const pollMs = 5000
 
+  function getAudioContext() {
+    if (typeof window === 'undefined') return null
+    if (audioContextRef.current) return audioContextRef.current
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!AudioContextClass) return null
+    audioContextRef.current = new AudioContextClass()
+    return audioContextRef.current
+  }
+
   async function playNotificationQueue(queue: Array<'orders' | 'refunds' | 'users'>) {
     if (typeof window === 'undefined') return
     const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
@@ -103,6 +112,33 @@ export default function AdminOrderPulse() {
     window.setTimeout(() => {
       gain.disconnect()
     }, Math.max(1400, queue.length * 1300))
+  }
+
+  async function enableSound() {
+    window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
+    setSoundArmed(true)
+    const audioContext = getAudioContext()
+    if (audioContext?.state === 'suspended') {
+      await audioContext.resume().catch(() => null)
+    }
+
+    if (!audioContext || audioContext.state === 'closed') return
+
+    const oscillator = audioContext.createOscillator()
+    const gain = audioContext.createGain()
+    const now = audioContext.currentTime
+    gain.gain.setValueAtTime(0.0001, now)
+    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22)
+    oscillator.type = 'sine'
+    oscillator.frequency.setValueAtTime(988, now)
+    oscillator.connect(gain)
+    gain.connect(audioContext.destination)
+    oscillator.start(now)
+    oscillator.stop(now + 0.22)
+    window.setTimeout(() => {
+      gain.disconnect()
+    }, 300)
   }
 
   useEffect(() => {
@@ -190,14 +226,6 @@ export default function AdminOrderPulse() {
 
   useEffect(() => {
     if (soundArmed) return
-
-    function getAudioContext() {
-      if (audioContextRef.current) return audioContextRef.current
-      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!AudioContextClass) return null
-      audioContextRef.current = new AudioContextClass()
-      return audioContextRef.current
-    }
 
     async function armSound() {
       window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
@@ -290,21 +318,36 @@ export default function AdminOrderPulse() {
 
   return (
     <div className="relative sm:static">
-      <button
-        type="button"
-        onClick={togglePanel}
-        title="Admin activity"
-        className="relative flex h-10 min-w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-3 transition hover:bg-[#FCFAF6]"
-      >
-        <svg className="h-4 w-4 text-[#8C7A6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        {badgeCount > 0 ? (
-          <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#7C4E2F] px-1 text-[10px] font-bold text-white">
-            {badgeCount}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={togglePanel}
+          title="Admin activity"
+          className="relative flex h-10 min-w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white px-3 transition hover:bg-[#FCFAF6]"
+        >
+          <svg className="h-4 w-4 text-[#8C7A6B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          {badgeCount > 0 ? (
+            <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[#7C4E2F] px-1 text-[10px] font-bold text-white">
+              {badgeCount}
+            </span>
+          ) : null}
+        </button>
+        {!soundArmed ? (
+          <button
+            type="button"
+            onClick={() => void enableSound()}
+            className="rounded-full border border-[#C5A070] bg-[#FCFAF6] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-white"
+          >
+            Enable Sound
+          </button>
+        ) : (
+          <span className="rounded-full border border-[#E6D9C8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">
+            Sound On
           </span>
-        ) : null}
-      </button>
+        )}
+      </div>
 
       {open ? (
         <>
@@ -319,6 +362,7 @@ export default function AdminOrderPulse() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#8C7A6B]">Admin Activity</p>
                 <h3 className="mt-1 font-display text-xl text-[#2B2119]">{badgeCount > 0 ? `${badgeCount} new` : 'You are up to date'}</h3>
+                <p className="mt-2 text-[11px] text-[#8C7A6B]">{soundArmed ? 'Notification sound is enabled.' : 'Tap Enable Sound to hear alerts on mobile.'}</p>
               </div>
               <div className="flex items-center gap-2">
                 {badgeCount > 0 ? (
