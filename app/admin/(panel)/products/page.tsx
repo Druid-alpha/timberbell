@@ -247,6 +247,12 @@ export default function AdminProductsPage() {
   const isStandaloneEdit = editorMode && Boolean(editParam)
   const isFocusedEditor = editorMode
 
+  async function refreshProductOptions() {
+    const optionRes = await fetch('/api/admin/product-options', { cache: 'no-store' })
+    const optionData = await optionRes.json().catch(() => ({}))
+    setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
+  }
+
   async function loadProducts(next?: { page?: number; search?: string; category?: string }) {
     const targetPage = next?.page ?? page
     const targetSearch = next?.search ?? search
@@ -426,9 +432,7 @@ export default function AdminProductsPage() {
       setBaselinePayload(null)
       // Reload products
       await loadProducts({ page, search, category: categoryFilter })
-      const optionRes = await fetch('/api/admin/product-options', { cache: 'no-store' })
-      const optionData = await optionRes.json().catch(() => ({}))
-      setOptionSets(optionData?.options || { badges: [], materials: [], finishes: [], leadTimes: [], colors: [] })
+      await refreshProductOptions()
       if (editorMode) {
         router.push('/admin/products')
       }
@@ -659,6 +663,7 @@ export default function AdminProductsPage() {
       )
     )
     setVariantQuickUpdate(null)
+    await refreshProductOptions()
     setQuickSaving(false)
   }
 
@@ -709,6 +714,7 @@ export default function AdminProductsPage() {
     }
     setQuickUpdate(null)
     await loadProducts({ page, search, category: categoryFilter })
+    await refreshProductOptions()
     setQuickSaving(false)
   }
 

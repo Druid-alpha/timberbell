@@ -16,9 +16,6 @@ export default function AdminTopbar({ onMenuToggle }: { onMenuToggle: () => void
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" />
           </svg>
         </button>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#C5A070]/10 text-[11px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] shadow-inner">
-          TB
-        </div>
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-display text-xl text-[#2B2119] sm:text-2xl">Timberbell Admin</h1>

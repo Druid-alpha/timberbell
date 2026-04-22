@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
     catalogDiscountTotal: draft.catalogDiscountTotal,
     couponDiscountTotal: draft.couponDiscountTotal,
     discountTotal: draft.discountTotal,
+    deliveryFee: draft.deliveryFee,
     couponCode: draft.coupon?.code || null,
     total: draft.total,
     status: 'pending',

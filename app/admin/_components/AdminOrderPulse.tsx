@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
 type ActivitySummary = {
@@ -43,6 +44,7 @@ export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
   const [seenAt, setSeenAt] = useState<string | null>(() => readSeenAt())
+  const pathname = usePathname()
 
   useEffect(() => {
     let active = true
@@ -82,6 +84,19 @@ export default function AdminOrderPulse() {
   }, [seenAt])
 
   const badgeCount = useMemo(() => Number(summary?.newCounts?.total || 0), [summary])
+
+  useEffect(() => {
+    if (open && summary?.lastActivityAt && badgeCount > 0) {
+      markSeen()
+    }
+  }, [open, summary?.lastActivityAt, badgeCount])
+
+  useEffect(() => {
+    if (!pathname || badgeCount <= 0) return
+    if (['/admin/orders', '/admin/fulfillment', '/admin/refunds', '/admin/users'].some((path) => pathname.startsWith(path))) {
+      markSeen()
+    }
+  }, [pathname, badgeCount, summary?.lastActivityAt])
 
   function markSeen() {
     if (!summary?.lastActivityAt) return
@@ -185,7 +200,10 @@ export default function AdminOrderPulse() {
                     <Link
                       key={section.key}
                       href={section.href}
-                      onClick={() => setOpen(false)}
+                      onClick={() => {
+                        markSeen()
+                        setOpen(false)
+                      }}
                       className="block rounded-3xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 transition hover:bg-white"
                     >
                       <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#8C7A6B]">{section.title}</p>

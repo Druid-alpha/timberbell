@@ -1,0 +1,1 @@
+export const STANDARD_DELIVERY_FEE = 3000

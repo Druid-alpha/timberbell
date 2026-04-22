@@ -1,5 +1,7 @@
 'use client'
 
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 type RefundMessage = {
@@ -23,8 +25,14 @@ type Refund = {
 }
 
 const statusOptions = ['pending', 'approved', 'rejected']
+const statusClasses: Record<string, string> = {
+  pending: 'border-amber-200 bg-amber-50 text-amber-700',
+  approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  rejected: 'border-red-200 bg-red-50 text-red-700',
+}
 
 export default function AdminRefundsPage() {
+  const searchParams = useSearchParams()
   const [refunds, setRefunds] = useState<Refund[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Refund | null>(null)
@@ -56,6 +64,14 @@ export default function AdminRefundsPage() {
 
     return () => window.clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    const selectedId = searchParams.get('refund')
+    if (!selectedId || !refunds.length) return
+    const match = refunds.find((refund) => refund.id === selectedId) || null
+    setSelected(match)
+    setAdminMessage('')
+  }, [searchParams, refunds])
 
   const filteredRefunds = refunds.filter((refund) => {
     const matchesFilter = filter === 'all' ? true : refund.status === filter
@@ -132,15 +148,17 @@ export default function AdminRefundsPage() {
                 <p className="text-xs font-bold text-[#2B2119]">{refund.customerName}</p>
                 <p className="text-[10px] uppercase tracking-widest text-[#8C7A6B]">Order #{refund.orderId.slice(-6).toUpperCase()}</p>
               </div>
-              <span className="rounded-full border border-[#E6D9C8] bg-[#FCFAF6] px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-[#7C4E2F]">
+              <span className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusClasses[refund.status] || 'border-[#E6D9C8] bg-[#FCFAF6] text-[#7C4E2F]'}`}>
                 {refund.status}
               </span>
-              <button
-                onClick={() => { setSelected(refund); setAdminMessage('') }}
-                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]"
+              <Link
+                href={`/admin/refunds?refund=${refund.id}`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] transition hover:bg-[#FCFAF6] active:scale-[0.98]"
               >
                 Review
-              </button>
+              </Link>
             </div>
             <p className="mt-3 text-sm text-[#6B594A]">{refund.reason}</p>
           </div>
@@ -200,7 +218,7 @@ export default function AdminRefundsPage() {
                   key={status}
                   onClick={() => updateRefund(selected.id, { status, adminMessage })}
                   disabled={busy}
-                  className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F] disabled:opacity-60"
+                  className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-widest disabled:opacity-60 ${statusClasses[status] || 'border-[#7C4E2F] text-[#7C4E2F]'}`}
                 >
                   {busy ? 'Saving...' : status}
                 </button>

@@ -15,6 +15,7 @@ import {
   getReservationTimeLeft,
   subscribeToReservationUpdates,
 } from '@/lib/reservation'
+import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
 
 export default function CartPage() {
   const [cart, setCart] = useState<any>(null)
@@ -231,7 +232,7 @@ export default function CartPage() {
     (sum: number, item: any) => sum + getItemUnitPrice(item) * item.quantity,
     0
   )
-  const delivery = subtotal > 0 ? 14000 : 0
+  const delivery = subtotal > 0 ? STANDARD_DELIVERY_FEE : 0
   const total = subtotal + delivery
 
   if (loading) {

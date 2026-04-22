@@ -5,13 +5,20 @@ import { getTrackingEntries } from '@/lib/orderTracking'
 type ShipmentTrackingProps = {
   trackingStage?: string
   trackingUpdatedAt?: string | Date | null
+  trackingNote?: string | null
 }
 
-export default function ShipmentTracking({ trackingStage, trackingUpdatedAt }: ShipmentTrackingProps) {
+export default function ShipmentTracking({ trackingStage, trackingUpdatedAt, trackingNote }: ShipmentTrackingProps) {
   const steps = getTrackingEntries({ trackingStage, trackingUpdatedAt })
 
   return (
     <div className="rounded-3xl border border-[#E6D9C8] bg-white p-6 md:p-10">
+      {trackingNote ? (
+        <div className="mb-6 rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Latest Update</p>
+          <p className="mt-2 text-sm text-[#6B594A]">{trackingNote}</p>
+        </div>
+      ) : null}
       <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-4">
         {steps.map((step, idx) => (
           <div key={step.stage} className="relative flex flex-1 gap-4 md:flex-col md:items-center md:gap-6">

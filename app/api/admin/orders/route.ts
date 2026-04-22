@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { isAdminRequest } from '@/lib/admin'
 import {
-  getOrderProgressFromStatus,
   getOrderStatusForTrackingStage,
   normalizeTrackingStage,
 } from '@/lib/orderTracking'
@@ -68,7 +67,6 @@ export async function PATCH(request: NextRequest) {
 
   const body = await request.json().catch(() => null)
   const id = body?.id ? String(body.id) : ''
-  const status = body?.status ? String(body.status) : ''
   const hasTrackingStage = typeof body?.trackingStage !== 'undefined'
   const nextTrackingStage = hasTrackingStage ? normalizeTrackingStage(body?.trackingStage) : null
   const note = typeof body?.trackingNote === 'string' ? body.trackingNote.trim() : ''
@@ -77,8 +75,8 @@ export async function PATCH(request: NextRequest) {
     return Response.json({ message: 'id required' }, { status: 400 })
   }
 
-  if (!status && !hasTrackingStage) {
-    return Response.json({ message: 'status or trackingStage required' }, { status: 400 })
+  if (!hasTrackingStage && typeof body?.trackingNote !== 'string') {
+    return Response.json({ message: 'trackingStage or trackingNote required' }, { status: 400 })
   }
 
   const db = await (await import('@/lib/db')).getDb()
@@ -88,13 +86,6 @@ export async function PATCH(request: NextRequest) {
   const query = { _id: new ObjectId(id) }
   const update: Record<string, unknown> = {
     updatedAt: new Date(),
-  }
-
-  if (status) {
-    const progress = getOrderProgressFromStatus(status)
-    update.status = progress.orderStatus
-    update.trackingStage = progress.trackingStage
-    update.trackingUpdatedAt = new Date()
   }
 
   if (nextTrackingStage) {

@@ -35,6 +35,7 @@ type OrderSummary = {
   items?: Array<{ quantity?: number }>
   trackingStage?: string
   trackingUpdatedAt?: string
+  trackingNote?: string
 }
 
 type RefundRecord = {
@@ -365,6 +366,7 @@ export default function AccountPage() {
                             <ShipmentTracking
                               trackingStage={order.trackingStage}
                               trackingUpdatedAt={order.trackingUpdatedAt || order.updatedAt || order.createdAt}
+                              trackingNote={order.trackingNote}
                             />
                           </div>
                         ) : null}

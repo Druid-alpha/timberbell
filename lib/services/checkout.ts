@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db'
 import { getCartByUserId, clearActiveCartItems } from '@/lib/services/cart'
 import { computeFinalPrice } from '@/lib/utils/pricing'
 import { getOrderProgressFromStatus } from '@/lib/orderTracking'
+import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
 
 type CheckoutInput = {
   userId: string
@@ -135,7 +136,8 @@ export async function buildOrderDraft(input: CheckoutInput) {
   }
 
   const discountTotal = catalogDiscountTotal + couponDiscountTotal
-  const total = Math.max(0, subtotal - discountTotal)
+  const deliveryFee = subtotal > 0 ? STANDARD_DELIVERY_FEE : 0
+  const total = Math.max(0, subtotal - discountTotal) + deliveryFee
 
   return {
     db,
@@ -145,6 +147,7 @@ export async function buildOrderDraft(input: CheckoutInput) {
     catalogDiscountTotal,
     couponDiscountTotal,
     discountTotal,
+    deliveryFee,
     total,
     customer: input.customer ?? null,
     notes: input.notes ?? '',

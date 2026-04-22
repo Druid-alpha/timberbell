@@ -43,10 +43,14 @@ export async function GET(
     { text: `Catalog Discount: ${formatPdfMoney(Number(order.catalogDiscountTotal || 0))}`, x: 50, y: 636, size: 11 },
     { text: `Coupon Discount: ${formatPdfMoney(Number(order.couponDiscountTotal || 0))}`, x: 50, y: 618, size: 11 },
     { text: `Total Discount: ${formatPdfMoney(Number(order.discountTotal || 0))}`, x: 50, y: 600, size: 11 },
-    { text: `Total: ${formatPdfMoney(Number(order.total || 0))}`, x: 50, y: 582, size: 13 },
-    { text: 'Items', x: 50, y: 546, size: 12 },
+    { text: `Delivery: ${formatPdfMoney(Number(order.deliveryFee || 0))}`, x: 50, y: 582, size: 11 },
+    { text: `Total: ${formatPdfMoney(Number(order.total || 0))}`, x: 50, y: 564, size: 13 },
+    ...(order.notes
+      ? [{ text: `Delivery Note: ${String(order.notes).slice(0, 90)}`, x: 50, y: 540, size: 10 }]
+      : []),
+    { text: 'Items', x: 50, y: order.notes ? 510 : 528, size: 12 },
     ...((order.items || []) as any[]).flatMap((item, index) => {
-      const y = 522 - index * 30
+      const y = (order.notes ? 486 : 504) - index * 30
       const itemType =
         item.purchaseType === 'variant' && item.variantName
           ? `Variant: ${item.variantName}`

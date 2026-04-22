@@ -26,6 +26,7 @@ type Order = {
   paymentProvider?: string
   total: number
   subtotal: number
+  deliveryFee?: number
   catalogDiscountTotal?: number
   couponDiscountTotal?: number
   discountTotal: number
@@ -34,14 +35,13 @@ type Order = {
   trackingStage?: string
   trackingUpdatedAt?: string
   trackingNote?: string
+  notes?: string
   customer: {
     name: string
     email: string
   }
   items: OrderItem[]
 }
-
-const statusOptions = ['pending_payment', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'payment_failed']
 
 const statusColors: Record<string, string> = {
   pending_payment: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -225,13 +225,9 @@ export default function AdminOrdersPage() {
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="space-y-2">
-                    <select
-                      value={o.status === 'paid' ? 'processing' : o.status}
-                      onChange={(e) => updateOrder(o.id, { status: e.target.value })}
-                      className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
-                    >
-                      {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
+                    <div className={`inline-flex rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusColors[o.status] || ''}`}>
+                      {o.status.replace('_', ' ')}
+                    </div>
                     <p className="text-[9px] uppercase tracking-widest text-[#8C7A6B]">
                       Stage: {getTrackingStageLabel(normalizeTrackingStage(o.trackingStage))}
                     </p>
@@ -281,13 +277,9 @@ export default function AdminOrdersPage() {
                       <p className="text-[10px] text-[#8C7A6B]">{o.customer.email}</p>
                     </td>
                     <td className="px-8 py-6">
-                      <select
-                        value={o.status === 'paid' ? 'processing' : o.status}
-                        onChange={(e) => updateOrder(o.id, { status: e.target.value })}
-                        className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest outline-none transition-all ${statusColors[o.status] || ''}`}
-                      >
-                        {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
+                      <div className={`inline-flex rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusColors[o.status] || ''}`}>
+                        {o.status.replace('_', ' ')}
+                      </div>
                     </td>
                     <td className="px-8 py-6">
                       <button
@@ -396,7 +388,7 @@ export default function AdminOrdersPage() {
                     ))}
                   </div>
 
-                  <div className="mt-10 rounded-[32px] bg-[#2B2119] p-8 text-[#F4EEE4]">
+                    <div className="mt-10 rounded-[32px] bg-[#2B2119] p-8 text-[#F4EEE4]">
                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
                       <span>Subtotal</span>
                       <span>{formatMoney(selected.subtotal)}</span>
@@ -408,6 +400,10 @@ export default function AdminOrdersPage() {
                     <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
                       <span>Coupon Discount</span>
                       <span>-{formatMoney(selected.couponDiscountTotal ?? Math.max(0, Number(selected.discountTotal || 0) - Number(selected.catalogDiscountTotal || 0)))}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
+                      <span>Delivery</span>
+                      <span>{formatMoney(selected.deliveryFee ?? 0)}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-widest opacity-60">
                       <span>Total Discount</span>
@@ -436,6 +432,27 @@ export default function AdminOrdersPage() {
 
                     <div className="border-t border-[#F4EEE4] pt-6">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Tracking Updates</p>
+                      <div className="mt-4 grid gap-3">
+                        <div className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">Payment</p>
+                          <input
+                            readOnly
+                            value={`${String(selected.paymentStatus || 'pending').replace('_', ' ')}${selected.paymentProvider ? ` via ${selected.paymentProvider}` : ''}`}
+                            className="mt-2 h-11 w-full rounded-2xl border border-[#E6D9C8] bg-[#F8F4EE] px-4 text-sm font-semibold capitalize text-[#2B2119] outline-none"
+                          />
+                          <p className="mt-2 text-[11px] text-[#8C7A6B]">
+                            {selected.paymentProvider === 'paystack'
+                              ? 'Payment is synced from Paystack confirmation and is not editable from admin.'
+                              : 'Manual payment order.'}
+                          </p>
+                        </div>
+                        <div className="rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">Order Status</p>
+                          <p className={`mt-2 inline-flex rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-widest ${statusColors[selected.status] || ''}`}>
+                            {selected.status.replace('_', ' ')}
+                          </p>
+                        </div>
+                      </div>
                       <div className="mt-4 space-y-3">
                         <select
                           value={trackingStageDraft}
@@ -451,7 +468,7 @@ export default function AdminOrdersPage() {
                         <textarea
                           value={trackingNoteDraft}
                           onChange={(e) => setTrackingNoteDraft(e.target.value)}
-                          placeholder="Optional internal or customer-facing progress note."
+                          placeholder="Add the tracking note customers should see in their account."
                           className="h-24 w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm outline-none"
                         />
                         <button
@@ -477,6 +494,13 @@ export default function AdminOrdersPage() {
                           </div>
                         ))}
                       </div>
+
+                      {selected.notes ? (
+                        <div className="mt-6 rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">Delivery Note</p>
+                          <p className="mt-2 text-sm text-[#6B594A]">{selected.notes}</p>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 

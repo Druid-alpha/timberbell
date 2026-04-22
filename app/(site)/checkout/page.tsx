@@ -5,6 +5,7 @@ import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
+import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
 
 const CHECKOUT_DETAILS_KEY = 'timberbell_checkout_details'
 
@@ -65,7 +66,7 @@ export default function CheckoutPage() {
     (sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity,
     0
   )
-  const delivery = subtotal > 0 ? 14000 : 0
+  const delivery = subtotal > 0 ? STANDARD_DELIVERY_FEE : 0
   const total = subtotal + delivery
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -222,7 +223,7 @@ export default function CheckoutPage() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="font-bold text-[#2B2119]">Priority Dispatch</p>
-                        <p className="text-xs text-[#8C7A6B]">Expanded regional delivery options coming soon.</p>
+                        <p className="text-xs text-[#8C7A6B]">Not active yet. This is a placeholder for a faster delivery option we can enable later.</p>
                       </div>
                       <div className="text-sm font-bold text-[#8C7A6B]">Coming Soon</div>
                     </div>
