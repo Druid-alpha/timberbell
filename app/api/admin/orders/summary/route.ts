@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
   ])
 
   const counts = await Promise.all([
-    sinceOrdersDate ? db.collection('orders').countDocuments({ createdAt: { $gt: sinceOrdersDate } }) : 0,
-    sinceRefundsDate ? db.collection('refunds').countDocuments({ createdAt: { $gt: sinceRefundsDate } }) : 0,
-    sinceUsersDate ? db.collection('users').countDocuments({ createdAt: { $gt: sinceUsersDate } }) : 0,
+    sinceOrdersDate ? db.collection('orders').countDocuments({ createdAt: { $gt: sinceOrdersDate } }) : db.collection('orders').countDocuments({}),
+    sinceRefundsDate ? db.collection('refunds').countDocuments({ createdAt: { $gt: sinceRefundsDate } }) : db.collection('refunds').countDocuments({}),
+    sinceUsersDate ? db.collection('users').countDocuments({ createdAt: { $gt: sinceUsersDate } }) : db.collection('users').countDocuments({}),
   ])
 
   const latestDates = [latestOrder?.createdAt, latestRefund?.createdAt, latestUser?.createdAt]

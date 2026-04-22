@@ -58,6 +58,7 @@ export default function AdminOrderPulse() {
   const previousOrderCountRef = useRef(0)
   const previousRefundCountRef = useRef(0)
   const previousUserCountRef = useRef(0)
+  const pollMs = 5000
 
   useEffect(() => {
     let active = true
@@ -81,7 +82,7 @@ export default function AdminOrderPulse() {
         refunds: readAdminActivitySeenAt('refunds'),
         users: readAdminActivitySeenAt('users'),
       })
-    }, 30000)
+    }, pollMs)
 
     return () => {
       active = false
@@ -199,33 +200,33 @@ export default function AdminOrderPulse() {
     const now = audioContext.currentTime
     const gain = audioContext.createGain()
     gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02)
     gain.connect(audioContext.destination)
 
     queue.forEach((type, queueIndex) => {
-      const startAt = now + queueIndex * 0.72
+      const startAt = now + queueIndex * 1.1
       const pattern =
         type === 'orders'
-          ? { frequencies: [880, 1174], wave: 'sine' as OscillatorType, length: 0.12 }
+          ? { frequencies: [1046, 1318, 1567, 1318], wave: 'sine' as OscillatorType, length: 0.16, gap: 0.18 }
           : type === 'refunds'
-            ? { frequencies: [659, 523, 659], wave: 'triangle' as OscillatorType, length: 0.1 }
-            : { frequencies: [523, 659, 784], wave: 'square' as OscillatorType, length: 0.08 }
+            ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.14, gap: 0.18 }
+            : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.12, gap: 0.16 }
 
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * 0.16 + 0.18)
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * pattern.gap + 0.28)
 
       pattern.frequencies.forEach((frequency, index) => {
         const oscillator = audioContext.createOscillator()
         oscillator.type = pattern.wave
-        oscillator.frequency.setValueAtTime(frequency, startAt + index * 0.16)
+        oscillator.frequency.setValueAtTime(frequency, startAt + index * pattern.gap)
         oscillator.connect(gain)
-        oscillator.start(startAt + index * 0.16)
-        oscillator.stop(startAt + index * 0.16 + pattern.length)
+        oscillator.start(startAt + index * pattern.gap)
+        oscillator.stop(startAt + index * pattern.gap + pattern.length)
       })
     })
 
     window.setTimeout(() => {
       void audioContext.close().catch(() => null)
-    }, Math.max(800, queue.length * 900))
+    }, Math.max(1400, queue.length * 1300))
   }
 
   const sections = [
