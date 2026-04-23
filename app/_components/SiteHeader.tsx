@@ -152,8 +152,21 @@ export default function SiteHeader() {
   const isLoggedIn = user.isLoggedIn
   const avatarUrl = user.avatarUrl
   const initials = (() => {
-    const seed = user.name || user.email || ''
-    return seed.slice(0, 2).toUpperCase() || '??'
+    const parts = String(user.name || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+
+    if (parts.length >= 2) {
+      return `${parts[0][0] || ''}${parts[1][0] || ''}`.toUpperCase()
+    }
+
+    if (parts.length === 1) {
+      return (parts[0].slice(0, 1) || '?').toUpperCase()
+    }
+
+    const emailSeed = String(user.email || '').trim()
+    return (emailSeed.slice(0, 1) || '?').toUpperCase()
   })()
   const hasActiveReservation = reservationTimeLeft > 0 && cartCount > 0
   const reservationMinutes = Math.floor(reservationTimeLeft / 60)
@@ -222,9 +235,10 @@ export default function SiteHeader() {
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => {})
-    await fetch('/api/auth/me', { method: 'DELETE' }).catch(() => {})
+    await fetch('/api/auth/me', { method: 'POST' }).catch(() => {})
     clearReservationCountdown()
     dispatch(clearUser())
+    dispatch(syncCart([]))
     router.push('/')
     router.refresh()
   }
@@ -364,26 +378,17 @@ export default function SiteHeader() {
 
           {isLoggedIn ? (
             <div className="hidden items-center gap-3 lg:flex">
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/account"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
-                  aria-label="Profile"
-                >
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    initials
-                  )}
-                </Link>
-                {user.name && (
-                  <div className="hidden flex-col justify-center xl:flex">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#2B2119]">
-                      {user.name}
-                    </span>
-                  </div>
+              <Link
+                href="/account"
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#E6D9C8] bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                aria-label="Profile"
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  initials
                 )}
-              </div>
+              </Link>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -526,26 +531,17 @@ export default function SiteHeader() {
               </Link>
               {isLoggedIn ? (
                 <>
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/account"
-                      onClick={() => setOpen(false)}
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
-                    >
-                      {avatarUrl ? (
-                        <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        initials
-                      )}
-                    </Link>
-                    {user.name && (
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-semibold tracking-[0.2em] text-[#2B2119]">
-                          {user.name}
-                        </span>
-                      </div>
+                  <Link
+                    href="/account"
+                    onClick={() => setOpen(false)}
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#2B2119] text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F4EEE4]"
+                  >
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      initials
                     )}
-                  </div>
+                  </Link>
                   <button
                     type="button"
                     onClick={handleLogout}

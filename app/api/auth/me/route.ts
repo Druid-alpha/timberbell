@@ -23,3 +23,9 @@ export async function POST() {
   response.cookies.set('token', '', { path: '/', maxAge: 0 })
   return response
 }
+
+export async function DELETE() {
+  const response = NextResponse.json({ message: 'Logged out' })
+  response.cookies.set('token', '', { path: '/', maxAge: 0 })
+  return response
+}
