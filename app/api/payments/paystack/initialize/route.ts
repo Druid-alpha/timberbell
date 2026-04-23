@@ -3,6 +3,7 @@ import { getUserFromRequest } from '@/lib/authServer'
 import { buildOrderDraft } from '@/lib/services/checkout'
 import { initializePaystackTransaction } from '@/lib/paystack'
 import { getOrderProgressFromStatus } from '@/lib/orderTracking'
+import { findUserById } from '@/lib/services/users'
 
 function createReference(userId: string) {
   return `timberbell_${userId}_${Date.now()}`
@@ -12,6 +13,14 @@ export async function POST(request: NextRequest) {
   const user = getUserFromRequest(request)
   if (!user) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const profile = await findUserById(user.id)
+  if (!profile) {
+    return Response.json({ message: 'User not found' }, { status: 404 })
+  }
+  if (!profile.emailVerified) {
+    return Response.json({ message: 'Please verify your email before checkout.' }, { status: 403 })
   }
 
   const body = await request.json().catch(() => ({}))

@@ -75,6 +75,11 @@ function VerifyEmailContent() {
       {token ? (
         <div className="rounded-3xl border border-white/70 bg-white/70 p-6 text-sm text-neutral-600">
           {status}
+          {status === 'Email verified. You can now log in.' ? (
+            <p className="mt-4">
+              <Link href="/login" className="font-semibold underline">Continue to login</Link>
+            </p>
+          ) : null}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
@@ -111,6 +116,11 @@ function VerifyEmailContent() {
             Resend code
           </button>
           {status ? <p className="text-sm text-[#6B594A]">{status}</p> : null}
+          {status === 'Email verified' || status === 'Email verified. You can now log in.' ? (
+            <p className="text-xs text-[#8C7A6B]">
+              <Link href="/login" className="font-semibold underline">Continue to login</Link>
+            </p>
+          ) : null}
           <p className="text-xs text-[#8C7A6B]">
             Already verified? <Link href="/login" className="underline">Go to login</Link>
           </p>

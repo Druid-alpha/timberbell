@@ -1,6 +1,11 @@
 import { NextRequest } from 'next/server'
 import { isAdminRequest } from '@/lib/admin'
-import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS, isSupportedFurnitureCategory } from '@/lib/catalog-taxonomy'
+import {
+  FURNITURE_CATEGORY_NAMES,
+  FURNITURE_CATEGORY_SLUGS,
+  isSupportedFurnitureCategory,
+  normalizeFurnitureCategory,
+} from '@/lib/catalog-taxonomy'
 
 export async function GET(request: NextRequest) {
   if (!isAdminRequest(request)) {
@@ -79,6 +84,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
   }
 
+  const normalizedCategory = normalizeFurnitureCategory(body.category)
+  if (!normalizedCategory) {
+    return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
+  }
+
   const db = await (await import('@/lib/db')).getDb()
   const result = await db.collection('products').insertOne({
     name: body.name,
@@ -91,7 +101,7 @@ export async function POST(request: NextRequest) {
     saleDiscount: body.saleDiscount ?? null,
     saleStartAt: body.saleStartAt ? new Date(body.saleStartAt) : null,
     saleEndAt: body.saleEndAt ? new Date(body.saleEndAt) : null,
-    category: body.category,
+    category: normalizedCategory.name,
     description: body.description ?? '',
     materials: body.materials ?? [],
     finishes: body.finishes ?? [],

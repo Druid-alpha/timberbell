@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createUser, findUserByEmail } from '@/lib/services/users'
-import { hashPassword, signToken } from '@/lib/auth'
+import { hashPassword } from '@/lib/auth'
 import { createEmailVerification } from '@/lib/services/authTokens'
 import { hashToken } from '@/lib/utils/tokens'
 import { sendEmail } from '@/lib/email'
@@ -58,18 +58,8 @@ export async function POST(request: Request) {
     html: welcomeEmailTemplate(nameFallback),
   })
 
-  const token = signToken({ id: userId, email: normalizedEmail })
-  const response = NextResponse.json({
+  return NextResponse.json({
     user: { id: userId, name: nameFallback, email: normalizedEmail, emailVerified: false },
     message: 'Verification code sent to your email.',
   })
-
-  response.cookies.set('token', token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7,
-  })
-
-  return response
 }

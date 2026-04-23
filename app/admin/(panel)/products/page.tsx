@@ -378,7 +378,7 @@ export default function AdminProductsPage() {
       formData.append('folder', signatureData.folder)
 
       const uploadRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`,
+        `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload`,
         { method: 'POST', body: formData }
       )
       const uploadJson = await uploadRes.json()

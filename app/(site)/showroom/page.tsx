@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import { motion } from 'framer-motion'
@@ -39,9 +40,12 @@ export default function ShowroomPage() {
                 <p className="text-sm text-[#2B2119]">Mon - Sat: 10am - 7pm</p>
             </div>
           </div>
-          <button className="w-full rounded-full bg-[#7C4E2F] py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white shadow-lg transition hover:bg-[#5C3A24]">
+          <Link
+            href="/contact?topic=consultation"
+            className="flex w-full items-center justify-center rounded-full bg-[#7C4E2F] py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white shadow-lg transition hover:bg-[#5C3A24]"
+          >
             Book a consultation
-          </button>
+          </Link>
         </div>
       </div>
     </div>

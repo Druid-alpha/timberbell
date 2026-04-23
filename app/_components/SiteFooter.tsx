@@ -2,27 +2,35 @@ import Link from 'next/link'
 
 const footerLinks = [
   {
-    title: 'Showroom',
+    title: 'Shop',
     links: [
-      { label: 'Appointments', href: '/showroom' },
-      { label: 'Virtual tours', href: '/virtual-tour' },
-      { label: 'Delivery zones', href: '/delivery' },
+      { label: 'Shop all furniture', href: '/productfilter' },
+      { label: 'Collections', href: '/collections' },
+      { label: 'Wishlist', href: '/wishlist' },
     ],
   },
   {
     title: 'Support',
     links: [
+      { label: 'Contact us', href: '/contact' },
       { label: 'Care guide', href: '/care-guide' },
       { label: 'Returns', href: '/returns' },
-      { label: 'Trade program', href: '/trade' },
     ],
   },
   {
-    title: 'Company',
+    title: 'Showroom',
+    links: [
+      { label: 'Book consultation', href: '/showroom' },
+      { label: 'Virtual tour', href: '/virtual-tour' },
+      { label: 'Shipping & delivery', href: '/shipping' },
+    ],
+  },
+  {
+    title: 'About',
     links: [
       { label: 'About Timberbell', href: '/about' },
       { label: 'Journal', href: '/journal' },
-      { label: 'Careers', href: '/careers' },
+      { label: 'Trade program', href: '/trade' },
     ],
   },
 ]

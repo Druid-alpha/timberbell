@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,6 +15,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState('')
   const [step, setStep] = useState(1)
+  const [emailVerified, setEmailVerified] = useState(true)
 
   const [form, setForm] = useState({
     firstName: '',
@@ -34,14 +36,23 @@ export default function CheckoutPage() {
 
     let active = true
     async function load() {
-      const res = await fetch('/api/cart')
-      const data = await res.json().catch(() => ({}))
+      const [cartRes, profileRes] = await Promise.all([
+        fetch('/api/cart'),
+        fetch('/api/users/me'),
+      ])
+      const data = await cartRes.json().catch(() => ({}))
+      const profileData = await profileRes.json().catch(() => ({}))
       if (!active) return
-      if (!res.ok && res.status === 401) {
+      if (!cartRes.ok && cartRes.status === 401) {
         setStatus('Please sign in to checkout.')
         setCart(null)
       } else {
-        setCart(res.ok ? data.cart : null)
+        setCart(cartRes.ok ? data.cart : null)
+        const verified = Boolean(profileData?.user?.emailVerified ?? true)
+        setEmailVerified(verified)
+        if (!verified) {
+          setStatus('Please verify your email before checkout.')
+        }
       }
       setLoading(false)
     }
@@ -71,6 +82,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+    if (!emailVerified) {
+      setStatus('Please verify your email before checkout.')
+      return
+    }
     if (step < 3) {
       setStep(step + 1)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -142,6 +157,12 @@ export default function CheckoutPage() {
       <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           <StepIndicator current={step} />
+
+          {!emailVerified ? (
+            <div className="rounded-[32px] border border-[#E6D9C8] bg-[#FFF7EF] px-5 py-4 text-sm text-[#6B594A]">
+              Verify your email to continue. <Link href="/verify" className="font-semibold underline">Open verification</Link>
+            </div>
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-5 shadow-sm sm:p-8">
             <AnimatePresence mode="wait">
@@ -277,7 +298,8 @@ export default function CheckoutPage() {
               )}
               <button
                 type="submit"
-                className="flex-1 rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98]"
+                disabled={!emailVerified}
+                className="flex-1 rounded-full bg-[#7C4E2F] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-white shadow-lg transition-all hover:bg-[#5C3A24] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-[#D8C7B3] disabled:shadow-none"
               >
                 {step === 3 ? 'Continue To Paystack' : 'Continue to next step'}
               </button>

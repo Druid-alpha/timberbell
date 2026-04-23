@@ -126,6 +126,7 @@ export default function AdminOrdersPage() {
   async function deleteOrder(id: string) {
     setBusyKey(id)
     setNotice('')
+    const orderToDelete = orders.find((order) => order.id === id) || null
     const res = await fetch('/api/admin/orders', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -135,6 +136,9 @@ export default function AdminOrdersPage() {
     setBusyKey(null)
     setNotice(json.message || (res.ok ? 'Order deleted.' : 'Unable to delete order.'))
     if (res.ok) {
+      if (orderToDelete?.createdAt) {
+        notifyAdminActivitySeen('orders', orderToDelete.createdAt)
+      }
       if (selected?.id === id) setSelected(null)
       await loadOrders()
     }

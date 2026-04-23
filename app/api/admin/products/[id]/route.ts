@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { isAdminRequest } from '@/lib/admin'
 import { getCloudinary } from '@/lib/cloudinary'
+import { normalizeFurnitureCategory } from '@/lib/catalog-taxonomy'
 
 function getQuery(id: string) {
   return ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }
@@ -36,6 +37,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const body = await request.json().catch(() => null)
   if (!body) {
     return Response.json({ message: 'Body required' }, { status: 400 })
+  }
+
+  const normalizedCategory = normalizeFurnitureCategory(body.category)
+  if (!normalizedCategory) {
+    return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
   }
 
   const db = await (await import('@/lib/db')).getDb()
@@ -78,7 +84,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     )
   }
 
-  await db.collection('products').updateOne(getQuery(id), { $set: { ...body, updatedAt: new Date() } })
+  await db.collection('products').updateOne(
+    getQuery(id),
+    { $set: { ...body, category: normalizedCategory.name, updatedAt: new Date() } }
+  )
   const value = await db.collection('products').findOne(getQuery(id))
   if (!value) {
     return Response.json({ message: 'Product not found' }, { status: 404 })

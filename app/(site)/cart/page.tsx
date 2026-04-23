@@ -23,6 +23,7 @@ export default function CartPage() {
   const [error, setError] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [timeLeft, setTimeLeft] = useState(0)
+  const [emailVerified, setEmailVerified] = useState(true)
 
   const dispatch = useAppDispatch()
   const { toast } = useToast()
@@ -53,8 +54,12 @@ export default function CartPage() {
   }, [])
 
   async function load() {
-    const res = await fetch('/api/cart')
+    const [res, profileRes] = await Promise.all([
+      fetch('/api/cart'),
+      fetch('/api/users/me'),
+    ])
     const data = await res.json().catch(() => ({}))
+    const profileData = await profileRes.json().catch(() => ({}))
 
     if (!res.ok) {
       setError(data.message || 'Unable to load cart')
@@ -85,6 +90,7 @@ export default function CartPage() {
       }))
       dispatch(syncCart(reduxItems))
     }
+    setEmailVerified(Boolean(profileData?.user?.emailVerified ?? true))
     setLoading(false)
   }
 
@@ -422,6 +428,11 @@ export default function CartPage() {
         <div className="min-w-0 h-fit space-y-6 lg:sticky lg:top-28">
           <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 sm:p-8">
             <h2 className="mb-6 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Summary</h2>
+            {!emailVerified && activeItems.length > 0 ? (
+              <div className="mb-5 rounded-3xl border border-[#E6D9C8] bg-[#FFF7EF] px-4 py-3 text-xs text-[#6B594A]">
+                Verify your email before checkout. <Link href="/verify" className="font-semibold underline">Verify now</Link>
+              </div>
+            ) : null}
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
@@ -437,8 +448,8 @@ export default function CartPage() {
               </div>
               <Link
                 href="/checkout"
-                className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition-all ${activeItems.length > 0 ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'cursor-not-allowed bg-[#D8C7B3]'}`}
-                onClick={(e) => activeItems.length === 0 && e.preventDefault()}
+                className={`flex w-full items-center justify-center rounded-full py-4 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition-all ${activeItems.length > 0 && emailVerified ? 'bg-[#7C4E2F] shadow-lg hover:bg-[#5C3A24]' : 'cursor-not-allowed bg-[#D8C7B3]'}`}
+                onClick={(e) => (activeItems.length === 0 || !emailVerified) && e.preventDefault()}
               >
                 Proceed to checkout
               </Link>

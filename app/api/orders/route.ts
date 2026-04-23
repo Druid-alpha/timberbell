@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getUserFromRequest } from '@/lib/authServer'
 import { buildOrderDraft, fulfillPaidOrder, incrementCouponUsage } from '@/lib/services/checkout'
 import { getOrderProgressFromStatus } from '@/lib/orderTracking'
+import { findUserById } from '@/lib/services/users'
 
 export async function GET(request: NextRequest) {
   const user = getUserFromRequest(request)
@@ -31,6 +32,14 @@ export async function POST(request: NextRequest) {
 
   if (!user) {
     return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const profile = await findUserById(user.id)
+  if (!profile) {
+    return Response.json({ message: 'User not found' }, { status: 404 })
+  }
+  if (!profile.emailVerified) {
+    return Response.json({ message: 'Please verify your email before placing an order.' }, { status: 403 })
   }
 
   const body = await request.json().catch(() => ({}))
