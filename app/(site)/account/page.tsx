@@ -89,7 +89,8 @@ export default function AccountPage() {
     const refundsJson = await refundsRes.json().catch(() => ({}))
 
     if (!profileRes.ok && profileRes.status === 401) {
-      setAuthStatus('Please sign in to view your account.')
+      window.location.href = `/login?next=${encodeURIComponent('/account')}`
+      return
     } else {
       setProfile(profileRes.ok ? profileJson.user : null)
     }

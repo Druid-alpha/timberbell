@@ -164,6 +164,8 @@ export default function ProductDetailPage() {
       )
       toast(`${product.name} added to your bundle`, 'success')
       setTimeout(() => router.push('/cart'), 600)
+    } else if (res.status === 401) {
+      return
     } else {
       const data = await res.json().catch(() => ({}))
       setStatus(data.message || 'Error occurred')

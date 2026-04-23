@@ -28,6 +28,10 @@ export default function WishlistPage() {
         const json = await res.json().catch(() => ({}))
         if (!active) return
         if (!res.ok) {
+          if (res.status === 401) {
+            window.location.href = `/login?next=${encodeURIComponent('/wishlist')}`
+            return
+          }
           setError(json?.message || 'Please sign in to view your wishlist.')
           setProducts([])
         } else {
