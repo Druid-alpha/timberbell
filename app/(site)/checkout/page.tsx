@@ -46,6 +46,7 @@ export default function CheckoutPage() {
       if (!cartRes.ok && cartRes.status === 401) {
         setStatus('Please sign in to checkout.')
         setCart(null)
+        window.location.href = `/login?next=${encodeURIComponent('/checkout')}`
       } else {
         setCart(cartRes.ok ? data.cart : null)
         const verified = Boolean(profileData?.user?.emailVerified ?? true)

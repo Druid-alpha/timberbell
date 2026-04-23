@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState('')
@@ -21,7 +23,8 @@ export default function LoginPage() {
 
     if (res.ok) {
       setStatus('Signed in. Redirecting...')
-      window.location.href = '/account'
+      const next = searchParams.get('next') || '/account'
+      window.location.href = next
       return
     }
 

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ProductSkeleton from '@/app/_components/ProductSkeleton'
-import { getColorName, normalizeHexColor } from '@/lib/utils/color-name'
+import { getColorFamily, getColorFamilySwatch } from '@/lib/utils/color-name'
 import type { Product } from '@/types/catalog'
 
 type Category = {
@@ -188,24 +188,18 @@ function ProductFilterContent() {
   }
 
   const colorOptions = useMemo(() => {
-    const colorMap = new Map<string, string>()
-
+    const families = new Set<string>()
     filterProducts.forEach((product) => {
       const allColors = [
         ...(product.palette ?? []),
         ...((product.variants ?? []).map((variant) => variant.color).filter(Boolean) as string[]),
       ]
-
       allColors.forEach((color) => {
-        const normalized = normalizeHexColor(color)
-        if (!normalized || colorMap.has(normalized)) return
-        colorMap.set(normalized, getColorName(normalized))
+        const family = getColorFamily(color)
+        if (family) families.add(family)
       })
     })
-
-    return Array.from(colorMap.entries())
-      .map(([hex, label]) => ({ hex, label }))
-      .sort((left, right) => left.label.localeCompare(right.label))
+    return Array.from(families).sort((left, right) => left.localeCompare(right))
   }, [filterProducts])
 
   const materialOptions = useMemo(() => {
@@ -341,20 +335,20 @@ function ProductFilterContent() {
       <div>
         <p className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Color</p>
         <div className="mt-4 flex flex-wrap gap-3">
-          {colorOptions.map((color) => {
-            const active = colors.includes(color.hex)
+          {colorOptions.map((family) => {
+            const active = colors.includes(family)
             return (
               <button
-                key={color.hex}
+                key={family}
                 type="button"
-                onClick={() => setColors((prev) => toggleValue(prev, color.hex))}
+                onClick={() => setColors((prev) => toggleValue(prev, family))}
                 className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[10px] uppercase tracking-[0.3em] transition ${
                   active ? 'border-[#7C4E2F] bg-[#7C4E2F]/5 text-[#7C4E2F] ring-1 ring-[#7C4E2F]' : 'border-[#E6D9C8] text-[#8C7A6B] hover:border-[#7C4E2F]'
                 }`}
-                title={color.label}
+                title={family}
               >
-                <span className="h-5 w-5 rounded-full border shadow-sm" style={{ backgroundColor: color.hex }} />
-                <span>{color.label}</span>
+                <span className="h-5 w-5 rounded-full border shadow-sm" style={{ backgroundColor: getColorFamilySwatch(family) }} />
+                <span>{family}</span>
               </button>
             )
           })}

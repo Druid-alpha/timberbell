@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import { getCategoryCopy, getCategoryImage } from '@/lib/constants/category-display'
 
 type Category = {
   id: string
@@ -47,7 +48,7 @@ export default function CollectionsPage() {
       {loading ? (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 w-full animate-pulse rounded-[28px] bg-[#E6D9C8]/40" />
+            <div key={i} className="h-[18.5rem] w-full animate-pulse rounded-[32px] bg-[#E6D9C8]/40 sm:h-64 sm:rounded-[40px]" />
           ))}
         </div>
       ) : (
@@ -56,28 +57,34 @@ export default function CollectionsPage() {
             <Link
               key={category.id}
               href={`/collections/${category.slug}`}
-              className="group relative flex h-64 flex-col justify-end overflow-hidden rounded-[28px] border border-[#E6D9C8] transition hover:-translate-y-1 hover:shadow-lg"
-              style={{
-                backgroundColor: category.tone || '#F4EEE4',
-              }}
+              className="group relative flex h-[18.5rem] flex-col justify-end overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-6 transition hover:-translate-y-1 hover:shadow-xl sm:h-64 sm:rounded-[40px] sm:p-8"
             >
-              {/* Optional: Add background image or pattern based on category here in the future */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-              <div className="relative z-10 p-8">
-                <h3 className="font-display text-2xl text-[#2B2119] transition-colors group-hover:text-white">
-                  {category.name}
-                </h3>
-                <p className="mt-2 text-sm text-[#6B594A] transition-colors group-hover:text-[#E6D9C8] line-clamp-2">
-                  {category.description || `Explore our ${category.name.toLowerCase()} collection.`}
-                </p>
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                style={{ backgroundImage: `url(${getCategoryImage(category.slug)})` }}
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,16,12,0.15)_0%,rgba(22,16,12,0.7)_100%)]" />
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/70 transition-colors group-hover:text-white">
+                    {category.name}
+                  </div>
+                  <div className="mt-2 max-w-[14rem] font-display text-[1.45rem] leading-tight text-[#F9F3EA] sm:text-[1.75rem]">
+                    {getCategoryCopy(category.slug, category.description || `Explore our ${category.name.toLowerCase()} collection.`)}
+                  </div>
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#F5E6D2]">
+                  Explore Collection &rarr;
+                </div>
               </div>
+              <div className="absolute -right-4 -bottom-4 h-32 w-32 rounded-full bg-white/20 blur-md transition-transform group-hover:scale-150" />
             </Link>
           ))}
         </div>
       )}
       
       {!loading && categories.length === 0 ? (
-        <div className="rounded-[28px] border border-[#E6D9C8] bg-[#F4EEE4] p-12 text-center text-sm text-[#6B594A] shadow-sm">
+        <div className="rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4] p-12 text-center text-sm text-[#6B594A] shadow-sm sm:rounded-[40px]">
            No collections found.
         </div>
       ) : null}

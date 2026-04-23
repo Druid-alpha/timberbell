@@ -39,15 +39,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return Response.json({ message: 'Body required' }, { status: 400 })
   }
 
-  const normalizedCategory = normalizeFurnitureCategory(body.category)
-  if (!normalizedCategory) {
-    return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
-  }
-
   const db = await (await import('@/lib/db')).getDb()
   const existing = await db.collection('products').findOne(getQuery(id))
   if (!existing) {
     return Response.json({ message: 'Product not found' }, { status: 404 })
+  }
+
+  const normalizedCategory = normalizeFurnitureCategory(body.category ?? existing.category)
+  if (!normalizedCategory) {
+    return Response.json({ message: 'Only living room, bedroom, dining, and entryway are supported.' }, { status: 400 })
   }
 
   const existingImages = Array.isArray(existing.images) ? existing.images : []

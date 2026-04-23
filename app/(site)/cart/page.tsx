@@ -246,7 +246,11 @@ export default function CartPage() {
   }
 
   if (error && !cart) {
-    return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">{error}</div>
+    return (
+      <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">
+        {error} {error.includes('sign in') ? <Link href="/login?next=%2Fcheckout" className="underline">Go to login</Link> : null}
+      </div>
+    )
   }
 
   return (

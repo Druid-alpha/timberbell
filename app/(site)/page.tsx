@@ -6,6 +6,7 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import RecentlyViewed from '@/app/_components/RecentlyViewed'
+import { getCategoryCopy, getCategoryImage } from '@/lib/constants/category-display'
 
 type Category = {
   id: string
@@ -127,20 +128,6 @@ export default function HomePage() {
       .slice(0, 4)
   }, [categories])
 
-  const categoryImages: Record<string, string> = {
-    living: '/living.jpeg',
-    bedroom: '/bedroom.jpeg',
-    dining: '/dining.jpeg',
-    entry: '/entry.jpeg',
-  }
-
-  const categoryCopy: Record<string, string> = {
-    living: 'Soft forms for slow evenings.',
-    bedroom: 'Quiet comfort for rest.',
-    dining: 'Gather beautifully every day.',
-    entry: 'A graceful welcome home.',
-  }
-
   return (
     <div className="space-y-24 pb-24">
       {/* Hero Carousel */}
@@ -244,11 +231,11 @@ export default function HomePage() {
             <Link
               key={category.id}
               href={`/productfilter?category=${category.slug}`}
-              className="group relative h-64 overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-white p-8 transition-all hover:-translate-y-1 hover:shadow-xl"
+              className="group relative h-[18.5rem] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-xl sm:h-64 sm:rounded-[40px] sm:p-8"
             >
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                style={{ backgroundImage: `url(${categoryImages[category.slug] || '/livingroom-chairs-table.jpg'})` }}
+                style={{ backgroundImage: `url(${getCategoryImage(category.slug)})` }}
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(22,16,12,0.15)_0%,rgba(22,16,12,0.7)_100%)]" />
               <div className="relative z-10 flex h-full flex-col justify-between">
@@ -256,8 +243,8 @@ export default function HomePage() {
                    <div className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/70 transition-colors group-hover:text-white">
                     {category.name}
                   </div>
-                  <div className="mt-2 max-w-[14rem] font-display text-[1.55rem] leading-tight text-[#F9F3EA] sm:text-[1.75rem]">
-                    {categoryCopy[category.slug] || category.description || 'Natural essence'}
+                  <div className="mt-2 max-w-[14rem] font-display text-[1.45rem] leading-tight text-[#F9F3EA] sm:text-[1.75rem]">
+                    {getCategoryCopy(category.slug, category.description)}
                   </div>
                 </div>
                 <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#F5E6D2]">

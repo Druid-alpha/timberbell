@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
 import type { Category, Product, Review } from '@/types/catalog'
 import { computeFinalPrice } from '@/lib/utils/pricing'
-import { normalizeHexColor } from '@/lib/utils/color-name'
+import { getColorFamily } from '@/lib/utils/color-name'
 import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS } from '@/lib/catalog-taxonomy'
 
 const fallbackPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
@@ -177,22 +177,13 @@ export async function getProducts(params?: {
 
   let rows = await db.collection('products').find(filter).sort(sort).toArray()
   if (params?.colors?.length) {
-    const requestedColors = new Set(
-      params.colors
-        .map((color) => normalizeHexColor(color))
-        .filter((color): color is string => Boolean(color))
-    )
     rows = rows.filter((row) => {
       const colorPool = [
         ...(Array.isArray(row.palette) ? row.palette : []),
         ...((Array.isArray(row.variants) ? row.variants : []).map((variant: any) => variant?.color).filter(Boolean)),
       ]
-      const normalizedPool = new Set(
-        colorPool
-          .map((color: string) => normalizeHexColor(color))
-          .filter((color): color is string => Boolean(color))
-      )
-      return Array.from(requestedColors).some((color) => normalizedPool.has(color))
+      const families = new Set(colorPool.map((color: string) => getColorFamily(color)))
+      return params.colors?.some((color) => families.has(color))
     })
   }
   const rowsWithStats = await attachReviewStats(db, rows)
