@@ -62,10 +62,19 @@ export default function SiteHeader() {
     let active = true
     async function loadProfile() {
       const res = await fetch('/api/users/me')
-      if (!active || !res.ok) return
+      if (!active) return
+      if (!res.ok) {
+        dispatch(clearUser())
+        dispatch(syncCart([]))
+        return
+      }
       const json = await res.json().catch(() => ({}))
       const u = json?.user
-      if (!u || !active) return
+      if (!u || !active) {
+        dispatch(clearUser())
+        dispatch(syncCart([]))
+        return
+      }
       dispatch(
         setUser({
           id: u._id ?? u.id ?? null,

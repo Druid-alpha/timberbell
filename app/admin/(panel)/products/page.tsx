@@ -363,6 +363,7 @@ export default function AdminProductsPage() {
     setUploading(true)
     setError('')
     try {
+      const mobilePhotoTypes = ['image/heic', 'image/heif']
       const signatureRes = await fetch('/api/admin/cloudinary/signature', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -376,6 +377,9 @@ export default function AdminProductsPage() {
       formData.append('timestamp', String(signatureData.timestamp))
       formData.append('signature', signatureData.signature)
       formData.append('folder', signatureData.folder)
+      if (mobilePhotoTypes.includes(file.type)) {
+        formData.append('format', 'jpg')
+      }
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload`,
