@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ShipmentTracking from '@/app/_components/ShipmentTracking'
+import LuxuryLoader from '@/app/_components/LuxuryLoader'
 import { formatMoney } from '@/lib/utils/format'
+import { getUserDisplayName, getUserInitials } from '@/lib/utils/user-display'
 
 type RefundMessage = {
   sender: 'admin' | 'customer'
@@ -76,6 +78,8 @@ export default function AccountPage() {
     delivered: 'border-green-200 bg-green-50 text-green-700',
     cancelled: 'border-slate-200 bg-slate-100 text-slate-700',
   }
+  const displayName = profile ? getUserDisplayName(profile) : 'Atelier member'
+  const profileInitials = profile ? getUserInitials(profile) : 'A'
 
   async function loadAccount() {
     const [profileRes, ordersRes, refundsRes] = await Promise.all([
@@ -260,13 +264,13 @@ export default function AccountPage() {
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Account' }]} />
         <SectionHeading
           eyebrow="Account"
-          title={`Welcome back, ${profile?.name || 'Atelier member'}`}
+          title={`Welcome back, ${displayName}`}
           description="Manage orders, track deliveries, and stay in touch with the studio."
         />
       </div>
 
       {loading ? (
-        <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">Loading account...</div>
+        <LuxuryLoader compact label="Opening your account suite" caption="Gathering your profile, orders, and delivery trail into one calm view." />
       ) : authStatus ? (
         <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A]">
           <p>{authStatus}</p>
@@ -290,11 +294,11 @@ export default function AccountPage() {
                       <img src={profile.avatarUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
                     ) : (
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#E9E1D4] text-sm font-semibold text-[#2B2119]">
-                        {(profile.name || 'U').slice(0, 1).toUpperCase()}
+                        {profileInitials}
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold text-[#2B2119]">Name: {profile.name?.trim() || 'Not provided'}</p>
+                      <p className="font-semibold text-[#2B2119]">Name: {displayName}</p>
                       <p>Email: {profile.email}</p>
                       {profile.phone ? <p>Phone: {profile.phone}</p> : null}
                     </div>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ProductSkeleton from '@/app/_components/ProductSkeleton'
+import LuxuryLoader from '@/app/_components/LuxuryLoader'
 import { getColorFamily, getColorFamilySwatch } from '@/lib/utils/color-name'
 import type { Product } from '@/types/catalog'
 
@@ -527,8 +528,8 @@ export default function ProductFilterPage() {
   return (
     <Suspense
       fallback={
-        <div className="mx-auto max-w-7xl px-6 py-16 text-sm text-[#6B594A]">
-          Loading filters...
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+          <LuxuryLoader compact label="Preparing your filters" caption="Sorting every shade, material, and silhouette into a cleaner browse." />
         </div>
       }
     >

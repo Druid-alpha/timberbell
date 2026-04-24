@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getUserFromRequest } from '@/lib/authServer'
 import { findUserById, updateUserProfile } from '@/lib/services/users'
+import { getUserDisplayName } from '@/lib/utils/user-display'
 
 export async function GET(request: NextRequest) {
   const user = getUserFromRequest(request)
@@ -16,7 +17,12 @@ export async function GET(request: NextRequest) {
   return Response.json({
     user: {
       id: profile._id.toString(),
-      name: profile.name || (profile.firstName ? `${profile.firstName} ${profile.lastName ?? ''}`.trim() : null),
+      name: getUserDisplayName({
+        name: profile.name,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+      }),
       email: profile.email?.toLowerCase(),
       phone: profile.phone ?? null,
       avatarUrl: profile.avatarUrl ?? null,
