@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import StateCard from '@/app/_components/StateCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
@@ -145,15 +146,31 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
-      <div className="flex flex-col gap-6">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
-        <SectionHeading
-          eyebrow={`Step ${step} of 3`}
-          title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select delivery plan' : 'Final Order Review'}
-          description="Every Timberbell order uses Nigeria delivery logistics, with Paystack used for your payment flow."
-        />
-      </div>
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
+      <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.16),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
+        <div className="flex flex-col gap-6">
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <SectionHeading
+              eyebrow={`Step ${step} of 3`}
+              title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select delivery plan' : 'Final Order Review'}
+              description="Every Timberbell order uses Nigeria delivery logistics, with Paystack used for a secure payment flow."
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: 'Bundle', value: String(activeItems.length) },
+                { label: 'Delivery', value: formatMoney(delivery) },
+                { label: 'Total', value: formatMoney(total) },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
+                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
@@ -165,7 +182,13 @@ export default function CheckoutPage() {
             </div>
           ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-5 shadow-sm sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-5 shadow-[0_24px_60px_-48px_rgba(55,32,15,0.45)] sm:p-8">
+            <div className="rounded-[28px] border border-[#E8DCCB] bg-white/80 p-5">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Checkout Note</p>
+              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
+                We use a guided three-step flow so your delivery details, logistics, and order review stay clear before payment.
+              </p>
+            </div>
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div
@@ -232,7 +255,7 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div className="rounded-3xl border-2 border-[#7C4E2F] bg-white p-6">
+                  <div className="rounded-3xl border-2 border-[#7C4E2F] bg-white p-6 shadow-sm">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="font-bold text-[#2B2119]">Standard Delivery</p>
@@ -241,7 +264,7 @@ export default function CheckoutPage() {
                       <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(delivery)}</div>
                     </div>
                   </div>
-                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/50 p-6 opacity-60">
+                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/60 p-6 opacity-75">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="font-bold text-[#2B2119]">Priority Dispatch</p>
@@ -261,7 +284,7 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div className="space-y-4 rounded-3xl border border-[#E6D9C8] bg-white p-6">
+                  <div className="space-y-4 rounded-3xl border border-[#E6D9C8] bg-white p-6 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Delivery Contact</p>
@@ -310,7 +333,7 @@ export default function CheckoutPage() {
         </div>
 
         <div className="space-y-6 lg:sticky lg:top-28">
-          <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A] sm:p-8">
+          <div className="rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 text-sm text-[#6B594A] shadow-[0_24px_60px_-50px_rgba(55,32,15,0.45)] sm:p-8">
             <div className="mb-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Order Detail</div>
             {activeItems.length ? (
               <div className="space-y-6">
@@ -355,11 +378,24 @@ export default function CheckoutPage() {
                 </div>
               </div>
             ) : (
-              <p>No items in cart.</p>
+              <StateCard
+                eyebrow="Checkout"
+                title="There are no active pieces to review"
+                description="Add products to your bundle before returning here to complete delivery details and payment."
+                actionHref="/productfilter"
+                actionLabel="Browse products"
+                compact
+              />
             )}
           </div>
 
-          <div className="space-y-4 rounded-[40px] border border-[#E6D9C8] p-6 sm:p-8">
+          <div className="space-y-4 rounded-[40px] border border-[#E6D9C8] bg-white/70 p-6 shadow-sm sm:p-8">
+            <div className="rounded-[24px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Payment Confidence</p>
+              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
+                Your payment is completed through Paystack after this review. Timberbell confirms the order once the payment provider returns success.
+              </p>
+            </div>
               <div className="flex items-center gap-3">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Insured Nigeria Delivery</p>

@@ -5,7 +5,10 @@ import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ShipmentTracking from '@/app/_components/ShipmentTracking'
 import LuxuryLoader from '@/app/_components/LuxuryLoader'
+import StateCard from '@/app/_components/StateCard'
 import { formatMoney } from '@/lib/utils/format'
+import { readRecentlyViewed, getRecentlyViewedStorageKey } from '@/lib/utils/recentlyViewed'
+import { readSavedBoard, type SavedBoard } from '@/lib/utils/savedBoard'
 import { getUserDisplayName, getUserInitials } from '@/lib/utils/user-display'
 
 type RefundMessage = {
@@ -68,6 +71,8 @@ export default function AccountPage() {
   const [refundSubmittingFor, setRefundSubmittingFor] = useState<string | null>(null)
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [replyingRefundId, setReplyingRefundId] = useState<string | null>(null)
+  const [savedBoard, setSavedBoard] = useState<SavedBoard | null>(null)
+  const [recentlyViewedCount, setRecentlyViewedCount] = useState(0)
   const statusStyles: Record<string, string> = {
     pending_payment: 'border-amber-200 bg-amber-50 text-amber-700',
     pending: 'border-orange-200 bg-orange-50 text-orange-700',
@@ -110,6 +115,33 @@ export default function AccountPage() {
     }, 0)
 
     return () => window.clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    async function loadSavedJourneys() {
+      const localBoard = readSavedBoard()
+      const storageKey = await getRecentlyViewedStorageKey()
+      const recent = readRecentlyViewed(storageKey)
+
+      try {
+        const res = await fetch('/api/saved-board', { cache: 'no-store' })
+        const json = await res.json().catch(() => ({}))
+        if (!active) return
+        setSavedBoard(json?.board ?? localBoard)
+        setRecentlyViewedCount(recent.length)
+      } catch {
+        if (!active) return
+        setSavedBoard(localBoard)
+        setRecentlyViewedCount(recent.length)
+      }
+    }
+
+    void loadSavedJourneys()
+    return () => {
+      active = false
+    }
   }, [])
 
   function getRefundForm(orderId: string) {
@@ -259,15 +291,31 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-4 py-12 sm:px-6 sm:py-16">
-      <div className="flex flex-col gap-6">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Account' }]} />
-        <SectionHeading
-          eyebrow="Account"
-          title={`Welcome back, ${displayName}`}
-          description="Manage orders, track deliveries, and stay in touch with the studio."
-        />
-      </div>
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-12 sm:px-6 sm:py-16">
+      <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.16),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
+        <div className="flex flex-col gap-6">
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Account' }]} />
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <SectionHeading
+              eyebrow="Account"
+              title={`Welcome back, ${displayName}`}
+              description="Manage orders, track deliveries, and stay in touch with the studio."
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: 'Orders', value: String(orders.length) },
+                { label: 'Refunds', value: String(refunds.length) },
+                { label: 'Profile', value: profile?.role === 'admin' ? 'Admin' : 'Member' },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
+                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {loading ? (
         <LuxuryLoader compact label="Opening your account suite" caption="Gathering your profile, orders, and delivery trail into one calm view." />
@@ -285,7 +333,7 @@ export default function AccountPage() {
               <div className="rounded-3xl border border-[#E6D9C8] bg-white p-4 text-sm text-[#6B594A]">{notice}</div>
             ) : null}
 
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 shadow-sm">
               <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Profile</div>
               {profile ? (
                 <div className="mt-3 space-y-2 text-sm text-[#6B594A]">
@@ -326,7 +374,7 @@ export default function AccountPage() {
               )}
             </div>
 
-            <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6">
+            <div className="rounded-3xl border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 shadow-sm">
               <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Orders</div>
               {orders.length ? (
                 <div className="mt-4 space-y-6">
@@ -336,7 +384,7 @@ export default function AccountPage() {
 
                     return (
                       <div key={order.id} className="space-y-4">
-                        <div className="flex flex-col gap-4 rounded-2xl border border-[#E6D9C8] bg-white p-4 xl:flex-row xl:items-center xl:justify-between">
+                        <div className="flex flex-col gap-4 rounded-2xl border border-[#E6D9C8] bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
                           <div className="min-w-0 space-y-1">
                             <p className="break-all text-[10px] font-bold uppercase tracking-[0.2em] text-[#2B2119]">Order {order.id}</p>
                             <p className="text-[11px] text-[#8C7A6B]">
@@ -377,7 +425,7 @@ export default function AccountPage() {
                         ) : null}
 
                         {refundOrderId === order.id ? (
-                          <div className="space-y-4 rounded-2xl border border-[#E6D9C8] bg-white p-4">
+                          <div className="space-y-4 rounded-2xl border border-[#E6D9C8] bg-white p-4 shadow-sm">
                             <input
                               value={form.reason}
                               onChange={(e) => updateRefundForm(order.id, (current) => ({ ...current, reason: e.target.value }))}
@@ -438,7 +486,7 @@ export default function AccountPage() {
                             : [{ sender: 'customer', message: refund.message, createdAt: refund.createdAt }]
 
                           return (
-                            <div key={refund.id} className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-sm text-[#6B594A]">
+                            <div key={refund.id} className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-sm text-[#6B594A] shadow-sm">
                               <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Refund status: {refund.status}</p>
                               <p className="mt-2">{refund.reason}</p>
                               {refund.attachments?.length ? (
@@ -486,14 +534,59 @@ export default function AccountPage() {
                   })}
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-[#6B594A]">No orders yet.</p>
+                <div className="mt-3">
+                  <StateCard
+                    eyebrow="Orders"
+                    title="No orders yet"
+                    description="Your future orders, delivery progress, and support history will appear here once your first purchase is placed."
+                    actionHref="/productfilter"
+                    actionLabel="Start browsing"
+                    compact
+                  />
+                </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-6 text-sm text-[#6B594A] lg:sticky lg:top-28">
+          <div className="space-y-5 rounded-3xl border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 text-sm text-[#6B594A] shadow-sm lg:sticky lg:top-28">
             <div className="text-xs uppercase tracking-[0.3em] text-[#8C7A6B]">Concierge notes</div>
-            <p className="mt-4">Keep your profile updated so the studio can reach you about delivery windows, refund replies, and styling notes.</p>
+            <p>Keep your profile updated so the studio can reach you about delivery windows, refund replies, and styling notes.</p>
+            <div className="rounded-[24px] border border-[#E8DCCB] bg-white/80 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Saved Journey</p>
+              <div className="mt-3 space-y-2 text-sm">
+                <p>{savedBoard ? `Room board: ${savedBoard.projectType}` : 'Room board: not saved yet'}</p>
+                <p>Recently viewed: {recentlyViewedCount}</p>
+                <p>Wishlist direction: use saved pieces to compare against your room board.</p>
+              </div>
+            </div>
+            {savedBoard ? (
+              <div className="rounded-[24px] border border-[#E8DCCB] bg-white/80 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Current Room Board</p>
+                <h3 className="mt-3 font-display text-2xl text-[#2B2119]">{savedBoard.projectType}</h3>
+                <p className="mt-2 leading-relaxed">{savedBoard.notes || 'A saved room advisor board is available on this device for future planning.'}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {savedBoard.items?.slice(0, 3).map((item) => (
+                    <span key={item.id} className="rounded-full border border-[#E6D9C8] px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-[#6B594A]">
+                      {item.name}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a href="/room-advisor" className="rounded-full border border-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#7C4E2F]">
+                    Open room advisor
+                  </a>
+                  <a href="/wishlist" className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#2B2119]">
+                    Compare with wishlist
+                  </a>
+                </div>
+              </div>
+            ) : null}
+            <div className="rounded-[24px] border border-[#E8DCCB] bg-white/80 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Account Direction</p>
+              <p className="mt-3 leading-relaxed">
+                This space is evolving into a fuller post-purchase suite. Next upgrades should include saved room boards, delivery milestones, and richer order detail views.
+              </p>
+            </div>
           </div>
         </div>
       )}

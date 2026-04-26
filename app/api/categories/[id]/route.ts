@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { ObjectId } from 'mongodb'
+import { isAdminRequest } from '@/lib/admin'
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,6 +16,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isAdminRequest(request)) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
   const body = await request.json().catch(() => null)
 
@@ -39,6 +44,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isAdminRequest(request)) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
   const db = await (await import('@/lib/db')).getDb()
   const query = ObjectId.isValid(id) ? { _id: new ObjectId(id) } : { slug: id }

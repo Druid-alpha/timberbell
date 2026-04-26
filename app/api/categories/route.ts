@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { isAdminRequest } from '@/lib/admin'
 import { FURNITURE_CATEGORY_SLUGS } from '@/lib/catalog-taxonomy'
 
 export async function GET() {
@@ -16,6 +17,10 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
   const body = await request.json().catch(() => null)
 
   if (!body?.name || !body?.slug) {

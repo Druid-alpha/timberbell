@@ -46,7 +46,11 @@ export default function WishlistButton({ productId }: { productId: string }) {
   }
 
   if (!ready) {
-    return null
+    return (
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/75">
+        <span className="h-3.5 w-3.5 animate-pulse rounded-full bg-[#E6D9C8]" />
+      </span>
+    )
   }
 
   return (
@@ -59,7 +63,11 @@ export default function WishlistButton({ productId }: { productId: string }) {
       }`}
     >
       {loading ? (
-        '...'
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:120ms]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current [animation-delay:240ms]" />
+        </span>
       ) : (
         <svg
           viewBox="0 0 24 24"

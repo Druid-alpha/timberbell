@@ -23,7 +23,7 @@ export default function LoginPage() {
 
     if (res.ok) {
       setStatus('Signed in. Redirecting...')
-      const next = searchParams.get('next') || '/account'
+      const next = searchParams.get('next') || '/'
       window.location.href = next
       return
     }

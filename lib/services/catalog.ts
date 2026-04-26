@@ -1,12 +1,25 @@
 import 'server-only'
 import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
-import type { Category, Product, Review } from '@/types/catalog'
+import type { Category, Product, ProductFacetSummary, ProductSearchResult, Review } from '@/types/catalog'
 import { computeFinalPrice } from '@/lib/utils/pricing'
 import { getColorFamily } from '@/lib/utils/color-name'
 import { FURNITURE_CATEGORY_NAMES, FURNITURE_CATEGORY_SLUGS } from '@/lib/catalog-taxonomy'
 
 const fallbackPalette = ['#f4e7d2', '#eab38b', '#c59a6b']
+const PRODUCT_SEARCH_FIELDS = [
+  'name',
+  'description',
+  'slug',
+  'category',
+  'materials',
+  'finishes',
+  'badge',
+  'dimensions',
+  'variants.name',
+  'variants.sku',
+  'variants.color',
+] as const
 
 const toId = (value: ObjectId) => value.toString()
 
@@ -97,23 +110,58 @@ async function attachReviewStats(db: any, rows: any[]) {
   })
 }
 
-export async function getCategories() {
-  const db = await getDb()
-  const rows = await db.collection('categories').find({ slug: { $in: FURNITURE_CATEGORY_SLUGS } }).sort({ name: 1 }).toArray()
-  return rows.map(normalizeCategory)
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-export async function getProducts(params?: {
-  category?: string
-  query?: string
-  minPrice?: number
-  maxPrice?: number
-  colors?: string[]
-  materials?: string[]
-  finishes?: string[]
-  sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating'
-}) {
-  const db = await getDb()
+function buildSearchFieldMatch(regex: string) {
+  return PRODUCT_SEARCH_FIELDS.map((field) => ({
+    [field]: { $regex: regex, $options: 'i' },
+  }))
+}
+
+function buildCatalogTextSearch(query?: string) {
+  const normalized = String(query || '').trim()
+  if (!normalized) return null
+
+  const escapedQuery = escapeRegex(normalized)
+  const tokens = normalized
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .map(escapeRegex)
+
+  const rules: Record<string, any>[] = [
+    { $or: buildSearchFieldMatch(escapedQuery) },
+  ]
+
+  if (tokens.length > 1) {
+    rules.push(
+      ...tokens.map((token) => ({
+        $or: buildSearchFieldMatch(token),
+      }))
+    )
+  }
+
+  if (rules.length === 1) {
+    return rules[0]
+  }
+
+  return { $and: rules }
+}
+
+async function buildCatalogBaseFilter(
+  db: any,
+  params?: {
+    category?: string
+    query?: string
+    minPrice?: number
+    maxPrice?: number
+    colors?: string[]
+    materials?: string[]
+    finishes?: string[]
+  }
+) {
   const filter: Record<string, any> = {
     category: { $in: [...FURNITURE_CATEGORY_SLUGS, ...FURNITURE_CATEGORY_NAMES] },
   }
@@ -135,14 +183,12 @@ export async function getProducts(params?: {
   }
 
   if (params?.query) {
-    filter.$or = [
-      { name: { $regex: params.query, $options: 'i' } },
-      { description: { $regex: params.query, $options: 'i' } },
-      { slug: { $regex: params.query, $options: 'i' } },
-      { 'variants.name': { $regex: params.query, $options: 'i' } },
-      { 'variants.sku': { $regex: params.query, $options: 'i' } },
-      { 'variants.color': { $regex: params.query, $options: 'i' } },
-    ]
+    const textSearch = buildCatalogTextSearch(params.query)
+    if (textSearch?.$and) {
+      filter.$and = [...(filter.$and || []), ...textSearch.$and]
+    } else if (textSearch?.$or) {
+      filter.$or = textSearch.$or
+    }
   }
 
   if (typeof params?.minPrice === 'number' || typeof params?.maxPrice === 'number') {
@@ -152,42 +198,170 @@ export async function getProducts(params?: {
   }
 
   if (params?.materials?.length) {
-    filter.$and = [...(filter.$and || []), { $or: [{ materials: { $in: params.materials } }, { 'variants.materials': { $in: params.materials } }] }]
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ materials: { $in: params.materials } }, { 'variants.materials': { $in: params.materials } }] },
+    ]
   }
 
   if (params?.finishes?.length) {
-    filter.$and = [...(filter.$and || []), { $or: [{ finishes: { $in: params.finishes } }, { 'variants.finishes': { $in: params.finishes } }] }]
+    filter.$and = [
+      ...(filter.$and || []),
+      { $or: [{ finishes: { $in: params.finishes } }, { 'variants.finishes': { $in: params.finishes } }] },
+    ]
   }
 
-  let sort: Record<string, 1 | -1> = { createdAt: -1 }
-  switch (params?.sort) {
+  return filter
+}
+
+function getCatalogSort(sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating') {
+  switch (sort) {
     case 'price_asc':
-      sort = { price: 1 }
-      break
+      return { price: 1 } as Record<string, 1 | -1>
     case 'price_desc':
-      sort = { price: -1 }
-      break
+      return { price: -1 } as Record<string, 1 | -1>
     case 'rating':
-      sort = { rating: -1, createdAt: -1 }
-      break
+      return { rating: -1, createdAt: -1 } as Record<string, 1 | -1>
     case 'newest':
     default:
-      sort = { createdAt: -1 }
+      return { createdAt: -1 } as Record<string, 1 | -1>
   }
+}
+
+function productMatchesColorFilters(row: any, colors?: string[]) {
+  if (!colors?.length) return true
+
+  const colorPool = [
+    ...(Array.isArray(row.palette) ? row.palette : []),
+    ...((Array.isArray(row.variants) ? row.variants : []).map((variant: any) => variant?.color).filter(Boolean)),
+  ]
+  const families = new Set(colorPool.map((color: string) => getColorFamily(color)).filter(Boolean))
+  return colors.some((color) => families.has(color))
+}
+
+function buildFacetSummary(rows: Product[]): ProductFacetSummary {
+  let min = Number.POSITIVE_INFINITY
+  let max = 0
+  const colors = new Set<string>()
+  const materials = new Map<string, string>()
+
+  rows.forEach((product) => {
+    const prices = [Number(product.finalPrice ?? product.price ?? 0)]
+    prices.forEach((price) => {
+      if (price > 0) {
+        min = Math.min(min, price)
+        max = Math.max(max, price)
+      }
+    })
+
+    const colorPool = [
+      ...(product.palette ?? []),
+      ...((product.variants ?? []).map((variant) => variant.color).filter(Boolean) as string[]),
+    ]
+    colorPool.forEach((color) => {
+      const family = getColorFamily(color)
+      if (family) colors.add(family)
+    })
+
+    const materialPool = [
+      ...(product.materials ?? []),
+      ...((product.variants ?? []).flatMap((variant) => variant.materials ?? [])),
+    ]
+    materialPool.forEach((material) => {
+      const clean = String(material || '').trim()
+      if (!clean) return
+      const key = clean.toLowerCase()
+      if (!materials.has(key)) materials.set(key, clean)
+    })
+  })
+
+  return {
+    priceRange: {
+      min: Number.isFinite(min) ? min : 0,
+      max,
+    },
+    colors: Array.from(colors).sort((left, right) => left.localeCompare(right)),
+    materials: Array.from(materials.values()).sort((left, right) => left.localeCompare(right)),
+  }
+}
+
+export async function getCategories() {
+  const db = await getDb()
+  const rows = await db.collection('categories').find({ slug: { $in: FURNITURE_CATEGORY_SLUGS } }).sort({ name: 1 }).toArray()
+  return rows.map(normalizeCategory)
+}
+
+export async function getProducts(params?: {
+  category?: string
+  query?: string
+  minPrice?: number
+  maxPrice?: number
+  colors?: string[]
+  materials?: string[]
+  finishes?: string[]
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating'
+}) {
+  const db = await getDb()
+  const filter = await buildCatalogBaseFilter(db, params)
+  const sort = getCatalogSort(params?.sort)
 
   let rows = await db.collection('products').find(filter).sort(sort).toArray()
-  if (params?.colors?.length) {
-    rows = rows.filter((row) => {
-      const colorPool = [
-        ...(Array.isArray(row.palette) ? row.palette : []),
-        ...((Array.isArray(row.variants) ? row.variants : []).map((variant: any) => variant?.color).filter(Boolean)),
-      ]
-      const families = new Set(colorPool.map((color: string) => getColorFamily(color)))
-      return params.colors?.some((color) => families.has(color))
-    })
-  }
+  rows = rows.filter((row) => productMatchesColorFilters(row, params?.colors))
   const rowsWithStats = await attachReviewStats(db, rows)
   return rowsWithStats.map(normalizeProduct)
+}
+
+export async function searchProducts(params?: {
+  category?: string
+  query?: string
+  minPrice?: number
+  maxPrice?: number
+  colors?: string[]
+  materials?: string[]
+  finishes?: string[]
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'rating'
+  page?: number
+  limit?: number
+}): Promise<ProductSearchResult> {
+  const db = await getDb()
+  const filter = await buildCatalogBaseFilter(db, params)
+  const sort = getCatalogSort(params?.sort)
+  const page = Math.max(1, Number(params?.page || 1))
+  const limit = Math.max(1, Number(params?.limit || 12))
+
+  let rows = await db.collection('products').find(filter).sort(sort).toArray()
+  rows = rows.filter((row) => productMatchesColorFilters(row, params?.colors))
+
+  const rowsWithStats = await attachReviewStats(db, rows)
+  const normalized = rowsWithStats.map(normalizeProduct)
+  const total = normalized.length
+  const start = (page - 1) * limit
+  const products = normalized.slice(start, start + limit)
+
+  return {
+    total,
+    page,
+    limit,
+    products,
+    facets: buildFacetSummary(normalized),
+  }
+}
+
+export async function searchProductsPreview(input: {
+  query?: string
+  limit?: number
+}) {
+  const normalizedQuery = String(input.query || '').trim()
+  if (!normalizedQuery) return []
+
+  const result = await searchProducts({
+    query: normalizedQuery,
+    sort: 'rating',
+    page: 1,
+    limit: Math.max(1, Number(input.limit || 8)),
+  })
+
+  return result.products
 }
 
 export async function getFeaturedProducts(limit = 6) {

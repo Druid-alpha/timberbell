@@ -37,9 +37,9 @@ const footerLinks = [
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-[#E6D9C8] bg-[#2B2119] text-[#E6D9C8]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-[1.3fr_2fr]">
-        <div className="space-y-4">
+    <footer className="border-t border-[#E6D9C8] bg-[linear-gradient(180deg,#2b2119,#201812)] text-[#E6D9C8]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 lg:grid-cols-[1.15fr_0.85fr_1.2fr]">
+        <div className="space-y-5">
           <div className="flex items-center gap-3">
             <img src="/brand.svg" alt="Timberbell" className="h-10 w-auto invert filter" />
             <div>
@@ -50,12 +50,35 @@ export default function SiteFooter() {
           <p className="text-sm text-[#E6D9C8]">
             Crafting heirloom pieces for modern rituals, with delivery coordinated across Nigeria.
           </p>
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
+            <p className="text-[10px] uppercase tracking-[0.32em] text-[#CBB9A2]">Studio Promise</p>
+            <p className="mt-3 text-sm leading-relaxed text-[#E6D9C8]">
+              Thoughtful material direction, guided consultations, and a slower, more composed furnishing experience.
+            </p>
+          </div>
           <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-[#CBB9A2]">
             <span>hello@timberbell.com</span>
             <span>+234 800 TIMBERBELL</span>
           </div>
         </div>
-        <div className="grid gap-8 sm:grid-cols-3">
+
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+          <p className="text-[10px] uppercase tracking-[0.32em] text-[#CBB9A2]">Visit The Atelier</p>
+          <h3 className="mt-3 font-display text-3xl text-white">Bring your project brief, room dimensions, and material questions.</h3>
+          <p className="mt-4 text-sm leading-relaxed text-[#E6D9C8]">
+            Book a guided session for full-room direction, trade support, or one-on-one product sourcing.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/room-advisor" className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white transition hover:bg-[#6A3F24]">
+              Start Room Advisor
+            </Link>
+            <Link href="/trade" className="rounded-full border border-white/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#E6D9C8] transition hover:bg-white/10">
+              Trade Program
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-2">
           {footerLinks.map((group) => (
             <div key={group.title} className="space-y-3 text-sm">
               <div className="text-[10px] uppercase tracking-[0.3em] text-[#CBB9A2]">

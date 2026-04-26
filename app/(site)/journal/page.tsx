@@ -1,36 +1,39 @@
-'use client'
-
-import SectionHeading from '@/app/_components/SectionHeading'
-import Breadcrumb from '@/app/_components/Breadcrumb'
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import Breadcrumb from '@/app/_components/Breadcrumb'
+import SectionHeading from '@/app/_components/SectionHeading'
+import { journalPosts } from '@/lib/content/journal'
+import { absoluteUrl } from '@/lib/site'
+
+export const metadata: Metadata = {
+  title: 'Journal',
+  description: 'Reflections on design, materiality, and the slower rhythms of modern life from Timberbell.',
+  alternates: {
+    canonical: absoluteUrl('/journal'),
+  },
+}
 
 export default function JournalPage() {
-  const posts = [
-    {
-      title: 'The Art of Timber Selection',
-      category: 'Design',
-      date: 'April 12, 2026',
-      image: '/lifestyle-1.svg',
-      excerpt: 'Exploring the slow growth cycles of West African mahogany and its architectural resilience.',
-    },
-    {
-      title: 'Living with Less',
-      category: 'Philosophy',
-      date: 'March 28, 2026',
-      image: '/lifestyle-2.svg',
-      excerpt: 'How sculptural furniture can create space for silence in a maximalist world.',
-    },
-    {
-      title: 'Studio Visit: The Carvers',
-      category: 'Atelier',
-      date: 'March 15, 2026',
-      image: '/hero-room.svg',
-      excerpt: 'A morning spent in our Lagos workshop watching raw timber transform into functional art.',
-    },
-  ]
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'The Timberbell Journal',
+    url: absoluteUrl('/journal'),
+    description: 'Reflections on design, materiality, and the slower rhythms of modern life.',
+    blogPost: journalPosts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      datePublished: post.date,
+      image: absoluteUrl(post.image),
+      url: absoluteUrl(`/journal#${post.slug}`),
+      articleSection: post.category,
+      description: post.excerpt,
+    })),
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-24 px-6 py-16">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="flex flex-col gap-6">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Journal' }]} />
         <SectionHeading
@@ -41,21 +44,24 @@ export default function JournalPage() {
       </div>
 
       <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post) => (
-          <article key={post.title} className="group cursor-pointer">
-            <div className="aspect-[4/5] overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4]">
-              <img src={post.image} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-            </div>
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest font-bold text-[#8C7A6B]">
-                <span>{post.category}</span>
-                <span className="h-1 w-1 rounded-full bg-[#E6D9C8]" />
-                <span>{post.date}</span>
+        {journalPosts.map((post) => (
+          <Link key={post.slug} href={`/journal/${post.slug}`} className="group block" id={post.slug}>
+            <article>
+              <div className="aspect-[4/5] overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4]">
+                <img src={post.image} alt={post.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
               </div>
-              <h3 className="font-display text-2xl text-[#2B2119] group-hover:text-[#7C4E2F] transition-colors">{post.title}</h3>
-              <p className="text-sm leading-relaxed text-[#6B594A] line-clamp-2">{post.excerpt}</p>
-            </div>
-          </article>
+              <div className="mt-6 space-y-3">
+                <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">
+                  <span>{post.category}</span>
+                  <span className="h-1 w-1 rounded-full bg-[#E6D9C8]" />
+                  <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+                <h3 className="font-display text-2xl text-[#2B2119] transition-colors group-hover:text-[#7C4E2F]">{post.title}</h3>
+                <p className="line-clamp-2 text-sm leading-relaxed text-[#6B594A]">{post.excerpt}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F]">Read story</p>
+              </div>
+            </article>
+          </Link>
         ))}
       </div>
     </div>

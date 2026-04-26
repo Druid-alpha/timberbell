@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import StateCard from '@/app/_components/StateCard'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { syncCart } from '@/lib/redux/cartSlice'
 import { formatMoney } from '@/lib/utils/format'
@@ -253,15 +254,31 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-12 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
-      <div className="flex flex-col gap-6">
-        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
-        <SectionHeading
-          eyebrow="Shopping Cart"
-          title="Your Curated Bundle"
-          description="Pieces currently held in your session for review and checkout."
-        />
-      </div>
+    <div className="mx-auto max-w-7xl space-y-12 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
+      <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.14),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
+        <div className="flex flex-col gap-6">
+          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <SectionHeading
+              eyebrow="Shopping Cart"
+              title="Your Curated Bundle"
+              description="Pieces currently held in your session for review, editing, and checkout."
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: 'Active Pieces', value: String(activeItems.length) },
+                { label: 'Saved', value: String(savedItems.length) },
+                { label: 'Current Total', value: formatMoney(total) },
+              ].map((item) => (
+                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
+                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="grid min-w-0 gap-12 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="min-w-0 space-y-8">
@@ -303,7 +320,7 @@ export default function CartPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className={`flex flex-col gap-6 rounded-[32px] border border-[#E6D9C8] bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:p-6 ${updatingId === getItemKey(item) || updatingId === 'reservation' ? 'opacity-50' : 'opacity-100'}`}
+                    className={`flex flex-col gap-6 rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdfa,#ffffff)] p-5 shadow-[0_20px_50px_-42px_rgba(55,32,15,0.45)] sm:flex-row sm:items-center sm:p-6 ${updatingId === getItemKey(item) || updatingId === 'reservation' ? 'opacity-50' : 'opacity-100'}`}
                   >
                     <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#F4EEE4]">
                       <img src={getItemImage(item)} alt="" className="h-full w-full object-cover" />
@@ -367,10 +384,13 @@ export default function CartPage() {
               </AnimatePresence>
             </div>
           ) : (
-            <div className="rounded-[40px] border-2 border-dashed border-[#E6D9C8] py-20 text-center">
-              <p className="text-sm text-[#8C7A6B]">Your bundle is currently empty.</p>
-              <Link href="/productfilter" className="mt-4 inline-block border-b-2 border-[#7C4E2F] text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Explore the collection</Link>
-            </div>
+            <StateCard
+              eyebrow="Curated Bundle"
+              title="Your bundle is currently empty"
+              description="Start gathering pieces for review, comparison, and checkout in one calmer flow."
+              actionHref="/productfilter"
+              actionLabel="Explore the collection"
+            />
           )}
 
           {savedItems.length > 0 && (
@@ -388,7 +408,7 @@ export default function CartPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="group flex gap-4 rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4]/30 p-4 transition hover:bg-white"
+                      className="group flex gap-4 rounded-3xl border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-4 transition hover:bg-white"
                     >
                       <img src={getItemImage(item)} alt="" className="h-16 w-16 rounded-xl object-cover grayscale transition-all group-hover:grayscale-0" />
                       <div className="flex-1">
@@ -429,13 +449,19 @@ export default function CartPage() {
         </div>
 
         <div className="min-w-0 h-fit space-y-6 lg:sticky lg:top-28">
-          <div className="rounded-[40px] border border-[#E6D9C8] bg-[#F4EEE4] p-6 sm:p-8">
+          <div className="rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 shadow-[0_24px_60px_-50px_rgba(55,32,15,0.5)] sm:p-8">
             <h2 className="mb-6 text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Summary</h2>
             {!emailVerified && activeItems.length > 0 ? (
               <div className="mb-5 rounded-3xl border border-[#E6D9C8] bg-[#FFF7EF] px-4 py-3 text-xs text-[#6B594A]">
                 Verify your email before checkout. <Link href="/verify" className="font-semibold underline">Verify now</Link>
               </div>
             ) : null}
+            <div className="mb-5 rounded-[28px] border border-[#E8DCCB] bg-white/80 p-5">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Studio Note</p>
+              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
+                Your current selection is arranged as a working room bundle. You can still swap finishes, adjust quantities, or save pieces before checkout.
+              </p>
+            </div>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>

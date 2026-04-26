@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { getOptimizedImageUrl } from '@/lib/utils/image'
+import StateCard from '@/app/_components/StateCard'
 
 type Product = {
   id: string
@@ -34,15 +35,40 @@ export default function RelatedProducts({ productId, category }: { productId: st
 
   if (loading) {
     return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="aspect-[4/5] animate-pulse rounded-[32px] bg-[#E6D9C8]/30" />
-        ))}
+      <div className="space-y-8 border-t border-[#E6D9C8] pt-16">
+        <div className="space-y-2">
+          <div className="h-4 w-32 animate-pulse rounded bg-[#E6D9C8]/40" />
+          <div className="h-10 w-64 animate-pulse rounded bg-[#E6D9C8]/30" />
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-3">
+              <div className="aspect-[4/5] animate-pulse rounded-[26px] bg-[#E6D9C8]/35" />
+              <div className="mt-4 space-y-2 px-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-[#E6D9C8]/30" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-[#E6D9C8]/25" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
-  if (products.length === 0) return null
+  if (products.length === 0) {
+    return (
+      <div className="border-t border-[#E6D9C8] pt-16">
+        <StateCard
+          eyebrow="Complementary Pieces"
+          title="No related pieces just yet"
+          description="As the collection expands, we will surface more pairings that work naturally with this piece."
+          actionHref={`/productfilter?category=${category}`}
+          actionLabel="Browse collection"
+          compact
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 pt-16 border-t border-[#E6D9C8]">

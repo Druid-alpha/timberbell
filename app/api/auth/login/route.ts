@@ -1,16 +1,30 @@
 import { NextResponse } from 'next/server'
 import { findUserByEmail } from '@/lib/services/users'
 import { signToken, verifyPassword } from '@/lib/auth'
+import { checkRateLimit, getRequestIp } from '@/lib/rate-limit'
+import { validateLoginPayload } from '@/lib/validation/request'
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null)
-
-  if (!body?.email || !body?.password) {
-    return NextResponse.json({ message: 'email and password required' }, { status: 400 })
+  const rateLimit = checkRateLimit({
+    key: `auth-login:${getRequestIp(request)}`,
+    limit: 20,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { message: 'Too many sign-in attempts. Please wait and try again.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+    )
   }
 
-  const normalizedEmail = String(body.email).toLowerCase()
-  const user = await findUserByEmail(normalizedEmail)
+  const body = await request.json().catch(() => null)
+  const parsed = validateLoginPayload(body)
+
+  if (!parsed.ok) {
+    return NextResponse.json({ message: parsed.message }, { status: 400 })
+  }
+
+  const user = await findUserByEmail(parsed.data.email)
   if (!user) {
     return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 })
   }
@@ -22,7 +36,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const valid = await verifyPassword(body.password, user.passwordHash)
+  const valid = await verifyPassword(parsed.data.password, user.passwordHash)
   if (!valid) {
     return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 })
   }

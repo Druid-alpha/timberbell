@@ -15,7 +15,7 @@ export async function createEmailVerification(userId: string, tokenHash: string,
   })
 }
 
-export async function consumeEmailVerification(tokenHash: string, userId?: string) {
+export async function findEmailVerification(tokenHash: string, userId?: string) {
   const db = await getDb()
   const query: { tokenHash: string; userId?: ObjectId } = { tokenHash }
   if (userId) {
@@ -32,8 +32,12 @@ export async function consumeEmailVerification(tokenHash: string, userId?: strin
     return null
   }
 
-  await db.collection('email_verifications').deleteOne({ _id: record._id })
   return record
+}
+
+export async function deleteEmailVerification(id: ObjectId) {
+  const db = await getDb()
+  await db.collection('email_verifications').deleteOne({ _id: id })
 }
 
 export async function createPasswordReset(userId: string, tokenHash: string, expiresAt: Date) {

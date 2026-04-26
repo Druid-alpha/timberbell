@@ -82,10 +82,10 @@ export default function ProductCard({
 
   if (variant === 'list') {
     return (
-      <article className="group mx-auto flex w-full max-w-full flex-col gap-4 rounded-[24px] border border-[#E6D9C8] bg-[#F4EEE4] p-3.5 transition sm:flex-row sm:items-center shadow-sm hover:shadow-md">
+      <article className="group mx-auto flex w-full max-w-full flex-col gap-4 rounded-[30px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f4eee4)] p-4 transition sm:flex-row sm:items-center shadow-[0_18px_45px_-38px_rgba(55,32,15,0.55)] hover:-translate-y-0.5 hover:shadow-[0_24px_55px_-34px_rgba(55,32,15,0.55)]">
         <Link
           href={`/products/${product.id}`}
-          className="relative h-32 w-full shrink-0 overflow-hidden rounded-2xl sm:h-36 sm:w-40"
+          className="relative h-36 w-full shrink-0 overflow-hidden rounded-[24px] sm:h-40 sm:w-44"
         >
           {primaryImage ? (
             <img src={primaryImage} alt={product.name} className="h-full w-full object-cover" />
@@ -103,21 +103,21 @@ export default function ProductCard({
             </span>
           ) : null}
         </Link>
-        <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="min-w-0 flex-1 space-y-3">
           <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 {product.category}
               </p>
-              <h3 className="text-base font-semibold leading-snug text-[#2B2119] break-words">
+              <h3 className="font-display text-[1.35rem] leading-snug text-[#2B2119] break-words">
                 <Link href={`/products/${product.id}`}>{product.name}</Link>
               </h3>
             </div>
             <div className="text-left md:text-right md:whitespace-nowrap">
-              <div className="text-base font-bold text-[#2B2119]">{formatMoney(price)}</div>
+              <div className="font-display text-xl text-[#2B2119]">{formatMoney(price)}</div>
             </div>
           </div>
-          <p className="line-clamp-2 text-xs leading-relaxed text-[#6B594A]">
+          <p className="line-clamp-2 text-sm leading-relaxed text-[#6B594A]">
             {product.description}
           </p>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -150,9 +150,9 @@ export default function ProductCard({
               <WishlistButton productId={product.id} />
               <Link
                 href={`/products/${product.id}`}
-                className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F]"
+                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition hover:border-[#7C4E2F] hover:bg-white"
               >
-                View
+                View Piece
               </Link>
             </div>
           </div>
@@ -163,14 +163,14 @@ export default function ProductCard({
 
   return (
     <article
-      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[20px] border border-[#E6D9C8] bg-[#F4EEE4] shadow-[0_14px_28px_-24px_rgba(55,32,15,0.38)] transition hover:-translate-y-1 hover:shadow-[0_22px_42px_-34px_rgba(55,32,15,0.45)] arkwood-reveal"
+      className="group mx-auto flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f4eee4)] shadow-[0_18px_38px_-28px_rgba(55,32,15,0.4)] transition hover:-translate-y-1 hover:shadow-[0_30px_60px_-34px_rgba(55,32,15,0.5)] arkwood-reveal"
       onMouseEnter={() => setIsCardHovered(true)}
       onMouseLeave={() => {
         setIsCardHovered(false)
         setHoveredVariantId(null)
       }}
     >
-      <Link href={`/products/${product.id}`} className="relative block h-44 w-full overflow-hidden sm:h-48 md:h-52">
+      <Link href={`/products/${product.id}`} className="relative block h-52 w-full overflow-hidden sm:h-56 md:h-64">
         {primaryImage ? (
           <>
             <img
@@ -195,6 +195,7 @@ export default function ProductCard({
           />
         )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.3),transparent_60%)] pointer-events-none" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,rgba(28,18,12,0.55))] pointer-events-none" />
 
         <div className="absolute left-3 top-3 flex flex-col gap-1.5 sm:left-4 sm:top-4">
           {product.badge ? (
@@ -215,7 +216,7 @@ export default function ProductCard({
 
         <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity pointer-events-none group-hover:opacity-100">
           <div className="image-glass rounded-full px-5 py-2 text-[9px] font-bold uppercase tracking-[0.24em] text-[#5B371F] pointer-events-auto">
-            Quick View
+            View Piece
           </div>
         </div>
 
@@ -234,22 +235,25 @@ export default function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-2 px-3 pb-3 pt-2.5 sm:px-3.5">
-        <div className="space-y-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-3 px-4 pb-4 pt-3.5 sm:px-4.5">
+        <div className="space-y-2.5">
           <div className="min-w-0">
             <p className="mb-1 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.22em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2rem] break-words text-[0.88rem] font-semibold leading-snug text-[#2B2119] sm:text-[0.92rem]">
+            <h3 className="line-clamp-2 min-h-[2.6rem] break-words font-display text-[1.2rem] leading-snug text-[#2B2119] sm:text-[1.3rem]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
             </h3>
           </div>
+          <p className="line-clamp-2 text-sm leading-relaxed text-[#6B594A]">
+            {product.description}
+          </p>
           <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">Price</p>
-              <div className="truncate font-display text-[0.98rem] text-[#2B2119] sm:text-[1.06rem]">{formatMoney(price)}</div>
+              <div className="truncate font-display text-[1.2rem] text-[#2B2119] sm:text-[1.35rem]">{formatMoney(price)}</div>
             </div>
             {product.price > price ? (
               <div className="shrink-0 text-right">
@@ -282,7 +286,7 @@ export default function ProductCard({
           ) : null}
         </div>
 
-        <div className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-[#E6D9C8]/50 pt-1.5">
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-[#E6D9C8]/60 pt-3">
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="flex shrink-0 items-center gap-0.5">{renderStars(product.rating)}</span>
             <span className="truncate text-[9px] text-[#8C7A6B]">({product.reviewCount || 0})</span>

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getProducts } from '@/lib/services/catalog'
+import { searchProducts } from '@/lib/services/catalog'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const parseList = (value: string | null) =>
     value ? value.split(',').map((item) => item.trim()).filter(Boolean) : undefined
 
-  const products = await getProducts({
+  const result = await searchProducts({
     category,
     query,
     minPrice: minPrice ? Number(minPrice) : undefined,
@@ -26,13 +26,16 @@ export async function GET(request: NextRequest) {
     materials: parseList(materials),
     finishes: parseList(finishes),
     sort: sort as any,
+    limit: limitParam ? Number(limitParam) : undefined,
+    page: pageParam ? Number(pageParam) : undefined,
   })
-
-  const limit = limitParam ? Number(limitParam) : undefined
-  const page = pageParam ? Math.max(1, Number(pageParam)) : 1
-  const total = products.length
-  const start = limit ? (page - 1) * limit : 0
-  const sliced = limit ? products.slice(start, start + limit) : products
-  return Response.json({ total, count: sliced.length, page, products: sliced })
+  return Response.json({
+    total: result.total,
+    count: result.products.length,
+    page: result.page,
+    limit: result.limit,
+    products: result.products,
+    facets: result.facets,
+  })
 }
 

@@ -244,7 +244,7 @@ export default function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[#E6D9C8] bg-[#F4EEE4]/90 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-[#E6D9C8]/80 bg-[linear-gradient(180deg,rgba(255,253,249,0.94),rgba(244,238,228,0.92))] backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:gap-8">
         <Link href="/" className="flex items-center gap-3">
           <img src="/brand.svg" alt="Timberbell" className="h-10 w-auto" />
@@ -258,12 +258,12 @@ export default function SiteHeader() {
           </div>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-6 text-[11px] uppercase tracking-[0.35em] text-[#8C7A6B] lg:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-3 text-[11px] uppercase tracking-[0.32em] text-[#8C7A6B] lg:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`transition hover:text-[#2B2119] ${link.label === 'Admin' ? 'rounded-full border border-[#7C4E2F] px-4 py-1.5 text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white' : ''}`}
+              className={`rounded-full px-4 py-2 transition hover:bg-white/75 hover:text-[#2B2119] ${link.label === 'Admin' ? 'border border-[#7C4E2F] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white' : ''}`}
             >
               {link.label}
             </Link>
@@ -277,7 +277,7 @@ export default function SiteHeader() {
               onChange={(event) => setSearchTerm(event.target.value)}
               onFocus={() => setSearchOpen(true)}
               placeholder="Search Timberbell pieces..."
-              className="w-full rounded-full border border-[#E6D9C8] bg-white px-5 py-2.5 pl-11 text-sm text-[#2B2119] placeholder:text-[#8C7A6B] focus:border-[#7C4E2F] focus:outline-none transition-all shadow-sm group-hover:shadow-md"
+              className="w-full rounded-full border border-[#E6D9C8] bg-white/90 px-5 py-3 pl-11 text-sm text-[#2B2119] placeholder:text-[#8C7A6B] focus:border-[#7C4E2F] focus:outline-none transition-all shadow-[0_14px_35px_-28px_rgba(55,32,15,0.5)] group-hover:shadow-[0_18px_40px_-26px_rgba(55,32,15,0.5)]"
             />
             <svg viewBox="0 0 24 24" className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8C7A6B]" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm8 2-4.35-4.35" strokeLinecap="round" />
@@ -334,7 +334,7 @@ export default function SiteHeader() {
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen((prev) => !prev)}
-            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70"
+            className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/60 text-[#2B2119] transition hover:bg-white/90"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm8 2-4.35-4.35" strokeLinecap="round" />
@@ -343,7 +343,7 @@ export default function SiteHeader() {
 
           <Link
             href="/wishlist"
-            className="hidden h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70 lg:inline-flex"
+            className="hidden h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/60 text-[#2B2119] transition hover:bg-white/90 lg:inline-flex"
             aria-label="Wishlist"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -353,7 +353,7 @@ export default function SiteHeader() {
 
           <Link
             href="/cart"
-            className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70 lg:inline-flex"
+            className="relative hidden h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/60 text-[#2B2119] transition hover:bg-white/90 lg:inline-flex"
             aria-label="Cart"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -401,7 +401,7 @@ export default function SiteHeader() {
             <div className="hidden items-center gap-2 lg:flex">
               <Link
                 href="/login"
-                className="rounded-full border border-[#E6D9C8] px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-[#8C7A6B] transition hover:border-[#7C4E2F] hover:text-[#7C4E2F]"
+                className="rounded-full border border-[#E6D9C8] bg-white/65 px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-[#8C7A6B] transition hover:border-[#7C4E2F] hover:text-[#7C4E2F]"
               >
                 Login
               </Link>
@@ -418,7 +418,7 @@ export default function SiteHeader() {
             type="button"
             aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
             onClick={() => setOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] text-[#2B2119] transition hover:bg-white/70 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/60 text-[#2B2119] transition hover:bg-white/90 lg:hidden"
           >
             <span className="sr-only">Toggle menu</span>
             <span className="relative block h-4 w-5">
@@ -437,9 +437,9 @@ export default function SiteHeader() {
       </div>
 
       {searchOpen ? (
-        <div className="border-t border-[#E6D9C8] bg-[#F4EEE4] lg:hidden">
+        <div className="border-t border-[#E6D9C8] bg-[linear-gradient(180deg,#f7efe5,#fffdfa)] lg:hidden">
           <div className="mx-auto max-w-7xl px-6 py-4">
-            <div className="flex flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-white px-4 py-2">
+            <div className="flex flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-white px-4 py-2 shadow-sm">
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
@@ -483,7 +483,7 @@ export default function SiteHeader() {
         <div
           className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-screen' : 'max-h-0'}`}
         >
-          <div className="flex flex-col gap-4 border-t border-[#E6D9C8] bg-[#F4EEE4] px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-[#8C7A6B]">
+          <div className="flex flex-col gap-4 border-t border-[#E6D9C8] bg-[linear-gradient(180deg,#f7efe5,#fffdfa)] px-6 py-5 text-[11px] uppercase tracking-[0.3em] text-[#8C7A6B]">
             {hasActiveReservation && (
               <Link
                 href="/cart"

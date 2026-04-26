@@ -34,6 +34,23 @@ export type Product = {
   variants?: ProductVariant[]
 }
 
+export type ProductFacetSummary = {
+  priceRange: {
+    min: number
+    max: number
+  }
+  colors: string[]
+  materials: string[]
+}
+
+export type ProductSearchResult = {
+  total: number
+  page: number
+  limit: number
+  products: Product[]
+  facets: ProductFacetSummary
+}
+
 export type ProductImage = {
   url: string
   publicId: string
