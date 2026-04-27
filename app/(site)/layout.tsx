@@ -1,5 +1,6 @@
 import SiteFooter from '@/app/_components/SiteFooter'
 import SiteHeader from '@/app/_components/SiteHeader'
+import AudioArmingSurface from '@/app/_components/AudioArmingSurface'
 
 export default function SiteLayout({
   children,
@@ -9,7 +10,7 @@ export default function SiteLayout({
   modal: React.ReactNode
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col">
+    <AudioArmingSurface className="relative flex min-h-screen flex-col">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-[#E9E1D4] blur-3xl" />
         <div className="absolute right-0 top-6 h-80 w-80 rounded-full bg-[#D9E1CF] blur-3xl" />
@@ -22,7 +23,7 @@ export default function SiteLayout({
         {modal}
       </main>
       <SiteFooter />
-    </div>
+    </AudioArmingSurface>
   )
 }
 

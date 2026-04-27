@@ -362,11 +362,6 @@ export default function CheckoutPage() {
             <div className="mb-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Order Detail</div>
             {activeItems.length ? (
               <div className="space-y-6">
-                <div className="rounded-[24px] border border-[#E8DCCB] bg-white/80 p-4 text-xs text-[#6B594A]">
-                  <p className="font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Delivery</p>
-                  <p className="mt-2 text-sm font-semibold capitalize text-[#2B2119]">{deliveryMethod} dispatch</p>
-                  <p className="mt-1">{deliveryQuote.zone.label} • {deliveryQuote.eta}</p>
-                </div>
                 <div className="custom-scrollbar max-h-60 space-y-4 overflow-y-auto pr-2">
                   {activeItems.map((item: any) => (
                     <div key={item.id} className="flex gap-4">

@@ -339,15 +339,11 @@ export default function ProductDetailClient({
               {variantBasePrice > variantDisplayPrice ? <span className="min-w-0 break-words text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span> : null}
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <p className="text-sm leading-7 text-[#6B594A]">{product.description}</p>
-              <div className="rounded-[28px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7f0e6)] p-5">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Selection</p>
-                <div className="mt-3 space-y-2 text-sm leading-7 text-[#6B594A]">
-                  <p>Color: {selectedColorName}</p>
-                  <p>Availability: {displayStockStatus === 'preorder' ? 'Available for preorder' : availableStock > 0 ? 'Ready to order' : 'Currently unavailable'}</p>
-                </div>
-              </div>
+            <div className="rounded-[28px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7f0e6)] p-5">
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Selection</p>
+              <p className="mt-3 text-sm leading-7 text-[#6B594A]">
+                {displayStockStatus === 'preorder' ? 'Available for preorder.' : availableStock > 0 ? 'Ready to order.' : 'Currently unavailable.'}
+              </p>
             </div>
           </div>
 

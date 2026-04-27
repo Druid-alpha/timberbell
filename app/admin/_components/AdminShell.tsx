@@ -4,12 +4,17 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import DiamondSidebar from './DiamondSidebar'
 import AdminTopbar from './AdminTopbar'
+import { armSharedAudio } from '@/lib/utils/sharedAudio'
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB]">
+    <div
+      className="min-h-screen bg-[#FDFCFB]"
+      onPointerDown={() => { void armSharedAudio() }}
+      onClick={() => { void armSharedAudio() }}
+    >
       <DiamondSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="min-h-screen lg:ml-64">
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">

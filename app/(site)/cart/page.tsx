@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
@@ -204,6 +204,55 @@ export default function CartPage() {
 
   const activeItems = cart?.items?.filter((item: any) => !item.saved) || []
   const savedItems = cart?.items?.filter((item: any) => item.saved) || []
+  const groupedSavedItems = useMemo(() => {
+    const groups = new Map<string, any>()
+
+    for (const item of savedItems) {
+      const key = getItemKey(item)
+      const existing = groups.get(key)
+      if (existing) {
+        existing.quantity += item.quantity
+      } else {
+        groups.set(key, { ...item })
+      }
+    }
+
+    return Array.from(groups.values())
+  }, [savedItems])
+
+  async function updateSavedGroup(groupKey: string, updates: any) {
+    if (!cart?.items?.length) return
+
+    setUpdatingId(groupKey)
+    const updatedItems = cart.items.map((item: any) =>
+      getItemKey(item) === groupKey ? { ...item, ...updates } : item
+    )
+
+    const finalItems = updatedItems.filter((item: any) => item.quantity > 0)
+
+    const res = await fetch('/api/cart', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items: finalItems.map((it: any) => ({
+          productId: it.productId,
+          purchaseType: getPurchaseType(it),
+          variantId: it.variantId,
+          variantName: it.variantName,
+          color: it.color,
+          quantity: it.quantity,
+          saved: it.saved,
+        })),
+      }),
+    })
+
+    if (res.ok) {
+      if (updates.saved === false) toast('Piece moved to active bundle', 'success')
+      if (updates.quantity === 0) toast('Piece removed from bundle', 'info')
+      load()
+    }
+    setUpdatingId(null)
+  }
 
   async function cancelReservation() {
     if (!activeItems.length) return
@@ -381,15 +430,15 @@ export default function CartPage() {
             />
           )}
 
-          {savedItems.length > 0 && (
+          {groupedSavedItems.length > 0 && (
             <div className="mt-10 space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-display text-xl text-[#2B2119]">Saved for later</h2>
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[#8C7A6B]">{savedItems.length} items</p>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[#8C7A6B]">{groupedSavedItems.length} items</p>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <AnimatePresence>
-                  {savedItems.map((item: any) => (
+                  {groupedSavedItems.map((item: any) => (
                     <motion.div
                       key={getItemKey(item)}
                       layout
@@ -424,8 +473,8 @@ export default function CartPage() {
                           </div>
                         ) : null}
                         <div className="mt-2 flex flex-wrap items-center gap-3">
-                          <button onClick={() => updateItem(getItemKey(item), { saved: false })} className="border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">Add back to bundle</button>
-                          <button onClick={() => updateItem(getItemKey(item), { quantity: 0 })} className="text-[9px] font-bold uppercase tracking-[0.12em] text-red-800 hover:underline">Remove</button>
+                          <button onClick={() => updateSavedGroup(getItemKey(item), { saved: false })} className="border-b border-[#7C4E2F] text-[9px] font-bold uppercase tracking-[0.12em] text-[#7C4E2F]">Add back to bundle</button>
+                          <button onClick={() => updateSavedGroup(getItemKey(item), { quantity: 0 })} className="text-[9px] font-bold uppercase tracking-[0.12em] text-red-800 hover:underline">Remove</button>
                         </div>
                       </div>
                     </motion.div>
