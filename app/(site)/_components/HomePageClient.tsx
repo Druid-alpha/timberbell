@@ -7,6 +7,7 @@ import SectionHeading from '@/app/_components/SectionHeading'
 import ProductCard from '@/app/_components/ProductCard'
 import RecentlyViewed from '@/app/_components/RecentlyViewed'
 import { getCategoryCopy, getCategoryImage } from '@/lib/constants/category-display'
+import { armSharedAudio } from '@/lib/utils/sharedAudio'
 import type { Category, Product } from '@/types/catalog'
 
 const heroSlides = [
@@ -137,6 +138,8 @@ export default function HomePageClient({
                   >
                     <Link
                       href="/productfilter"
+                      onPointerDown={() => { void armSharedAudio() }}
+                      onClick={() => { void armSharedAudio() }}
                       className="inline-flex items-center justify-center rounded-full bg-[#F4EEE4] px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#1B130D] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
                     >
                       Shop Collection
@@ -185,6 +188,8 @@ export default function HomePageClient({
             <Link
               key={category.id}
               href={`/productfilter?category=${category.slug}`}
+              onPointerDown={() => { void armSharedAudio() }}
+              onClick={() => { void armSharedAudio() }}
               className="group relative h-[18.5rem] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-6 shadow-[0_24px_60px_-46px_rgba(55,32,15,0.42)] transition-all hover:-translate-y-1 hover:shadow-[0_32px_70px_-42px_rgba(55,32,15,0.5)] sm:h-64 sm:rounded-[40px] sm:p-8"
             >
               <div

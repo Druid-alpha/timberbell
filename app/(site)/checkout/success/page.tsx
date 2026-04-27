@@ -100,11 +100,14 @@ export default function CheckoutSuccessPage() {
                   <path d="M12 8v5m0 3h.01M10.29 3.86l-8.1 14.04A2 2 0 0 0 3.92 21h16.16a2 2 0 0 0 1.73-3.1l-8.1-14.04a2 2 0 0 0-3.42 0Z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                  className="h-10 w-10 rounded-full border-[3px] border-[#7C4E2F]/20 border-t-[#7C4E2F]"
-                />
+                <div className="relative flex h-12 w-12 items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+                    className="absolute inset-0 rounded-full border-[3px] border-[#7C4E2F]/20 border-t-[#7C4E2F]"
+                  />
+                  <img src="/brand.svg" alt="Timberbell" className="h-6 w-6" />
+                </div>
               )}
             </motion.div>
           </div>

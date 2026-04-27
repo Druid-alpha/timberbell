@@ -2,6 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { armSharedAudio, clearSharedAudioReference, getSharedAudioContext } from '@/lib/utils/sharedAudio'
 
 type Toast = {
   id: string
@@ -24,28 +25,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return
 
     const armSound = async () => {
-      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-      if (!AudioContextClass) return
-
-      const context = audioContextRef.current ?? new AudioContextClass()
-      audioContextRef.current = context
-
-      if (context.state === 'suspended') {
-        await context.resume().catch(() => null)
-      }
-
-      soundReadyRef.current = context.state === 'running'
+      const unlocked = await armSharedAudio()
+      audioContextRef.current = getSharedAudioContext()
+      soundReadyRef.current = unlocked
     }
 
     window.addEventListener('pointerdown', armSound, { passive: true })
+    window.addEventListener('click', armSound, { passive: true })
+    window.addEventListener('touchstart', armSound, { passive: true })
     window.addEventListener('keydown', armSound)
 
     return () => {
       window.removeEventListener('pointerdown', armSound)
+      window.removeEventListener('click', armSound)
+      window.removeEventListener('touchstart', armSound)
       window.removeEventListener('keydown', armSound)
       const context = audioContextRef.current
       if (context) {
         void context.close().catch(() => null)
+        clearSharedAudioReference()
       }
     }
   }, [])
@@ -53,10 +51,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const playToastSound = useCallback(async (type: Toast['type']) => {
     if (typeof window === 'undefined') return
 
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return
-
-    const context = audioContextRef.current ?? new AudioContextClass()
+    const context = audioContextRef.current ?? getSharedAudioContext()
+    if (!context) return
     audioContextRef.current = context
 
     if (context.state === 'suspended') {

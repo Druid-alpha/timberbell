@@ -8,6 +8,7 @@ import {
   readAdminActivitySeenAt,
   type AdminActivitySection,
 } from '@/lib/adminActivity'
+import { armSharedAudio, clearSharedAudioReference, getSharedAudioContext, readSharedAudioArmed } from '@/lib/utils/sharedAudio'
 
 type ActivitySummary = {
   latestOrder: {
@@ -40,13 +41,6 @@ type ActivitySummary = {
   lastActivityAt: string | null
 }
 
-const SOUND_ARMED_KEY = 'timberbell_admin_activity_sound_armed'
-
-function readSoundArmed() {
-  if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(SOUND_ARMED_KEY) === 'true'
-}
-
 export default function AdminOrderPulse() {
   const [summary, setSummary] = useState<ActivitySummary | null>(null)
   const [open, setOpen] = useState(false)
@@ -55,7 +49,7 @@ export default function AdminOrderPulse() {
     refunds: readAdminActivitySeenAt('refunds'),
     users: readAdminActivitySeenAt('users'),
   }))
-  const [soundArmed, setSoundArmed] = useState<boolean>(() => readSoundArmed())
+  const [soundArmed, setSoundArmed] = useState<boolean>(() => readSharedAudioArmed())
   const initializedRef = useRef(false)
   const previousOrderCountRef = useRef(0)
   const previousRefundCountRef = useRef(0)
@@ -64,20 +58,15 @@ export default function AdminOrderPulse() {
   const pollMs = 5000
 
   function getAudioContext() {
-    if (typeof window === 'undefined') return null
     if (audioContextRef.current) return audioContextRef.current
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return null
-    audioContextRef.current = new AudioContextClass()
+    audioContextRef.current = getSharedAudioContext()
     return audioContextRef.current
   }
 
   async function playNotificationQueue(queue: Array<'orders' | 'refunds' | 'users'>) {
-    if (typeof window === 'undefined') return
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioContextClass) return
+    const audioContext = audioContextRef.current ?? getSharedAudioContext()
+    if (!audioContext) return
 
-    const audioContext = audioContextRef.current ?? new AudioContextClass()
     audioContextRef.current = audioContext
     if (audioContext.state === 'suspended') {
       await audioContext.resume().catch(() => null)
@@ -87,19 +76,19 @@ export default function AdminOrderPulse() {
     const now = audioContext.currentTime
     const gain = audioContext.createGain()
     gain.gain.setValueAtTime(0.0001, now)
-    gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.22, now + 0.03)
     gain.connect(audioContext.destination)
 
     queue.forEach((type, queueIndex) => {
-      const startAt = now + queueIndex * 1.1
+      const startAt = now + queueIndex * 1.5
       const pattern =
         type === 'orders'
-          ? { frequencies: [1046, 1318, 1567, 1318, 1174, 1567], wave: 'sine' as OscillatorType, length: 0.24, gap: 0.22 }
+          ? { frequencies: [1046, 1318, 1567, 1318, 1174, 1567, 1318, 1760], wave: 'sine' as OscillatorType, length: 0.34, gap: 0.28 }
           : type === 'refunds'
-            ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.14, gap: 0.18 }
-            : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.12, gap: 0.16 }
+            ? { frequencies: [740, 622, 740, 622], wave: 'triangle' as OscillatorType, length: 0.16, gap: 0.2 }
+            : { frequencies: [523, 659, 784, 988], wave: 'square' as OscillatorType, length: 0.14, gap: 0.18 }
 
-      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * pattern.gap + 0.28)
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + pattern.frequencies.length * pattern.gap + 0.5)
 
       pattern.frequencies.forEach((frequency, index) => {
         const oscillator = audioContext.createOscillator()
@@ -113,7 +102,7 @@ export default function AdminOrderPulse() {
 
     window.setTimeout(() => {
       gain.disconnect()
-    }, Math.max(1400, queue.length * 1300))
+    }, Math.max(2600, queue.length * 2400))
   }
 
   useEffect(() => {
@@ -200,30 +189,33 @@ export default function AdminOrderPulse() {
   }, [])
 
   useEffect(() => {
-    if (soundArmed) return
-
     async function armSound() {
-      window.localStorage.setItem(SOUND_ARMED_KEY, 'true')
+      const unlocked = await armSharedAudio()
+      getAudioContext()
+      if (!unlocked) return
+
       setSoundArmed(true)
-      const audioContext = getAudioContext()
-      if (audioContext?.state === 'suspended') {
-        await audioContext.resume().catch(() => null)
-      }
       window.removeEventListener('pointerdown', armSound)
       window.removeEventListener('touchstart', armSound)
       window.removeEventListener('keydown', armSound)
+      window.removeEventListener('click', armSound)
     }
 
-    window.addEventListener('pointerdown', armSound)
+    const requiresUnlock = !audioContextRef.current || audioContextRef.current.state !== 'running'
+    if (!requiresUnlock) return
+
+    window.addEventListener('pointerdown', armSound, { passive: true })
     window.addEventListener('touchstart', armSound, { passive: true })
     window.addEventListener('keydown', armSound)
+    window.addEventListener('click', armSound, { passive: true })
 
     return () => {
       window.removeEventListener('pointerdown', armSound)
       window.removeEventListener('touchstart', armSound)
       window.removeEventListener('keydown', armSound)
+      window.removeEventListener('click', armSound)
     }
-  }, [soundArmed])
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -231,6 +223,7 @@ export default function AdminOrderPulse() {
       if (audioContext) {
         void audioContext.close().catch(() => null)
         audioContextRef.current = null
+        clearSharedAudioReference()
       }
     }
   }, [])

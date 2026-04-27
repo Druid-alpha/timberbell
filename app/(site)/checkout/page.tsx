@@ -251,7 +251,7 @@ export default function CheckoutPage() {
                     required
                   />
                   <div className="rounded-3xl border border-[#E6D9C8] bg-white/80 px-5 py-4 text-sm text-[#6B594A]">
-                    Delivery zone: <span className="font-semibold text-[#2B2119]">{deliveryQuote.zone.label}</span> • Standard ETA {deliveryQuote.zone.standardEta}
+                    Delivery zone: <span className="font-semibold text-[#2B2119]">{deliveryQuote.zone.label}</span> • ETA {deliveryQuote.zone.standardEta}
                   </div>
                 </motion.div>
               )}
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                     </div>
                   </button>
                   <div className="rounded-3xl border border-[#E6D9C8] bg-white/70 p-5 text-sm text-[#6B594A]">
-                    Priority dispatch now follows the selected Nigeria delivery zone, so the same logic can be reused across checkout, stored orders, and delivery pages.
+                    Standard delivery is ₦3,000. Priority dispatch is ₦5,000.
                   </div>
                 </motion.div>
               )}

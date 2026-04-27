@@ -262,7 +262,7 @@ export default function CartPage() {
             <SectionHeading
               eyebrow="Shopping Cart"
               title="Your Curated Bundle"
-              description="Pieces currently held in your session for review, editing, and checkout."
+              description="Review your selected pieces and continue to checkout."
             />
           </div>
         </div>
@@ -382,12 +382,12 @@ export default function CartPage() {
           )}
 
           {savedItems.length > 0 && (
-            <div className="mt-16 space-y-6">
-              <div>
-                <h2 className="font-display text-2xl text-[#2B2119]">Saved for later</h2>
-                <p className="text-xs text-[#8C7A6B]">Items you're keeping an eye on for future curation.</p>
+            <div className="mt-10 space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-display text-xl text-[#2B2119]">Saved for later</h2>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-[#8C7A6B]">{savedItems.length} items</p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <AnimatePresence>
                   {savedItems.map((item: any) => (
                     <motion.div
@@ -396,9 +396,9 @@ export default function CartPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="group flex gap-4 rounded-3xl border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-4 transition hover:bg-white"
+                      className="group flex gap-3 rounded-[24px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-3 transition hover:bg-white"
                     >
-                      <img src={getItemImage(item)} alt="" className="h-16 w-16 rounded-xl object-cover grayscale transition-all group-hover:grayscale-0" />
+                      <img src={getItemImage(item)} alt="" className="h-14 w-14 rounded-xl object-cover grayscale transition-all group-hover:grayscale-0" />
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-[#2B2119]">{item.product?.name}</h4>
                         {getItemLabel(item) ? <p className="mt-1 text-[10px] uppercase tracking-widest text-[#8C7A6B]">{getItemLabel(item)}</p> : null}
