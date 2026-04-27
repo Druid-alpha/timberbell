@@ -2,6 +2,7 @@
 
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
+import { DELIVERY_ZONES } from '@/lib/constants/shipping'
 
 export default function ShippingPage() {
   return (
@@ -17,7 +18,7 @@ export default function ShippingPage() {
 
       <div className="space-y-12 text-[#6B594A]">
         <section className="space-y-4">
-          <h2 className="font-display text-2xl text-[#2B2119]">Standard Delivery Service</h2>
+          <h2 className="font-display text-2xl text-[#2B2119]">Standard And Priority Dispatch</h2>
           <p className="leading-relaxed">
             Our delivery service is built around secure transport, careful handling, and clear delivery coordination
             across Nigeria.
@@ -25,22 +26,22 @@ export default function ShippingPage() {
         </section>
 
         <section className="grid gap-8 sm:grid-cols-2">
-          <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8">
-            <h3 className="font-bold uppercase tracking-widest text-[#2B2119] text-[10px] mb-3">Lagos</h3>
-            <p className="text-sm">3-5 business days from dispatch</p>
-            <p className="mt-2 text-xs opacity-80">Fastest delivery window</p>
-          </div>
-          <div className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8">
-            <h3 className="font-bold uppercase tracking-widest text-[#2B2119] text-[10px] mb-3">Abuja / Port Harcourt</h3>
-            <p className="text-sm">5-9 business days from dispatch</p>
-            <p className="mt-2 text-xs opacity-80">Regional delivery pricing applies</p>
-          </div>
+          {DELIVERY_ZONES.map((zone) => (
+            <div key={zone.id} className="rounded-3xl border border-[#E6D9C8] bg-[#F4EEE4] p-8">
+              <h3 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[#2B2119]">{zone.label}</h3>
+              <p className="text-sm">Standard: {zone.standardEta}</p>
+              <p className="mt-2 text-sm">Priority: {zone.priorityEta}</p>
+              <p className="mt-3 text-xs opacity-80">
+                Standard fee starts at ₦{zone.standardFee.toLocaleString()} • Priority starts at ₦{zone.priorityFee.toLocaleString()}
+              </p>
+            </div>
+          ))}
         </section>
 
-        <section className="rounded-[40px] border border-[#E6D9C8] p-10 space-y-4">
+        <section className="space-y-4 rounded-[40px] border border-[#E6D9C8] p-10">
           <h2 className="font-display text-2xl text-[#2B2119]">Preparation</h2>
           <p className="leading-relaxed">
-            Before delivery, please ensure the pathway to the final destination is clear and that 
+            Before delivery, please ensure the pathway to the final destination is clear and that
             the space is roughly ready for your new piece. Our logistics team will coordinate the final handoff with you.
           </p>
         </section>

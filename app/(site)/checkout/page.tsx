@@ -7,7 +7,7 @@ import Breadcrumb from '@/app/_components/Breadcrumb'
 import StateCard from '@/app/_components/StateCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
-import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
+import { NIGERIA_STATES, getDeliveryQuote, type DeliveryMethod } from '@/lib/constants/shipping'
 
 const CHECKOUT_DETAILS_KEY = 'timberbell_checkout_details'
 
@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState('')
   const [step, setStep] = useState(1)
   const [emailVerified, setEmailVerified] = useState(true)
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('standard')
 
   const [form, setForm] = useState({
     firstName: '',
@@ -24,6 +25,7 @@ export default function CheckoutPage() {
     email: '',
     address: '',
     city: '',
+    state: '',
     postal: '',
     notes: '',
   })
@@ -33,6 +35,9 @@ export default function CheckoutPage() {
     if (savedForm) {
       const parsed = JSON.parse(savedForm)
       setForm((current) => ({ ...current, ...parsed }))
+      if (parsed.deliveryMethod === 'priority') {
+        setDeliveryMethod('priority')
+      }
     }
 
     let active = true
@@ -65,21 +70,17 @@ export default function CheckoutPage() {
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(CHECKOUT_DETAILS_KEY, JSON.stringify(form))
-  }, [form])
+    localStorage.setItem(CHECKOUT_DETAILS_KEY, JSON.stringify({ ...form, deliveryMethod }))
+  }, [form, deliveryMethod])
 
   const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
-  const getCheckoutUnitPrice = (item: any) => {
-    return item.product?.finalPrice ?? item.price ?? item.selectedVariant?.price ?? item.product?.price ?? 0
-  }
+  const getCheckoutUnitPrice = (item: any) => item.product?.finalPrice ?? item.price ?? item.selectedVariant?.price ?? item.product?.price ?? 0
   const getCheckoutImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
   const getCheckoutLabel = (item: any) => item.variantName || item.selectedVariant?.name || null
   const getCheckoutColor = (item: any) => item.color || item.selectedVariant?.color || null
-  const subtotal = activeItems.reduce(
-    (sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity,
-    0
-  )
-  const delivery = subtotal > 0 ? STANDARD_DELIVERY_FEE : 0
+  const subtotal = activeItems.reduce((sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity, 0)
+  const deliveryQuote = getDeliveryQuote({ state: form.state, city: form.city, method: deliveryMethod })
+  const delivery = subtotal > 0 ? deliveryQuote.fee : 0
   const total = subtotal + delivery
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -101,7 +102,13 @@ export default function CheckoutPage() {
         email: form.email,
         address: form.address,
         city: form.city,
+        state: form.state,
         postal: form.postal,
+      },
+      delivery: {
+        method: deliveryMethod,
+        state: form.state,
+        city: form.city,
       },
       notes: form.notes,
     }
@@ -156,18 +163,6 @@ export default function CheckoutPage() {
               title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select delivery plan' : 'Final Order Review'}
               description="Every Timberbell order uses Nigeria delivery logistics, with Paystack used for a secure payment flow."
             />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Bundle', value: String(activeItems.length) },
-                { label: 'Delivery', value: formatMoney(delivery) },
-                { label: 'Total', value: formatMoney(total) },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -230,19 +225,33 @@ export default function CheckoutPage() {
                   />
                   <div className="grid gap-4 sm:grid-cols-2">
                     <input
-                      placeholder="City"
+                      placeholder="City / LGA"
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.city}
                       onChange={(e) => setForm({ ...form, city: e.target.value })}
                       required
                     />
-                    <input
-                      placeholder="Postal code"
+                    <select
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
-                      value={form.postal}
-                      onChange={(e) => setForm({ ...form, postal: e.target.value })}
+                      value={form.state}
+                      onChange={(e) => setForm({ ...form, state: e.target.value })}
                       required
-                    />
+                    >
+                      <option value="">Select state</option>
+                      {NIGERIA_STATES.map((state) => (
+                        <option key={state} value={state}>{state}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <input
+                    placeholder="Postal code"
+                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
+                    value={form.postal}
+                    onChange={(e) => setForm({ ...form, postal: e.target.value })}
+                    required
+                  />
+                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/80 px-5 py-4 text-sm text-[#6B594A]">
+                    Delivery zone: <span className="font-semibold text-[#2B2119]">{deliveryQuote.zone.label}</span> • Standard ETA {deliveryQuote.zone.standardEta}
                   </div>
                 </motion.div>
               )}
@@ -255,23 +264,34 @@ export default function CheckoutPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <div className="rounded-3xl border-2 border-[#7C4E2F] bg-white p-6 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod('standard')}
+                    className={`w-full rounded-3xl border bg-white p-6 text-left shadow-sm transition ${deliveryMethod === 'standard' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
+                  >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="font-bold text-[#2B2119]">Standard Delivery</p>
-                        <p className="text-xs text-[#8C7A6B]">Secure nationwide logistics across Nigeria.</p>
+                        <p className="text-xs text-[#8C7A6B]">{deliveryQuote.zone.label} • {deliveryQuote.zone.standardEta}</p>
                       </div>
-                      <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(delivery)}</div>
+                      <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(subtotal > 0 ? deliveryQuote.zone.standardFee : 0)}</div>
                     </div>
-                  </div>
-                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/60 p-6 opacity-75">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryMethod('priority')}
+                    className={`w-full rounded-3xl border bg-white p-6 text-left shadow-sm transition ${deliveryMethod === 'priority' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
+                  >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
                         <p className="font-bold text-[#2B2119]">Priority Dispatch</p>
-                        <p className="text-xs text-[#8C7A6B]">Not active yet. This is a placeholder for a faster delivery option we can enable later.</p>
+                        <p className="text-xs text-[#8C7A6B]">{deliveryQuote.zone.label} • {deliveryQuote.zone.priorityEta}</p>
                       </div>
-                      <div className="text-sm font-bold text-[#8C7A6B]">Coming Soon</div>
+                      <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(subtotal > 0 ? deliveryQuote.zone.priorityFee : 0)}</div>
                     </div>
+                  </button>
+                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/70 p-5 text-sm text-[#6B594A]">
+                    Priority dispatch now follows the selected Nigeria delivery zone, so the same logic can be reused across checkout, stored orders, and delivery pages.
                   </div>
                 </motion.div>
               )}
@@ -297,7 +317,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="border-t border-[#F4EEE4] pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Shipping Address</p>
-                      <p className="mt-1 text-sm font-medium">{form.address}, {form.city} {form.postal}</p>
+                      <p className="mt-1 text-sm font-medium">{form.address}, {form.city}, {form.state} {form.postal}</p>
+                    </div>
+                    <div className="border-t border-[#F4EEE4] pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Delivery Plan</p>
+                      <p className="mt-1 text-sm font-medium capitalize">{deliveryMethod} dispatch</p>
+                      <p className="text-xs text-[#8C7A6B]">{deliveryQuote.zone.label} • {deliveryQuote.eta}</p>
                     </div>
                   </div>
                   <textarea
@@ -337,6 +362,11 @@ export default function CheckoutPage() {
             <div className="mb-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Order Detail</div>
             {activeItems.length ? (
               <div className="space-y-6">
+                <div className="rounded-[24px] border border-[#E8DCCB] bg-white/80 p-4 text-xs text-[#6B594A]">
+                  <p className="font-bold uppercase tracking-[0.2em] text-[#8C7A6B]">Delivery</p>
+                  <p className="mt-2 text-sm font-semibold capitalize text-[#2B2119]">{deliveryMethod} dispatch</p>
+                  <p className="mt-1">{deliveryQuote.zone.label} • {deliveryQuote.eta}</p>
+                </div>
                 <div className="custom-scrollbar max-h-60 space-y-4 overflow-y-auto pr-2">
                   {activeItems.map((item: any) => (
                     <div key={item.id} className="flex gap-4">
@@ -396,13 +426,13 @@ export default function CheckoutPage() {
                 Your payment is completed through Paystack after this review. Timberbell confirms the order once the payment provider returns success.
               </p>
             </div>
-              <div className="flex items-center gap-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
+            <div className="flex items-center gap-3">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Insured Nigeria Delivery</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Sustainable Packaging</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Priority Dispatch By Zone</p>
             </div>
             <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By confirming your order, you agree to our service terms. Paystack checkout is used for payment collection.</p>
           </div>

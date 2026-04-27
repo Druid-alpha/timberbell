@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     draft = await buildOrderDraft({
       userId: user.id,
       customer: body.customer,
+      delivery: body.delivery,
       notes: body.notes,
       couponCode: body.couponCode,
     })
@@ -64,6 +65,9 @@ export async function POST(request: NextRequest) {
     couponDiscountTotal: draft.couponDiscountTotal,
     discountTotal: draft.discountTotal,
     deliveryFee: draft.deliveryFee,
+    deliveryMethod: draft.deliveryMethod,
+    deliveryZone: draft.deliveryZone,
+    deliveryEta: draft.deliveryEta,
     couponCode: draft.coupon?.code || null,
     total: draft.total,
     status: 'pending',

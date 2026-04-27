@@ -212,29 +212,7 @@ export default function HomePageClient({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.12),transparent_28%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <SectionHeading
-              eyebrow="New Arrivals"
-              title="The Artisan Edit"
-              description="Hand-selected pieces that define our current seasonal tone."
-            />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Featured', value: String(featured.length) },
-                { label: 'Collections', value: String(categoryPreview.length) },
-                { label: 'Mood', value: 'Collected' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-10 grid gap-8 md:mt-12 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
@@ -283,7 +261,7 @@ export default function HomePageClient({
             <SectionHeading
               eyebrow="Continue Exploring"
               title="Return to pieces that already caught your eye"
-              description="Your recent views stay close so it is easier to compare, revisit, and keep shaping the room."
+              description="Your recent views stay close so it is easier to compare and revisit on the go."
             />
             <Link href="/productfilter" className="w-fit rounded-full border border-[#7C4E2F] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F] transition hover:bg-white">
               Browse all products

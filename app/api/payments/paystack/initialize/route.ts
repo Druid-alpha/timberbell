@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
         ...(body.customer || {}),
         email,
       },
+      delivery: body.delivery,
       notes: body.notes,
       couponCode: body.couponCode,
     })
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
     couponDiscountTotal: draft.couponDiscountTotal,
     discountTotal: draft.discountTotal,
     deliveryFee: draft.deliveryFee,
+    deliveryMethod: draft.deliveryMethod,
+    deliveryZone: draft.deliveryZone,
+    deliveryEta: draft.deliveryEta,
     couponCode: draft.coupon?.code || null,
     total: draft.total,
     status: 'pending_payment',

@@ -5,11 +5,16 @@ import { getDb } from '@/lib/db'
 import { getCartByUserId, clearActiveCartItems } from '@/lib/services/cart'
 import { computeFinalPrice } from '@/lib/utils/pricing'
 import { getOrderProgressFromStatus } from '@/lib/orderTracking'
-import { STANDARD_DELIVERY_FEE } from '@/lib/constants/shipping'
+import { getDeliveryQuote, type DeliveryMethod } from '@/lib/constants/shipping'
 
 type CheckoutInput = {
   userId: string
   customer?: unknown
+  delivery?: {
+    method?: DeliveryMethod
+    state?: string
+    city?: string
+  }
   notes?: string
   couponCode?: string
 }
@@ -136,7 +141,13 @@ export async function buildOrderDraft(input: CheckoutInput) {
   }
 
   const discountTotal = catalogDiscountTotal + couponDiscountTotal
-  const deliveryFee = subtotal > 0 ? STANDARD_DELIVERY_FEE : 0
+  const customerRecord = input.customer && typeof input.customer === 'object' ? (input.customer as Record<string, unknown>) : null
+  const deliveryQuote = getDeliveryQuote({
+    method: input.delivery?.method,
+    state: input.delivery?.state ?? String(customerRecord?.state || ''),
+    city: input.delivery?.city ?? String(customerRecord?.city || ''),
+  })
+  const deliveryFee = subtotal > 0 ? deliveryQuote.fee : 0
   const total = Math.max(0, subtotal - discountTotal) + deliveryFee
 
   return {
@@ -148,6 +159,9 @@ export async function buildOrderDraft(input: CheckoutInput) {
     couponDiscountTotal,
     discountTotal,
     deliveryFee,
+    deliveryMethod: deliveryQuote.method,
+    deliveryZone: deliveryQuote.zone,
+    deliveryEta: deliveryQuote.eta,
     total,
     customer: input.customer ?? null,
     notes: input.notes ?? '',

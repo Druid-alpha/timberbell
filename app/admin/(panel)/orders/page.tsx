@@ -37,6 +37,11 @@ type Order = {
   trackingUpdatedAt?: string
   trackingNote?: string
   notes?: string
+  deliveryMethod?: string
+  deliveryEta?: string
+  deliveryZone?: {
+    label?: string
+  }
   customer: {
     name: string
     email: string
@@ -499,6 +504,17 @@ export default function AdminOrdersPage() {
                         <div className="mt-6 rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3">
                           <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">Delivery Note</p>
                           <p className="mt-2 text-sm text-[#6B594A]">{selected.notes}</p>
+                        </div>
+                      ) : null}
+
+                      {selected.deliveryMethod || selected.deliveryZone?.label ? (
+                        <div className="mt-6 rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#8C7A6B]">Delivery Plan</p>
+                          <p className="mt-2 text-sm capitalize text-[#6B594A]">
+                            {selected.deliveryMethod || 'standard'} dispatch
+                            {selected.deliveryZone?.label ? ` • ${selected.deliveryZone.label}` : ''}
+                          </p>
+                          {selected.deliveryEta ? <p className="mt-1 text-xs text-[#8C7A6B]">ETA: {selected.deliveryEta}</p> : null}
                         </div>
                       ) : null}
                     </div>

@@ -279,20 +279,8 @@ export default function ProductDetailClient({
             <SectionHeading
               eyebrow="Timberbell Furniture"
               title={selectedTitle}
-              description="Refined proportions, composed materials, and a warmer point of view for rooms that need both function and presence."
+              description={product.description}
             />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Price', value: formatMoney(price) },
-                { label: 'Materiality', value: displayMaterials.split(',')[0] || 'Natural finish' },
-                { label: 'Status', value: displayStockStatus === 'preorder' ? 'Preorder' : availableStock > 0 ? 'In Stock' : 'Sold Out' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[26px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -325,14 +313,10 @@ export default function ProductDetailClient({
               ))}
             </div>
             <div className="grid gap-4 md:grid-cols-3">
-              {[
-                { title: 'Crafted Presence', text: 'A room-defining silhouette chosen for calm, tactile interiors.' },
-                { title: 'Layered Finish', text: `Selected in ${selectedColorName.toLowerCase()} tones with ${displayFinishes.toLowerCase()}.` },
-                { title: 'Daily Living', text: 'Balanced for comfort, durability, and a more collected home atmosphere.' },
-              ].map((item) => (
-                <div key={item.title} className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">{item.title}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">{item.text}</p>
+              {detailCards.slice(0, 3).map((item) => (
+                <div key={item.label} className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">{item.label}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -358,10 +342,11 @@ export default function ProductDetailClient({
             <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
               <p className="text-sm leading-7 text-[#6B594A]">{product.description}</p>
               <div className="rounded-[28px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7f0e6)] p-5">
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Design Note</p>
-                <p className="mt-3 text-sm leading-7 text-[#6B594A]">
-                  This piece works best in rooms that need one confident anchor rather than many competing forms. Pair it with quieter textures and softer lighting.
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Selection</p>
+                <div className="mt-3 space-y-2 text-sm leading-7 text-[#6B594A]">
+                  <p>Color: {selectedColorName}</p>
+                  <p>Availability: {displayStockStatus === 'preorder' ? 'Available for preorder' : availableStock > 0 ? 'Ready to order' : 'Currently unavailable'}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -438,7 +423,7 @@ export default function ProductDetailClient({
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-            {detailCards.map((item) => (
+            {detailCards.slice(3).map((item) => (
               <div key={item.label} className="rounded-[30px] border border-[#E6D9C8] bg-white/80 p-6 shadow-sm">
                 <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
                 <p className="mt-3 text-sm leading-7 text-[#2B2119]">{item.value}</p>

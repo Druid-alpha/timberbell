@@ -264,18 +264,6 @@ export default function CartPage() {
               title="Your Curated Bundle"
               description="Pieces currently held in your session for review, editing, and checkout."
             />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Active Pieces', value: String(activeItems.length) },
-                { label: 'Saved', value: String(savedItems.length) },
-                { label: 'Current Total', value: formatMoney(total) },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>

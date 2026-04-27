@@ -58,11 +58,12 @@ export default function LuxuryLoader({
             transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
           />
           <motion.div
-            aria-hidden="true"
-            className="h-10 w-10 rounded-full bg-[#2B2119]"
-            animate={{ scale: [0.9, 1.08, 0.9], boxShadow: ['0 0 0 rgba(43,33,25,0.08)', '0 0 36px rgba(124,78,47,0.18)', '0 0 0 rgba(43,33,25,0.08)'] }}
+            className="relative flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-[0_16px_30px_-18px_rgba(43,33,25,0.55)]"
+            animate={{ scale: [0.94, 1.05, 0.94], boxShadow: ['0 0 0 rgba(43,33,25,0.08)', '0 0 36px rgba(124,78,47,0.18)', '0 0 0 rgba(43,33,25,0.08)'] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          >
+            <img src="/brand.svg" alt="Timberbell" className="h-7 w-7" />
+          </motion.div>
         </div>
 
         <div className="space-y-2">
