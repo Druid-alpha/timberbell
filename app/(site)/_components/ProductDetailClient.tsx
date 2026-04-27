@@ -324,38 +324,20 @@ export default function ProductDetailClient({
         </div>
 
         <div className="min-w-0 space-y-8 arkwood-stagger">
-          <div className="space-y-5 rounded-[36px] border border-[#E6D9C8] bg-white/80 p-7 shadow-[0_24px_70px_-60px_rgba(55,32,15,0.7)] sm:p-8">
-            <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-[#F9F4EC] px-4 py-2 shadow-sm">
-                <div className="flex shrink-0">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
-                <span className="shrink-0 text-xs font-semibold text-[#2B2119]">{ratingLabel}</span>
-                <span className="text-xs uppercase tracking-[0.12em] text-[#8C7A6B]">{reviews.length} reviews</span>
-              </div>
-              <WishlistButton productId={product.id} />
-            </div>
-
-            <div className="flex min-w-0 flex-wrap items-baseline gap-3">
-              <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
-              {variantBasePrice > variantDisplayPrice ? <span className="min-w-0 break-words text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span> : null}
-            </div>
-
-            <div className="rounded-[28px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7f0e6)] p-5">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Selection</p>
-              <p className="mt-3 text-sm leading-7 text-[#6B594A]">
-                {displayStockStatus === 'preorder' ? 'Available for preorder.' : availableStock > 0 ? 'Ready to order.' : 'Currently unavailable.'}
-              </p>
-            </div>
-          </div>
-
           <div className="space-y-6 rounded-[36px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#ffffff)] p-8 shadow-[0_24px_70px_-60px_rgba(55,32,15,0.6)]">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Configuration</p>
-                <h3 className="mt-2 font-display text-3xl text-[#2B2119]">Compose Your Selection</h3>
+              <div className="space-y-4">
+                <div className="flex min-w-0 flex-wrap items-center gap-3 rounded-full border border-[#E6D9C8] bg-[#F9F4EC] px-4 py-2 shadow-sm">
+                  <div className="flex shrink-0">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
+                  <span className="shrink-0 text-xs font-semibold text-[#2B2119]">{ratingLabel}</span>
+                  <span className="text-xs uppercase tracking-[0.12em] text-[#8C7A6B]">{reviews.length} reviews</span>
+                </div>
+                <div className="flex min-w-0 flex-wrap items-baseline gap-3">
+                  <span className="font-display text-4xl text-[#7C4E2F]">{formatMoney(price)}</span>
+                  {variantBasePrice > variantDisplayPrice ? <span className="min-w-0 break-words text-lg text-[#8C7A6B] line-through">{formatMoney(variantBasePrice)}</span> : null}
+                </div>
               </div>
-              <div className="rounded-full bg-white px-4 py-2 text-[10px] uppercase tracking-[0.24em] text-[#7C4E2F] shadow-sm">
-                {selectedColorName} finish
-              </div>
+              <WishlistButton productId={product.id} />
             </div>
 
             {product.variants?.length > 0 && (
@@ -384,7 +366,12 @@ export default function ProductDetailClient({
 
             {!product.variants?.length && paletteChoices.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Available colors</p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Color</p>
+                  <span className="rounded-full bg-white px-4 py-2 text-[10px] uppercase tracking-[0.18em] text-[#7C4E2F] shadow-sm">
+                    {selectedColorName}
+                  </span>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   {paletteChoices.map((color: string) => {
                     const isActive = selectedColorHex === color
@@ -411,7 +398,7 @@ export default function ProductDetailClient({
               <div className="flex flex-col gap-3 px-2">
                 <div className="flex items-center gap-2 text-[10px] text-[#6B594A]">
                   <div className={`h-1.5 w-1.5 rounded-full ${(availableStock > 5 || displayStockStatus === 'preorder') ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
-                  {displayStockStatus === 'preorder' ? 'Available for preorder' : availableStock > 5 ? 'In stock and ready to ship' : `Only ${availableStock} left - items in cart are reserved for 10 min`}
+                  {displayStockStatus === 'preorder' ? 'Available for preorder' : availableStock > 5 ? 'In stock' : `Only ${availableStock} left`}
                 </div>
               </div>
             </div>

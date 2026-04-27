@@ -493,12 +493,6 @@ export default function CartPage() {
                 Verify your email before checkout. <Link href="/verify" className="font-semibold underline">Verify now</Link>
               </div>
             ) : null}
-            <div className="mb-5 rounded-[28px] border border-[#E8DCCB] bg-white/80 p-5">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">Studio Note</p>
-              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
-                Your current selection is arranged as a working room bundle. You can still swap finishes, adjust quantities, or save pieces before checkout.
-              </p>
-            </div>
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span>Subtotal</span>

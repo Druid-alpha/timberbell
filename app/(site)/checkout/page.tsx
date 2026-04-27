@@ -73,15 +73,11 @@ export default function CheckoutPage() {
     localStorage.setItem(CHECKOUT_DETAILS_KEY, JSON.stringify({ ...form, deliveryMethod }))
   }, [form, deliveryMethod])
 
-  const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
   const getCheckoutUnitPrice = (item: any) => item.product?.finalPrice ?? item.price ?? item.selectedVariant?.price ?? item.product?.price ?? 0
-  const getCheckoutImage = (item: any) => item.selectedVariant?.image?.url || item.product?.images?.[0]?.url || ''
-  const getCheckoutLabel = (item: any) => item.variantName || item.selectedVariant?.name || null
-  const getCheckoutColor = (item: any) => item.color || item.selectedVariant?.color || null
+  const activeItems = cart?.items?.filter((item: any) => !item.saved) ?? []
   const subtotal = activeItems.reduce((sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity, 0)
   const deliveryQuote = getDeliveryQuote({ state: form.state, city: form.city, method: deliveryMethod })
   const delivery = subtotal > 0 ? deliveryQuote.fee : 0
-  const total = subtotal + delivery
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -178,12 +174,6 @@ export default function CheckoutPage() {
           ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-5 shadow-[0_24px_60px_-48px_rgba(55,32,15,0.45)] sm:p-8">
-            <div className="rounded-[28px] border border-[#E8DCCB] bg-white/80 p-5">
-              <p className="text-[10px] uppercase tracking-[0.28em] text-[#8C7A6B]">Checkout Note</p>
-              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
-                We use a guided three-step flow so your delivery details, logistics, and order review stay clear before payment.
-              </p>
-            </div>
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div
@@ -290,9 +280,6 @@ export default function CheckoutPage() {
                       <div className="text-sm font-bold text-[#7C4E2F]">{formatMoney(subtotal > 0 ? deliveryQuote.zone.priorityFee : 0)}</div>
                     </div>
                   </button>
-                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/70 p-5 text-sm text-[#6B594A]">
-                    Standard delivery is ₦3,000. Priority dispatch is ₦5,000.
-                  </div>
                 </motion.div>
               )}
 
@@ -358,79 +345,16 @@ export default function CheckoutPage() {
         </div>
 
         <div className="space-y-6 lg:sticky lg:top-28">
-          <div className="rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-6 text-sm text-[#6B594A] shadow-[0_24px_60px_-50px_rgba(55,32,15,0.45)] sm:p-8">
-            <div className="mb-6 text-[10px] font-bold uppercase tracking-[0.3em] text-[#8C7A6B]">Order Detail</div>
-            {activeItems.length ? (
-              <div className="space-y-6">
-                <div className="custom-scrollbar max-h-60 space-y-4 overflow-y-auto pr-2">
-                  {activeItems.map((item: any) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[#E6D9C8] bg-white">
-                        <img src={getCheckoutImage(item)} alt="" className="h-full w-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="line-clamp-1 font-bold leading-tight text-[#2B2119]">{item.product?.name}</p>
-                        {getCheckoutLabel(item) ? (
-                          <p className="mt-0.5 text-[10px] uppercase tracking-widest text-[#7C4E2F]">
-                            {getCheckoutLabel(item)}
-                          </p>
-                        ) : null}
-                        {getCheckoutColor(item) ? (
-                          <div className="mt-1 inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-[#8C7A6B]">
-                            <span className="h-2.5 w-2.5 rounded-full border border-black/10" style={{ backgroundColor: getCheckoutColor(item) }} />
-                            Selected Color
-                          </div>
-                        ) : null}
-                        <p className="text-[10px] text-[#8C7A6B]">Qty: {item.quantity}</p>
-                      </div>
-                      <p className="font-bold text-[#2B2119]">{formatMoney(getCheckoutUnitPrice(item) * item.quantity)}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="space-y-3 border-t border-[#E6D9C8] pt-6">
-                  <div className="flex justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Subtotal</span>
-                    <span className="font-bold text-[#2B2119]">{formatMoney(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Delivery</span>
-                    <span className="font-bold text-[#2B2119]">{formatMoney(delivery)}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-[#E6D9C8] pt-3 font-display text-lg text-[#7C4E2F]">
-                    <span>Total</span>
-                    <span>{formatMoney(total)}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <StateCard
-                eyebrow="Checkout"
-                title="There are no active pieces to review"
-                description="Add products to your bundle before returning here to complete delivery details and payment."
-                actionHref="/productfilter"
-                actionLabel="Browse products"
-                compact
-              />
-            )}
-          </div>
-
-          <div className="space-y-4 rounded-[40px] border border-[#E6D9C8] bg-white/70 p-6 shadow-sm sm:p-8">
-            <div className="rounded-[24px] border border-[#E8DCCB] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Payment Confidence</p>
-              <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
-                Your payment is completed through Paystack after this review. Timberbell confirms the order once the payment provider returns success.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Insured Nigeria Delivery</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2A3320] text-[10px] font-bold text-white">OK</div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Priority Dispatch By Zone</p>
-            </div>
-            <p className="text-[10px] leading-relaxed text-[#8C7A6B]">By confirming your order, you agree to our service terms. Paystack checkout is used for payment collection.</p>
-          </div>
+          {!activeItems.length ? (
+            <StateCard
+              eyebrow="Checkout"
+              title="There are no active pieces to review"
+              description="Add products to your bundle before returning here to complete delivery details and payment."
+              actionHref="/productfilter"
+              actionLabel="Browse products"
+              compact
+            />
+          ) : null}
         </div>
       </div>
     </div>
