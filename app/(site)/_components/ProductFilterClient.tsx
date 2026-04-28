@@ -51,6 +51,23 @@ export default function ProductFilterClient({
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
+  useEffect(() => {
+    const syncToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+
+    syncToTop()
+    const frame = window.requestAnimationFrame(syncToTop)
+    const timer = window.setTimeout(syncToTop, 120)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+    }
+  }, [])
+
   const priceCeiling = useMemo(() => {
     const highest = Number(facets.priceRange.max || 0)
     if (!highest) return FALLBACK_MAX_PRICE
