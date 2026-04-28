@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import SectionHeading from '@/app/_components/SectionHeading'
-import Breadcrumb from '@/app/_components/Breadcrumb'
 import StateCard from '@/app/_components/StateCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
@@ -159,20 +157,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
-      <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.16),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
-        <div className="flex flex-col gap-6">
-          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <SectionHeading
-              eyebrow={`Step ${step} of 3`}
-              title={step === 1 ? 'Where should we deliver?' : step === 2 ? 'Select delivery plan' : 'Final Order Review'}
-              description="Every Timberbell order uses Nigeria delivery logistics, with Paystack used for a secure payment flow."
-            />
-          </div>
-        </div>
-      </section>
-
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16">
       <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
         <div className="space-y-6">
           <StepIndicator current={step} />

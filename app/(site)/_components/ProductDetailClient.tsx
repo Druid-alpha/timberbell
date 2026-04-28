@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import SectionHeading from '@/app/_components/SectionHeading'
 import { formatMoney } from '@/lib/utils/format'
 import WishlistButton from '@/app/_components/WishlistButton'
 import { useAppDispatch } from '@/lib/redux/hooks'
@@ -261,29 +260,17 @@ export default function ProductDetailClient({
     { label: 'Dimensions', value: product.dimensions && product.dimensions !== 'TBD' ? product.dimensions : 'Made to fit refined everyday spaces' },
     { label: 'Materials', value: displayMaterials },
     { label: 'Finishes', value: displayFinishes },
-    { label: 'Availability', value: displayStockStatus === 'preorder' ? 'Available for preorder' : availableStock > 0 ? 'Ready to order' : 'Currently unavailable' },
   ]
 
   return (
     <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 py-16 sm:px-6">
-      <section className="overflow-hidden rounded-[44px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.18),transparent_28%),linear-gradient(135deg,#fffdf9,#f3ebdf)] px-6 py-8 shadow-[0_35px_90px_-70px_rgba(55,32,15,0.7)] sm:px-8 sm:py-10">
-        <div className="flex flex-col gap-6">
-          <Breadcrumb
-            items={[
-              { label: 'Home', href: '/' },
-              { label: (product.category ?? 'Collection').charAt(0).toUpperCase() + (product.category ?? 'Collection').slice(1), href: `/productfilter?category=${product.category}` },
-              { label: product.name },
-            ]}
-          />
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <SectionHeading
-              eyebrow="Timberbell Furniture"
-              title={selectedTitle}
-              description={product.description}
-            />
-          </div>
-        </div>
-      </section>
+      <Breadcrumb
+        items={[
+          { label: 'Home', href: '/' },
+          { label: (product.category ?? 'Collection').charAt(0).toUpperCase() + (product.category ?? 'Collection').slice(1), href: `/productfilter?category=${product.category}` },
+          { label: product.name },
+        ]}
+      />
 
       <div className="grid min-w-0 gap-10 xl:grid-cols-[1.08fr_0.92fr]">
         <div className="min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start">
@@ -403,15 +390,6 @@ export default function ProductDetailClient({
               </div>
             </div>
             {status && <p className="mt-2 text-center text-xs font-medium text-[#7C4E2F]">{status}</p>}
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            {detailCards.slice(3).map((item) => (
-              <div key={item.label} className="rounded-[30px] border border-[#E6D9C8] bg-white/80 p-6 shadow-sm">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                <p className="mt-3 text-sm leading-7 text-[#2B2119]">{item.value}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

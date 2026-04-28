@@ -2,8 +2,6 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import SectionHeading from '@/app/_components/SectionHeading'
-import Breadcrumb from '@/app/_components/Breadcrumb'
 import StateCard from '@/app/_components/StateCard'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { syncCart } from '@/lib/redux/cartSlice'
@@ -303,20 +301,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-12 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
-      <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.14),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
-        <div className="flex flex-col gap-6">
-          <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-            <SectionHeading
-              eyebrow="Shopping Cart"
-              title="Your Curated Bundle"
-              description="Review your selected pieces and continue to checkout."
-            />
-          </div>
-        </div>
-      </section>
-
+    <div className="mx-auto max-w-7xl overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
       <div className="grid min-w-0 gap-12 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="min-w-0 space-y-8">
           {activeItems.length > 0 && timeLeft > 0 && (

@@ -62,13 +62,13 @@ export default function SiteFooter() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6">
+        <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
           <p className="text-[10px] uppercase tracking-[0.32em] text-[#CBB9A2]">Visit The Atelier</p>
-          <h3 className="mt-3 font-display text-3xl text-white">Bring your project brief, room dimensions, and material questions.</h3>
-          <p className="mt-4 text-sm leading-relaxed text-[#E6D9C8]">
+          <h3 className="mt-2 font-display text-xl leading-snug text-white">Bring your project brief, room dimensions, and material questions.</h3>
+          <p className="mt-3 text-sm leading-relaxed text-[#E6D9C8]">
             Book a guided session for full-room direction, trade support, or one-on-one product sourcing.
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link href="/room-advisor" className="rounded-full bg-[#7C4E2F] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white transition hover:bg-[#6A3F24]">
               Start Room Advisor
             </Link>

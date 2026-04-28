@@ -117,9 +117,6 @@ export default function ProductCard({
               <div className="font-display text-xl text-[#2B2119]">{formatMoney(price)}</div>
             </div>
           </div>
-          <p className="line-clamp-2 text-sm leading-relaxed text-[#6B594A]">
-            {product.description}
-          </p>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               {visiblePalette.map((color, index) => (
@@ -247,9 +244,6 @@ export default function ProductCard({
               </Link>
             </h3>
           </div>
-          <p className="line-clamp-2 text-sm leading-relaxed text-[#6B594A]">
-            {product.description}
-          </p>
           <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">Price</p>
