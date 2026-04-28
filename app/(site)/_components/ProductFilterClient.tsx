@@ -273,7 +273,7 @@ export default function ProductFilterClient({
             </div>
           </div>
 
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-2 2xl:grid-cols-3' : 'grid-cols-1'}`}>
             {products.map((product) => (
               <ProductCard key={product.id} product={product} variant={viewMode} />
             ))}

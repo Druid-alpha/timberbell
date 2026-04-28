@@ -40,7 +40,7 @@ export default function RelatedProducts({ productId, category }: { productId: st
           <div className="h-4 w-32 animate-pulse rounded bg-[#E6D9C8]/40" />
           <div className="h-10 w-64 animate-pulse rounded bg-[#E6D9C8]/30" />
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-3">
               <div className="aspect-[4/5] animate-pulse rounded-[26px] bg-[#E6D9C8]/35" />
@@ -82,7 +82,7 @@ export default function RelatedProducts({ productId, category }: { productId: st
         </Link>
       </div>
 
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:gap-8 lg:grid-cols-4">
         {products.map((product, i) => (
           <motion.div
             key={product.id}

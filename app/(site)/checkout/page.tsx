@@ -8,6 +8,7 @@ import StateCard from '@/app/_components/StateCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { NIGERIA_STATES, getDeliveryQuote, type DeliveryMethod } from '@/lib/constants/shipping'
+import { getStateTowns, getTownAreas } from '@/lib/constants/nigeria-locations'
 
 const CHECKOUT_DETAILS_KEY = 'timberbell_checkout_details'
 
@@ -26,6 +27,7 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     state: '',
+    area: '',
     postal: '',
     notes: '',
   })
@@ -34,7 +36,11 @@ export default function CheckoutPage() {
     const savedForm = localStorage.getItem(CHECKOUT_DETAILS_KEY)
     if (savedForm) {
       const parsed = JSON.parse(savedForm)
-      setForm((current) => ({ ...current, ...parsed }))
+      setForm((current) => ({
+        ...current,
+        ...parsed,
+        area: parsed.area || '',
+      }))
       if (parsed.deliveryMethod === 'priority') {
         setDeliveryMethod('priority')
       }
@@ -78,6 +84,8 @@ export default function CheckoutPage() {
   const subtotal = activeItems.reduce((sum: number, item: any) => sum + getCheckoutUnitPrice(item) * item.quantity, 0)
   const deliveryQuote = getDeliveryQuote({ state: form.state, city: form.city, method: deliveryMethod })
   const delivery = subtotal > 0 ? deliveryQuote.fee : 0
+  const towns = getStateTowns(form.state)
+  const areas = getTownAreas(form.state, form.city)
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -99,12 +107,14 @@ export default function CheckoutPage() {
         address: form.address,
         city: form.city,
         state: form.state,
+        area: form.area,
         postal: form.postal,
       },
       delivery: {
         method: deliveryMethod,
         state: form.state,
         city: form.city,
+        area: form.area,
       },
       notes: form.notes,
     }
@@ -207,24 +217,17 @@ export default function CheckoutPage() {
                     required
                   />
                   <input
-                    placeholder="Delivery address"
+                    placeholder="Street address"
                     className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     required
                   />
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <input
-                      placeholder="City / LGA"
-                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
-                      value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value })}
-                      required
-                    />
                     <select
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.state}
-                      onChange={(e) => setForm({ ...form, state: e.target.value })}
+                      onChange={(e) => setForm({ ...form, state: e.target.value, city: '', area: '' })}
                       required
                     >
                       <option value="">Select state</option>
@@ -232,14 +235,40 @@ export default function CheckoutPage() {
                         <option key={state} value={state}>{state}</option>
                       ))}
                     </select>
+                    <select
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F] disabled:bg-[#F4EEE4] disabled:text-[#8C7A6B]"
+                      value={form.city}
+                      onChange={(e) => setForm({ ...form, city: e.target.value, area: '' })}
+                      disabled={!form.state}
+                      required
+                    >
+                      <option value="">{form.state ? 'Select town' : 'Select state first'}</option>
+                      {towns.map((town) => (
+                        <option key={town.name} value={town.name}>{town.name}</option>
+                      ))}
+                    </select>
                   </div>
-                  <input
-                    placeholder="Postal code"
-                    className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
-                    value={form.postal}
-                    onChange={(e) => setForm({ ...form, postal: e.target.value })}
-                    required
-                  />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <select
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F] disabled:bg-[#F4EEE4] disabled:text-[#8C7A6B]"
+                      value={form.area}
+                      onChange={(e) => setForm({ ...form, area: e.target.value })}
+                      disabled={!form.city}
+                      required
+                    >
+                      <option value="">{form.city ? 'Select area' : 'Select town first'}</option>
+                      {areas.map((area) => (
+                        <option key={area} value={area}>{area}</option>
+                      ))}
+                    </select>
+                    <input
+                      placeholder="Postal code"
+                      className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
+                      value={form.postal}
+                      onChange={(e) => setForm({ ...form, postal: e.target.value })}
+                      required
+                    />
+                  </div>
                   <div className="rounded-3xl border border-[#E6D9C8] bg-white/80 px-5 py-4 text-sm text-[#6B594A]">
                     Delivery zone: <span className="font-semibold text-[#2B2119]">{deliveryQuote.zone.label}</span> • ETA {deliveryQuote.zone.standardEta}
                   </div>
@@ -304,7 +333,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="border-t border-[#F4EEE4] pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Shipping Address</p>
-                      <p className="mt-1 text-sm font-medium">{form.address}, {form.city}, {form.state} {form.postal}</p>
+                      <p className="mt-1 text-sm font-medium">{form.address}, {form.area}, {form.city}, {form.state} {form.postal}</p>
                     </div>
                     <div className="border-t border-[#F4EEE4] pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Delivery Plan</p>

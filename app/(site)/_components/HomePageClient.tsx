@@ -183,7 +183,7 @@ export default function HomePageClient({
             View all categories
           </Link>
         </div>
-        <div className="mt-10 grid gap-6 md:mt-12 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid grid-cols-2 gap-4 md:mt-12 md:grid-cols-2 md:gap-6 xl:grid-cols-4">
           {categoryPreview.map((category) => (
             <Link
               key={category.id}
@@ -217,7 +217,7 @@ export default function HomePageClient({
       </section>
 
       <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-2 md:gap-8 xl:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

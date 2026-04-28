@@ -14,6 +14,7 @@ type CheckoutInput = {
     method?: DeliveryMethod
     state?: string
     city?: string
+    area?: string
   }
   notes?: string
   couponCode?: string
