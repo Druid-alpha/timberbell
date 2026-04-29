@@ -85,6 +85,10 @@ export default function HomePageClient({
       .slice(0, 4)
   }, [categories])
 
+  const handleFilterJump = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }
+
   return (
     <div className="space-y-20 pb-20 sm:space-y-24 sm:pb-24">
       <section className="px-0 pt-0">
@@ -138,8 +142,9 @@ export default function HomePageClient({
                   >
                     <Link
                       href="/productfilter"
+                      scroll
                       onPointerDown={() => { void armSharedAudio() }}
-                      onClick={() => { void armSharedAudio() }}
+                      onClick={() => { void armSharedAudio(); handleFilterJump() }}
                       className="inline-flex items-center justify-center rounded-full bg-[#F4EEE4] px-6 py-3.5 text-[10px] font-bold uppercase tracking-[0.22em] text-[#1B130D] shadow-[0_24px_60px_-30px_rgba(0,0,0,0.45)] transition-all hover:-translate-y-0.5 hover:bg-white sm:px-8 sm:py-4 sm:text-[10px] sm:tracking-[0.3em]"
                     >
                       Shop Collection
@@ -179,7 +184,7 @@ export default function HomePageClient({
             title="Shop with intention"
             description="Refined silhouettes curated for every corner of your sanctuary."
           />
-          <Link href="/productfilter" className="rounded-full border border-[#E6D9C8] bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F] shadow-sm transition hover:border-[#7C4E2F] hover:bg-white">
+          <Link href="/productfilter" scroll onClick={handleFilterJump} className="rounded-full border border-[#E6D9C8] bg-white/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F] shadow-sm transition hover:border-[#7C4E2F] hover:bg-white">
             View all categories
           </Link>
         </div>
@@ -188,8 +193,9 @@ export default function HomePageClient({
             <Link
               key={category.id}
               href={`/productfilter?category=${category.slug}`}
+              scroll
               onPointerDown={() => { void armSharedAudio() }}
-              onClick={() => { void armSharedAudio() }}
+              onClick={() => { void armSharedAudio(); handleFilterJump() }}
               className="group relative h-[18.5rem] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-6 shadow-[0_24px_60px_-46px_rgba(55,32,15,0.42)] transition-all hover:-translate-y-1 hover:shadow-[0_32px_70px_-42px_rgba(55,32,15,0.5)] sm:h-64 sm:rounded-[40px] sm:p-8"
             >
               <div
@@ -249,6 +255,8 @@ export default function HomePageClient({
                   <p className="max-w-sm text-sm leading-relaxed text-white/90">{banner.detail}</p>
                   <Link
                     href="/productfilter"
+                    scroll
+                    onClick={handleFilterJump}
                     className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2B2119] shadow-lg transition-all hover:shadow-xl"
                   >
                     View products
@@ -268,7 +276,7 @@ export default function HomePageClient({
               title="Return to pieces that already caught your eye"
               description="Your recent views stay close so it is easier to compare and revisit on the go."
             />
-            <Link href="/productfilter" className="w-fit rounded-full border border-[#7C4E2F] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F] transition hover:bg-white">
+            <Link href="/productfilter" scroll onClick={handleFilterJump} className="w-fit rounded-full border border-[#7C4E2F] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.24em] text-[#7C4E2F] transition hover:bg-white">
               Browse all products
             </Link>
           </div>

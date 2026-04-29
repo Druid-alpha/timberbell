@@ -113,6 +113,27 @@ export default function ProductDetailClient({
   }, [reviews])
 
   const ratingLabel = useMemo(() => `${averageRating.toFixed(1)} / 5`, [averageRating])
+  const ratingBreakdown = useMemo(
+    () => [5, 4, 3, 2, 1].map((value) => ({
+      value,
+      count: reviews.filter((review) => Math.round(review.rating || 0) === value).length,
+    })),
+    [reviews]
+  )
+  const ratingOptions = [
+    { value: 5, label: 'Outstanding', note: 'Exceeded expectation' },
+    { value: 4, label: 'Excellent', note: 'Strong quality and finish' },
+    { value: 3, label: 'Good', note: 'Solid with minor tradeoffs' },
+    { value: 2, label: 'Fair', note: 'Needs improvement' },
+    { value: 1, label: 'Poor', note: 'Did not meet expectation' },
+  ] as const
+  const ratingProfiles = {
+    5: { eyebrow: 'Collector Grade', title: 'Deeply worth recommending', accent: 'bg-[#2B2119] text-white', pill: 'border-[#2B2119] text-[#2B2119]' },
+    4: { eyebrow: 'Studio Favorite', title: 'Strong finish and presence', accent: 'bg-[#7C4E2F] text-white', pill: 'border-[#7C4E2F] text-[#7C4E2F]' },
+    3: { eyebrow: 'Balanced Pick', title: 'Good with a few tradeoffs', accent: 'bg-[#C8B39C] text-[#2B2119]', pill: 'border-[#C8B39C] text-[#6B594A]' },
+    2: { eyebrow: 'Needs Work', title: 'Below the expected standard', accent: 'bg-[#E7D5C3] text-[#7C4E2F]', pill: 'border-[#D7B594] text-[#7C4E2F]' },
+    1: { eyebrow: 'Missed The Mark', title: 'Did not deliver the experience', accent: 'bg-[#F0DDD4] text-[#8A3F23]', pill: 'border-[#D6A188] text-[#8A3F23]' },
+  } as const
   const stars = useMemo(() => {
     const safeRating = Math.round(averageRating * 2) / 2
     return Array.from({ length: 5 }).map((_, index) => {
@@ -255,6 +276,7 @@ export default function ProductDetailClient({
   const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
   const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
   const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
+  const featuredReviewTone = ratingProfiles[Math.max(1, Math.min(5, Math.round(averageRating || 0))) as keyof typeof ratingProfiles]
   const detailCards = [
     { label: 'Dimensions', value: product.dimensions && product.dimensions !== 'TBD' ? product.dimensions : 'Made to fit refined everyday spaces' },
     { label: 'Materials', value: displayMaterials },
@@ -394,31 +416,80 @@ export default function ProductDetailClient({
 
       <RelatedProducts productId={product.id} category={product.category} />
 
-      <section className="space-y-10 border-t border-[#E6D9C8] pt-16">
-        <div className="flex flex-col gap-4 rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 flex-wrap items-center gap-3">
-            <div className="flex shrink-0">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
-            <span className="text-sm font-semibold text-[#2B2119]">{ratingLabel}</span>
-            <span className="text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} reviews</span>
+      <section className="space-y-8 border-t border-[#E6D9C8] pt-16">
+        <div className="grid gap-5 rounded-[34px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_left,#fffdfa_0%,#f7efe4_50%,#efe4d4_100%)] p-5 shadow-[0_26px_80px_-60px_rgba(55,32,15,0.45)] lg:grid-cols-[1.05fr_0.95fr_auto] lg:items-center">
+          <div className="rounded-[28px] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Experience index</p>
+            <div className="mt-4 flex items-end gap-4">
+              <span className="font-display text-5xl leading-none text-[#2B2119]">{averageRating ? averageRating.toFixed(1) : '0.0'}</span>
+              <div className="pb-1">
+                <div className="flex">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
+                <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} collected notes</p>
+              </div>
+            </div>
+            <div className={`mt-5 inline-flex rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] ${featuredReviewTone.pill}`}>
+              {featuredReviewTone.eyebrow}
+            </div>
+          </div>
+          <div className="space-y-3">
+            {ratingBreakdown.map((item) => {
+              const percentage = reviews.length ? (item.count / reviews.length) * 100 : 0
+              const profile = ratingProfiles[item.value as keyof typeof ratingProfiles]
+              return (
+                <div key={item.value} className="rounded-[22px] border border-[#E6D9C8] bg-white/80 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3 text-[11px]">
+                    <span className="font-semibold uppercase tracking-[0.16em] text-[#2B2119]">{profile.eyebrow}</span>
+                    <span className="text-[#8C7A6B]">{item.count}</span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-[#E8DCCB]">
+                    <div className="h-full rounded-full bg-[#7C4E2F]" style={{ width: `${percentage}%` }} />
+                  </div>
+                </div>
+              )
+            })}
           </div>
           <button onClick={() => { if (myReview) { setEditingReviewId(myReview.id); setNewReview({ rating: myReview.rating, message: myReview.message }) } else { setEditingReviewId(null); setNewReview({ rating: 5, message: '' }) } setIsAddingReview(!isAddingReview) }} className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition-all shadow-sm hover:bg-[#7C4E2F] hover:text-white">
-            {isAddingReview ? 'Cancel' : myReview ? 'Edit your rating' : 'Rate this piece'}
+            {isAddingReview ? 'Cancel' : myReview ? 'Edit your review' : 'Write a review'}
           </button>
         </div>
 
         {isAddingReview && (
-          <form onSubmit={submitReview} className="space-y-6 rounded-[32px] border-2 border-[#7C4E2F]/10 bg-[#F4EEE4] p-8 shadow-inner arkwood-reveal">
+          <form onSubmit={submitReview} className="space-y-6 rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(135deg,#f6eee4_0%,#fffdf9_55%,#efe2d1_100%)] p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] arkwood-reveal">
             <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Experience rating</label>
-              <div className="flex gap-3">
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <button key={num} type="button" onClick={() => setNewReview({ ...newReview, rating: num })} className={`transition-transform hover:scale-125 ${newReview.rating >= num ? 'text-[#7C4E2F]' : 'text-[#D8C7B3]'}`}>
-                    <StarIcon variant={newReview.rating >= num ? 'full' : 'empty'} size="lg" />
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Design verdict</label>
+                  <p className="mt-2 text-sm text-[#6B594A]">Choose the statement that best matches the full experience, not just the finish.</p>
+                </div>
+                <div className={`rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] ${ratingProfiles[newReview.rating as keyof typeof ratingProfiles].accent}`}>
+                  {ratingProfiles[newReview.rating as keyof typeof ratingProfiles].title}
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                {ratingOptions.map((option) => {
+                  const active = newReview.rating === option.value
+                  const profile = ratingProfiles[option.value as keyof typeof ratingProfiles]
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setNewReview({ ...newReview, rating: option.value })}
+                      className={`rounded-[24px] border px-4 py-4 text-left transition-all ${active ? 'border-[#7C4E2F] bg-white shadow-[0_20px_40px_-32px_rgba(55,32,15,0.55)]' : 'border-[#E6D9C8] bg-white/70 hover:border-[#7C4E2F]'}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8C7A6B]">{profile.eyebrow}</p>
+                          <span className="mt-2 block text-sm font-semibold text-[#2B2119]">{option.label}</span>
+                        </div>
+                        <span className="flex">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={option.value > idx ? 'full' : 'empty'} />)}</span>
+                      </div>
+                      <p className="mt-2 text-xs text-[#8C7A6B]">{option.note}</p>
+                    </button>
+                  )
+                })}
               </div>
             </div>
-            <textarea placeholder="Share your thoughts on the texture, comfort, or how it sits in your space..." value={newReview.message} onChange={(e) => setNewReview({ ...newReview, message: e.target.value })} className="h-32 w-full rounded-2xl border border-[#E6D9C8] bg-white p-5 text-sm ring-inset transition-all focus:outline-none focus:ring-2 focus:ring-[#7C4E2F]" required />
+            <textarea placeholder="What stood out about the quality, comfort, finish, delivery, or fit in your space?" value={newReview.message} onChange={(e) => setNewReview({ ...newReview, message: e.target.value })} className="h-32 w-full rounded-2xl border border-[#E6D9C8] bg-white p-5 text-sm ring-inset transition-all focus:outline-none focus:ring-2 focus:ring-[#7C4E2F]" required />
             <button type="submit" className="rounded-full bg-[#7C4E2F] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_-10px_rgba(124,78,47,0.5)] transition-all active:scale-[0.97] hover:shadow-lg">
               {editingReviewId ? 'Update review' : 'Submit review'}
             </button>
@@ -427,15 +498,20 @@ export default function ProductDetailClient({
 
         <div className="grid gap-4">
           {reviews.length > 0 ? reviews.map((review, i) => (
-            <div key={review.id || i} className="space-y-4 rounded-[24px] border border-[#E6D9C8] bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
+            <div key={review.id || i} className="space-y-4 rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdfa,#ffffff)] p-5 shadow-[0_18px_50px_-40px_rgba(55,32,15,0.35)]">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />)}</div>
                   <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#8C7A6B]">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
+                <div className="flex items-center gap-3">
+                  <span className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${ratingProfiles[Math.max(1, Math.min(5, review.rating)) as keyof typeof ratingProfiles].pill}`}>
+                    {ratingProfiles[Math.max(1, Math.min(5, review.rating)) as keyof typeof ratingProfiles].eyebrow}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
+                </div>
               </div>
-              <p className="text-sm leading-relaxed text-[#2B2119]">{review.message}</p>
+              <p className="border-l-2 border-[#E6D9C8] pl-4 text-sm leading-relaxed text-[#2B2119]">{review.message}</p>
               {review.userId === currentUserId ? (
                 <div className="flex flex-wrap gap-4 border-t border-[#F4EEE4] pt-4">
                   <button type="button" onClick={() => { setEditingReviewId(review.id); setNewReview({ rating: review.rating, message: review.message }); setIsAddingReview(true) }} className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Edit</button>

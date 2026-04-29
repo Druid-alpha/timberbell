@@ -142,10 +142,10 @@ export default function CheckoutPage() {
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${current === s ? 'bg-[#7C4E2F] text-white' : current > s ? 'bg-[#2A3320] text-white' : 'bg-[#E6D9C8] text-[#8C7A6B]'}`}
           >
-            {current > s ? 'OK' : s}
+            {current > s ? 'OK' : <span className="h-2.5 w-2.5 rounded-full bg-current" aria-hidden="true" />}
           </div>
           <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${current === s ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}>
-            {s}
+            {`Step ${s}`}
           </span>
           {s < 3 ? <div className="hidden h-px w-8 bg-[#E6D9C8] sm:block" /> : null}
         </div>

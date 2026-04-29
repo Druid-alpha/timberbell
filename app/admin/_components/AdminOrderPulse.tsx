@@ -218,13 +218,25 @@ export default function AdminOrderPulse() {
   }, [])
 
   useEffect(() => {
+    function refreshSoundState() {
+      const context = audioContextRef.current ?? getSharedAudioContext()
+      audioContextRef.current = context
+      setSoundArmed(readSharedAudioArmed() && Boolean(context && context.state !== 'closed'))
+    }
+
+    window.addEventListener('focus', refreshSoundState)
+    document.addEventListener('visibilitychange', refreshSoundState)
+
     return () => {
-      const audioContext = audioContextRef.current
-      if (audioContext) {
-        void audioContext.close().catch(() => null)
-        audioContextRef.current = null
-        clearSharedAudioReference()
-      }
+      window.removeEventListener('focus', refreshSoundState)
+      document.removeEventListener('visibilitychange', refreshSoundState)
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      audioContextRef.current = null
+      clearSharedAudioReference()
     }
   }, [])
 

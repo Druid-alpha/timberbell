@@ -35,6 +35,22 @@ export async function armSharedAudio() {
     await context.resume().catch(() => null)
   }
 
+  if (context.state === 'running') {
+    try {
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      const now = context.currentTime
+      gain.gain.setValueAtTime(0.00001, now)
+      oscillator.frequency.setValueAtTime(880, now)
+      oscillator.connect(gain)
+      gain.connect(context.destination)
+      oscillator.start(now)
+      oscillator.stop(now + 0.01)
+    } catch {
+      // Some mobile browsers can reject warm-up nodes; resume success is still enough.
+    }
+  }
+
   const unlocked = context.state === 'running'
   if (unlocked && typeof window !== 'undefined') {
     window.localStorage.setItem(SHARED_AUDIO_KEY, 'true')

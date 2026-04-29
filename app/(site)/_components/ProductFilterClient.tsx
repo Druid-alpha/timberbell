@@ -52,6 +52,7 @@ export default function ProductFilterClient({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [pagingDirection, setPagingDirection] = useState<'prev' | 'next' | null>(null)
   const [isPending, startTransition] = useTransition()
+  const routeSignature = `${query}|${category}|${minPriceParam}|${maxPriceParam}|${colorsParam}|${materialsParam}|${sortParam}|${pageParam}`
 
   useEffect(() => {
     const syncToTop = () => {
@@ -68,7 +69,7 @@ export default function ProductFilterClient({
       window.cancelAnimationFrame(frame)
       window.clearTimeout(timer)
     }
-  }, [])
+  }, [routeSignature])
 
   const priceCeiling = useMemo(() => {
     const highest = Number(facets.priceRange.max || 0)
