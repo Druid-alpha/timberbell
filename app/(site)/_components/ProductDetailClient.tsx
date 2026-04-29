@@ -398,12 +398,19 @@ export default function ProductDetailClient({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <h2 className="font-display text-4xl text-[#2B2119]">Collector Reviews</h2>
-            <p className="text-sm text-[#6B594A]">A more refined read on comfort, finish, and presence in real spaces.</p>
+            <p className="max-w-2xl text-sm text-[#6B594A]">Ratings help buyers trust the piece faster. If you bought it, a quick score and honest note on comfort, finish, delivery, or styling makes this page far more useful.</p>
           </div>
           <button onClick={() => { if (myReview) { setEditingReviewId(myReview.id); setNewReview({ rating: myReview.rating, message: myReview.message }) } else { setEditingReviewId(null); setNewReview({ rating: 5, message: '' }) } setIsAddingReview(!isAddingReview) }} className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition-all shadow-sm hover:bg-[#7C4E2F] hover:text-white">
-            {isAddingReview ? 'Cancel' : myReview ? 'Edit your note' : 'Write a note'}
+            {isAddingReview ? 'Cancel' : myReview ? 'Edit your rating' : 'Rate this piece'}
           </button>
         </div>
+
+        {!myReview ? (
+          <div className="rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 text-sm text-[#6B594A] shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Why feedback matters</p>
+            <p className="mt-3 leading-relaxed">Your review helps confirm quality, shows how the piece performs in real homes, and gives the next buyer the confidence to choose well.</p>
+          </div>
+        ) : null}
 
         {isAddingReview && (
           <form onSubmit={submitReview} className="space-y-6 rounded-[32px] border-2 border-[#7C4E2F]/10 bg-[#F4EEE4] p-8 shadow-inner arkwood-reveal">

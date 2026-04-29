@@ -6,6 +6,41 @@ import { isAdminRequest } from '@/lib/admin'
 import { sendEmail } from '@/lib/email'
 import { refundStatusEmailTemplate } from '@/lib/emailTemplates'
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = getUserFromRequest(request)
+  const admin = isAdminRequest(request)
+
+  if (!user && !admin) {
+    return Response.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { id } = await params
+  if (!ObjectId.isValid(id)) {
+    return Response.json({ message: 'Invalid refund id' }, { status: 400 })
+  }
+
+  const db = await getDb()
+  const refund = await db.collection('refunds').findOne({ _id: new ObjectId(id) })
+  if (!refund) {
+    return Response.json({ message: 'Refund request not found' }, { status: 404 })
+  }
+
+  if (!admin && refund.userId !== user?.id) {
+    return Response.json({ message: 'Forbidden' }, { status: 403 })
+  }
+
+  return Response.json({
+    refund: {
+      id: refund._id.toString(),
+      ...refund,
+      _id: undefined,
+    },
+  })
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

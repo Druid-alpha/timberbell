@@ -418,7 +418,7 @@ export default function SiteHeader() {
             type="button"
             aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
             onClick={() => setOpen((prev) => !prev)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#E6D9C8] bg-white/60 text-[#2B2119] transition hover:bg-white/90 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center bg-transparent text-[#2B2119] transition hover:text-[#7C4E2F] lg:hidden"
           >
             <span className="sr-only">Toggle menu</span>
             <span className="relative block h-4 w-5">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ShipmentTracking from '@/app/_components/ShipmentTracking'
@@ -58,7 +57,6 @@ type RefundRecord = {
 const emptyRefundForm = (): RefundFormState => ({ reason: '', message: '', attachments: [] })
 
 export default function AccountPage() {
-  const searchParams = useSearchParams()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [orders, setOrders] = useState<OrderSummary[]>([])
   const [refunds, setRefunds] = useState<RefundRecord[]>([])
@@ -118,19 +116,6 @@ export default function AccountPage() {
 
     return () => window.clearTimeout(timer)
   }, [])
-
-  useEffect(() => {
-    const refundId = searchParams.get('refund')
-    if (!refundId || !refunds.length) return
-
-    const targetRefund = refunds.find((refund) => refund.id === refundId)
-    if (!targetRefund) return
-
-    setRefundOrderId(targetRefund.orderId)
-    window.setTimeout(() => {
-      document.getElementById(`refund-${refundId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 120)
-  }, [refunds, searchParams])
 
   useEffect(() => {
     let active = true
@@ -314,7 +299,7 @@ export default function AccountPage() {
             <SectionHeading
               eyebrow="Account"
               title={`Welcome back, ${displayName}`}
-              description="Manage orders, track deliveries, and stay in touch with the studio."
+              description=""
             />
           </div>
         </div>
@@ -412,7 +397,7 @@ export default function AccountPage() {
                               onClick={() => {
                                 const existingRefund = orderRefunds[0]
                                 if (existingRefund) {
-                                  window.location.href = `/account?refund=${existingRefund.id}`
+                                  window.location.href = `/account/refunds/${existingRefund.id}`
                                   return
                                 }
                                 setRefundOrderId(refundOrderId === order.id ? null : order.id)
