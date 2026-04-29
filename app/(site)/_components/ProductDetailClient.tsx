@@ -254,12 +254,10 @@ export default function ProductDetailClient({
   const availableStock = displayVariant?.stockCount ?? product.inventoryCount ?? 0
   const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
   const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
-  const displayFinishes = displayVariant?.finishes?.length ? displayVariant.finishes.join(', ') : product.finishes?.join(', ') || 'Furniture-grade finish'
   const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
   const detailCards = [
     { label: 'Dimensions', value: product.dimensions && product.dimensions !== 'TBD' ? product.dimensions : 'Made to fit refined everyday spaces' },
     { label: 'Materials', value: displayMaterials },
-    { label: 'Finishes', value: displayFinishes },
   ]
 
   return (

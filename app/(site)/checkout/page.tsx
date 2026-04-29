@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import StateCard from '@/app/_components/StateCard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatMoney } from '@/lib/utils/format'
 import { NIGERIA_STATES, getDeliveryQuote, type DeliveryMethod } from '@/lib/constants/shipping'
@@ -26,6 +25,7 @@ export default function CheckoutPage() {
     city: '',
     state: '',
     area: '',
+    customArea: '',
     postal: '',
     notes: '',
   })
@@ -38,6 +38,7 @@ export default function CheckoutPage() {
         ...current,
         ...parsed,
         area: parsed.area || '',
+        customArea: parsed.customArea || '',
       }))
       if (parsed.deliveryMethod === 'priority') {
         setDeliveryMethod('priority')
@@ -84,6 +85,7 @@ export default function CheckoutPage() {
   const delivery = subtotal > 0 ? deliveryQuote.fee : 0
   const towns = getStateTowns(form.state)
   const areas = getTownAreas(form.state, form.city)
+  const resolvedArea = form.area === '__other' ? form.customArea.trim() : form.area
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -105,14 +107,14 @@ export default function CheckoutPage() {
         address: form.address,
         city: form.city,
         state: form.state,
-        area: form.area,
+        area: resolvedArea,
         postal: form.postal,
       },
       delivery: {
         method: deliveryMethod,
         state: form.state,
         city: form.city,
-        area: form.area,
+        area: resolvedArea,
       },
       notes: form.notes,
     }
@@ -132,35 +134,13 @@ export default function CheckoutPage() {
     }
   }
 
-  const StepIndicator = ({ current }: { current: number }) => (
-    <div className="mb-8 flex flex-wrap items-center gap-3 sm:gap-4">
-      {[1, 2, 3].map((s) => (
-        <div key={s} className="flex items-center gap-2">
-          <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${current === s ? 'bg-[#7C4E2F] text-white' : current > s ? 'bg-[#2A3320] text-white' : 'bg-[#E6D9C8] text-[#8C7A6B]'}`}
-          >
-            {current > s ? 'OK' : s}
-          </div>
-          <span
-            className={`text-[10px] font-bold uppercase tracking-[0.2em] ${current === s ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}
-          >
-            {s === 1 ? 'Shipping' : s === 2 ? 'Method' : 'Order'}
-          </span>
-          {s < 3 && <div className="hidden h-px w-8 bg-[#E6D9C8] sm:block" />}
-        </div>
-      ))}
-    </div>
-  )
-
   if (loading) {
     return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">Initializing studio checkout...</div>
   }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16">
-      <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr]">
-        <div className="space-y-6">
-          <StepIndicator current={step} />
+      <div className="mx-auto max-w-3xl space-y-6">
 
           {!emailVerified ? (
             <div className="rounded-[32px] border border-[#E6D9C8] bg-[#FFF7EF] px-5 py-4 text-sm text-[#6B594A]">
@@ -212,7 +192,7 @@ export default function CheckoutPage() {
                     <select
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.state}
-                      onChange={(e) => setForm({ ...form, state: e.target.value, city: '', area: '' })}
+                      onChange={(e) => setForm({ ...form, state: e.target.value, city: '', area: '', customArea: '' })}
                       required
                     >
                       <option value="">Select state</option>
@@ -223,7 +203,7 @@ export default function CheckoutPage() {
                     <select
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F] disabled:bg-[#F4EEE4] disabled:text-[#8C7A6B]"
                       value={form.city}
-                      onChange={(e) => setForm({ ...form, city: e.target.value, area: '' })}
+                      onChange={(e) => setForm({ ...form, city: e.target.value, area: '', customArea: '' })}
                       disabled={!form.state}
                       required
                     >
@@ -237,7 +217,7 @@ export default function CheckoutPage() {
                     <select
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F] disabled:bg-[#F4EEE4] disabled:text-[#8C7A6B]"
                       value={form.area}
-                      onChange={(e) => setForm({ ...form, area: e.target.value })}
+                      onChange={(e) => setForm({ ...form, area: e.target.value, customArea: e.target.value === '__other' ? form.customArea : '' })}
                       disabled={!form.city}
                       required
                     >
@@ -245,18 +225,24 @@ export default function CheckoutPage() {
                       {areas.map((area) => (
                         <option key={area} value={area}>{area}</option>
                       ))}
+                      <option value="__other">My area is not listed</option>
                     </select>
                     <input
                       placeholder="Postal code"
                       className="rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
                       value={form.postal}
                       onChange={(e) => setForm({ ...form, postal: e.target.value })}
-                      required
                     />
                   </div>
-                  <div className="rounded-3xl border border-[#E6D9C8] bg-white/80 px-5 py-4 text-sm text-[#6B594A]">
-                    Delivery zone: <span className="font-semibold text-[#2B2119]">{deliveryQuote.zone.label}</span> • ETA {deliveryQuote.zone.standardEta}
-                  </div>
+                  {form.area === '__other' ? (
+                    <input
+                      placeholder="Enter your area"
+                      className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-5 py-3 text-sm outline-none transition-all focus:border-[#7C4E2F]"
+                      value={form.customArea}
+                      onChange={(e) => setForm({ ...form, customArea: e.target.value })}
+                      required
+                    />
+                  ) : null}
                 </motion.div>
               )}
 
@@ -271,7 +257,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setDeliveryMethod('standard')}
-                    className={`w-full rounded-3xl border bg-white p-6 text-left shadow-sm transition ${deliveryMethod === 'standard' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
+                    className={`w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition ${deliveryMethod === 'standard' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
@@ -284,7 +270,7 @@ export default function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => setDeliveryMethod('priority')}
-                    className={`w-full rounded-3xl border bg-white p-6 text-left shadow-sm transition ${deliveryMethod === 'priority' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
+                    className={`w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition ${deliveryMethod === 'priority' ? 'border-2 border-[#7C4E2F]' : 'border-[#E6D9C8]'}`}
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="space-y-1">
@@ -318,7 +304,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="border-t border-[#F4EEE4] pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Shipping Address</p>
-                      <p className="mt-1 text-sm font-medium">{form.address}, {form.area}, {form.city}, {form.state} {form.postal}</p>
+                      <p className="mt-1 text-sm font-medium">{form.address}, {resolvedArea}, {form.city}, {form.state}{form.postal ? ` ${form.postal}` : ''}</p>
                     </div>
                     <div className="border-t border-[#F4EEE4] pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Delivery Plan</p>
@@ -356,20 +342,6 @@ export default function CheckoutPage() {
             </div>
           </form>
           {status && <p className="mt-6 text-center text-xs font-bold text-[#7C4E2F] animate-pulse">{status}</p>}
-        </div>
-
-        <div className="space-y-6 lg:sticky lg:top-28">
-          {!activeItems.length ? (
-            <StateCard
-              eyebrow="Checkout"
-              title="There are no active pieces to review"
-              description="Add products to your bundle before returning here to complete delivery details and payment."
-              actionHref="/productfilter"
-              actionLabel="Browse products"
-              compact
-            />
-          ) : null}
-        </div>
       </div>
     </div>
   )

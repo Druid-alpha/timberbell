@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import { clearReservationCountdown } from '@/lib/reservation'
+import { getSharedAudioContext, readSharedAudioArmed } from '@/lib/utils/sharedAudio'
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams()
@@ -14,6 +15,7 @@ export default function CheckoutSuccessPage() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(reference ? 'loading' : 'error')
   const [message, setMessage] = useState(reference ? 'Verifying your Paystack payment...' : 'We could not find a payment reference to verify.')
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [playedSuccessSound, setPlayedSuccessSound] = useState(false)
 
   useEffect(() => {
     if (!reference) {
@@ -55,6 +57,40 @@ export default function CheckoutSuccessPage() {
       active = false
     }
   }, [reference])
+
+  useEffect(() => {
+    if (status !== 'success' || playedSuccessSound || !readSharedAudioArmed()) return
+
+    const context = getSharedAudioContext()
+    if (!context) return
+
+    const play = async () => {
+      if (context.state === 'suspended') {
+        await context.resume().catch(() => null)
+      }
+      if (context.state !== 'running') return
+
+      const now = context.currentTime
+      const gain = context.createGain()
+      gain.connect(context.destination)
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.03)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7)
+
+      ;[740, 880, 1040].forEach((frequency, index) => {
+        const oscillator = context.createOscillator()
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.12)
+        oscillator.connect(gain)
+        oscillator.start(now + index * 0.12)
+        oscillator.stop(now + index * 0.12 + 0.24)
+      })
+
+      setPlayedSuccessSound(true)
+    }
+
+    void play()
+  }, [playedSuccessSound, status])
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 px-6 py-16">
@@ -135,7 +171,7 @@ export default function CheckoutSuccessPage() {
               <Link href="/account" className="rounded-full bg-[#7C4E2F] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-white">
                 View Account
               </Link>
-              <Link href="/productfilter" className="rounded-full border border-[#7C4E2F] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F]">
+              <Link href="/productfilter" scroll className="rounded-full border border-[#7C4E2F] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F]" onClick={() => window.scrollTo({ top: 0, left: 0, behavior: 'auto' })}>
                 Continue Shopping
               </Link>
             </>

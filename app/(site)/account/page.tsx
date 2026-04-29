@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
 import Breadcrumb from '@/app/_components/Breadcrumb'
 import ShipmentTracking from '@/app/_components/ShipmentTracking'
@@ -57,6 +58,7 @@ type RefundRecord = {
 const emptyRefundForm = (): RefundFormState => ({ reason: '', message: '', attachments: [] })
 
 export default function AccountPage() {
+  const searchParams = useSearchParams()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [orders, setOrders] = useState<OrderSummary[]>([])
   const [refunds, setRefunds] = useState<RefundRecord[]>([])
@@ -116,6 +118,19 @@ export default function AccountPage() {
 
     return () => window.clearTimeout(timer)
   }, [])
+
+  useEffect(() => {
+    const refundId = searchParams.get('refund')
+    if (!refundId || !refunds.length) return
+
+    const targetRefund = refunds.find((refund) => refund.id === refundId)
+    if (!targetRefund) return
+
+    setRefundOrderId(targetRefund.orderId)
+    window.setTimeout(() => {
+      document.getElementById(`refund-${refundId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+  }, [refunds, searchParams])
 
   useEffect(() => {
     let active = true
@@ -301,18 +316,6 @@ export default function AccountPage() {
               title={`Welcome back, ${displayName}`}
               description="Manage orders, track deliveries, and stay in touch with the studio."
             />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Orders', value: String(orders.length) },
-                { label: 'Refunds', value: String(refunds.length) },
-                { label: 'Profile', value: profile?.role === 'admin' ? 'Admin' : 'Member' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
@@ -406,10 +409,17 @@ export default function AccountPage() {
                               Receipt PDF
                             </a>
                             <button
-                              onClick={() => setRefundOrderId(refundOrderId === order.id ? null : order.id)}
+                              onClick={() => {
+                                const existingRefund = orderRefunds[0]
+                                if (existingRefund) {
+                                  window.location.href = `/account?refund=${existingRefund.id}`
+                                  return
+                                }
+                                setRefundOrderId(refundOrderId === order.id ? null : order.id)
+                              }}
                               className="rounded-full border border-[#E6D9C8] px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#2B2119]"
                             >
-                              Refund
+                              {orderRefunds.length ? 'View Refund' : 'Refund'}
                             </button>
                           </div>
                         </div>
@@ -486,7 +496,7 @@ export default function AccountPage() {
                             : [{ sender: 'customer', message: refund.message, createdAt: refund.createdAt }]
 
                           return (
-                            <div key={refund.id} className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-sm text-[#6B594A] shadow-sm">
+                            <div id={`refund-${refund.id}`} key={refund.id} className="rounded-2xl border border-[#E6D9C8] bg-[#FCFAF6] p-4 text-sm text-[#6B594A] shadow-sm">
                               <p className="text-[10px] font-bold uppercase tracking-widest text-[#8C7A6B]">Refund status: {refund.status}</p>
                               <p className="mt-2">{refund.reason}</p>
                               {refund.attachments?.length ? (

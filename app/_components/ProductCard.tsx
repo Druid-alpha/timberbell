@@ -167,7 +167,7 @@ export default function ProductCard({
         setHoveredVariantId(null)
       }}
     >
-      <Link href={`/products/${product.id}`} className="relative block h-52 w-full overflow-hidden sm:h-56 md:h-64">
+      <Link href={`/products/${product.id}`} className="relative block h-40 w-full overflow-hidden sm:h-48 md:h-56">
         {primaryImage ? (
           <>
             <img
@@ -232,13 +232,13 @@ export default function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-3 px-4 pb-4 pt-3.5 sm:px-4.5">
-        <div className="space-y-2.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5 px-3.5 pb-3.5 pt-3 sm:px-4">
+        <div className="space-y-2">
           <div className="min-w-0">
             <p className="mb-1 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.22em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2.6rem] break-words font-display text-[1.2rem] leading-snug text-[#2B2119] sm:text-[1.3rem]">
+            <h3 className="line-clamp-2 min-h-[2.2rem] break-words font-display text-[1.05rem] leading-snug text-[#2B2119] sm:text-[1.18rem]">
               <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
                 {product.name}
               </Link>
@@ -247,7 +247,7 @@ export default function ProductCard({
           <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
               <p className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">Price</p>
-              <div className="truncate font-display text-[1.2rem] text-[#2B2119] sm:text-[1.35rem]">{formatMoney(price)}</div>
+              <div className="truncate font-display text-[1.05rem] text-[#2B2119] sm:text-[1.2rem]">{formatMoney(price)}</div>
             </div>
             {product.price > price ? (
               <div className="shrink-0 text-right">
@@ -280,7 +280,7 @@ export default function ProductCard({
           ) : null}
         </div>
 
-        <div className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-[#E6D9C8]/60 pt-3">
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-2 border-t border-[#E6D9C8]/60 pt-2.5">
           <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
             <span className="flex shrink-0 items-center gap-0.5">{renderStars(product.rating)}</span>
             <span className="truncate text-[9px] text-[#8C7A6B]">({product.reviewCount || 0})</span>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import ProductCard from '@/app/_components/ProductCard'
 import Breadcrumb from '@/app/_components/Breadcrumb'
@@ -50,6 +50,8 @@ export default function ProductFilterClient({
   const [page, setPage] = useState(Number(pageParam) || 1)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [pagingDirection, setPagingDirection] = useState<'prev' | 'next' | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     const syncToTop = () => {
@@ -91,7 +93,26 @@ export default function ProductFilterClient({
     setMaterials(materialsParam ? materialsParam.split(',').filter(Boolean) : [])
     setSort(sortParam || 'newest')
     setPage(Number(pageParam) || 1)
+    setPagingDirection(null)
   }, [query, minPriceParam, maxPriceParam, colorsParam, materialsParam, sortParam, pageParam, priceCeiling])
+
+  function goToPage(nextPage: number, direction: 'prev' | 'next') {
+    setPagingDirection(direction)
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    if (category) params.set('category', category)
+    if (minPriceParam) params.set('minPrice', minPriceParam)
+    if (maxPriceParam) params.set('maxPrice', maxPriceParam)
+    if (colorsParam) params.set('colors', colorsParam)
+    if (materialsParam) params.set('materials', materialsParam)
+    if (sortParam) params.set('sort', sortParam)
+    if (nextPage > 1) params.set('page', String(nextPage))
+    params.set('limit', '12')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    startTransition(() => {
+      router.push(`/productfilter?${params.toString()}`, { scroll: true })
+    })
+  }
 
   function buildFilterUrl(next: {
     query?: string
@@ -311,47 +332,23 @@ export default function ProductFilterClient({
             <div className="flex items-center justify-between rounded-3xl border border-[#E6D9C8] bg-white px-6 py-4 text-xs uppercase tracking-[0.3em] text-[#8C7A6B] shadow-sm">
               <button
                 type="button"
-                onClick={() => {
-                  const nextPage = Math.max(1, page - 1)
-                  const params = new URLSearchParams()
-                  if (query) params.set('q', query)
-                  if (category) params.set('category', category)
-                  if (minPriceParam) params.set('minPrice', minPriceParam)
-                  if (maxPriceParam) params.set('maxPrice', maxPriceParam)
-                  if (colorsParam) params.set('colors', colorsParam)
-                  if (materialsParam) params.set('materials', materialsParam)
-                  if (sortParam) params.set('sort', sortParam)
-                  if (nextPage > 1) params.set('page', String(nextPage))
-                  params.set('limit', '12')
-                  router.push(`/productfilter?${params.toString()}`)
-                }}
-                disabled={page <= 1}
-                className={`rounded-full border px-4 py-2 ${page <= 1 ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F]'}`}
+                onClick={() => goToPage(Math.max(1, page - 1), 'prev')}
+                disabled={page <= 1 || isPending}
+                className={`rounded-full border px-4 py-2 transition ${page <= 1 || isPending ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white'} ${pagingDirection === 'prev' && isPending ? 'scale-[0.98] opacity-70' : ''}`}
               >
-                Prev
+                {pagingDirection === 'prev' && isPending ? 'Loading...' : 'Prev'}
               </button>
-              <span>Page {page} / {Math.max(1, Math.ceil(total / 12))}</span>
+              <span>{isPending ? 'Updating page...' : `Page ${page} / ${Math.max(1, Math.ceil(total / 12))}`}</span>
               <button
                 type="button"
                 onClick={() => {
                   const totalPages = Math.max(1, Math.ceil(total / 12))
-                  const nextPage = Math.min(totalPages, page + 1)
-                  const params = new URLSearchParams()
-                  if (query) params.set('q', query)
-                  if (category) params.set('category', category)
-                  if (minPriceParam) params.set('minPrice', minPriceParam)
-                  if (maxPriceParam) params.set('maxPrice', maxPriceParam)
-                  if (colorsParam) params.set('colors', colorsParam)
-                  if (materialsParam) params.set('materials', materialsParam)
-                  if (sortParam) params.set('sort', sortParam)
-                  if (nextPage > 1) params.set('page', String(nextPage))
-                  params.set('limit', '12')
-                  router.push(`/productfilter?${params.toString()}`)
+                  goToPage(Math.min(totalPages, page + 1), 'next')
                 }}
-                disabled={page >= Math.max(1, Math.ceil(total / 12))}
-                className={`rounded-full border px-4 py-2 ${page >= Math.max(1, Math.ceil(total / 12)) ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F]'}`}
+                disabled={page >= Math.max(1, Math.ceil(total / 12)) || isPending}
+                className={`rounded-full border px-4 py-2 transition ${page >= Math.max(1, Math.ceil(total / 12)) || isPending ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white'} ${pagingDirection === 'next' && isPending ? 'scale-[0.98] opacity-70' : ''}`}
               >
-                Next
+                {pagingDirection === 'next' && isPending ? 'Loading...' : 'Next'}
               </button>
             </div>
           ) : null}
