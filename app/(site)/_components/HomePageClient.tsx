@@ -196,7 +196,7 @@ export default function HomePageClient({
               scroll
               onPointerDown={() => { void armSharedAudio() }}
               onClick={() => { void armSharedAudio(); handleFilterJump() }}
-              className="group relative h-[18.5rem] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-white p-6 shadow-[0_24px_60px_-46px_rgba(55,32,15,0.42)] transition-all hover:-translate-y-1 hover:shadow-[0_32px_70px_-42px_rgba(55,32,15,0.5)] sm:h-64 sm:rounded-[40px] sm:p-8"
+              className="group relative h-[18.5rem] overflow-hidden border border-[#E6D9C8] bg-white p-6 shadow-[0_24px_60px_-46px_rgba(55,32,15,0.42)] transition-all hover:-translate-y-1 hover:shadow-[0_32px_70px_-42px_rgba(55,32,15,0.5)] sm:h-64 sm:p-8"
             >
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"

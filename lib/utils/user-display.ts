@@ -38,7 +38,7 @@ export function getUserDisplayName(source: UserDisplaySource) {
 
   if (fullName) return fullName
 
-  return formatEmailSeed(source.email) || 'Atelier Member'
+  return formatEmailSeed(source.email) || 'Guest'
 }
 
 export function getUserInitials(source: UserDisplaySource) {
@@ -54,5 +54,5 @@ export function getUserInitials(source: UserDisplaySource) {
     return (nameParts[0][0] || 'A').toUpperCase()
   }
 
-  return 'A'
+  return 'G'
 }

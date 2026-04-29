@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatMoney } from '@/lib/utils/format'
 import WishlistButton from '@/app/_components/WishlistButton'
@@ -107,19 +107,16 @@ export default function ProductDetailClient({
     })()
   }, [product])
 
-  const averageRating = useMemo(() => {
+  const averageRating = (() => {
     if (!reviews.length) return 0
     return reviews.reduce((sum, review) => sum + (review.rating || 0), 0) / reviews.length
-  }, [reviews])
+  })()
 
-  const ratingLabel = useMemo(() => `${averageRating.toFixed(1)} / 5`, [averageRating])
-  const ratingBreakdown = useMemo(
-    () => [5, 4, 3, 2, 1].map((value) => ({
+  const ratingLabel = `${averageRating.toFixed(1)} / 5`
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((value) => ({
       value,
       count: reviews.filter((review) => Math.round(review.rating || 0) === value).length,
-    })),
-    [reviews]
-  )
+    }))
   const ratingOptions = [
     { value: 5, label: 'Outstanding', note: 'Exceeded expectation' },
     { value: 4, label: 'Excellent', note: 'Strong quality and finish' },
@@ -127,14 +124,7 @@ export default function ProductDetailClient({
     { value: 2, label: 'Fair', note: 'Needs improvement' },
     { value: 1, label: 'Poor', note: 'Did not meet expectation' },
   ] as const
-  const ratingProfiles = {
-    5: { eyebrow: 'Collector Grade', title: 'Deeply worth recommending', accent: 'bg-[#2B2119] text-white', pill: 'border-[#2B2119] text-[#2B2119]' },
-    4: { eyebrow: 'Studio Favorite', title: 'Strong finish and presence', accent: 'bg-[#7C4E2F] text-white', pill: 'border-[#7C4E2F] text-[#7C4E2F]' },
-    3: { eyebrow: 'Balanced Pick', title: 'Good with a few tradeoffs', accent: 'bg-[#C8B39C] text-[#2B2119]', pill: 'border-[#C8B39C] text-[#6B594A]' },
-    2: { eyebrow: 'Needs Work', title: 'Below the expected standard', accent: 'bg-[#E7D5C3] text-[#7C4E2F]', pill: 'border-[#D7B594] text-[#7C4E2F]' },
-    1: { eyebrow: 'Missed The Mark', title: 'Did not deliver the experience', accent: 'bg-[#F0DDD4] text-[#8A3F23]', pill: 'border-[#D6A188] text-[#8A3F23]' },
-  } as const
-  const stars = useMemo(() => {
+  const stars = (() => {
     const safeRating = Math.round(averageRating * 2) / 2
     return Array.from({ length: 5 }).map((_, index) => {
       const starNumber = index + 1
@@ -142,7 +132,7 @@ export default function ProductDetailClient({
       if (safeRating + 0.5 === starNumber) return 'half'
       return 'empty'
     })
-  }, [averageRating])
+  })()
 
   const handleAddToCart = async () => {
     if (!product) return
@@ -276,14 +266,12 @@ export default function ProductDetailClient({
   const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
   const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
   const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
-  const featuredReviewTone = ratingProfiles[Math.max(1, Math.min(5, Math.round(averageRating || 0))) as keyof typeof ratingProfiles]
   const detailCards = [
-    { label: 'Dimensions', value: product.dimensions && product.dimensions !== 'TBD' ? product.dimensions : 'Made to fit refined everyday spaces' },
     { label: 'Materials', value: displayMaterials },
   ]
 
   return (
-    <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 py-16 sm:px-6">
+    <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
       <Breadcrumb
         items={[
           { label: 'Home', href: '/' },
@@ -312,20 +300,26 @@ export default function ProductDetailClient({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
-            <div className="flex gap-4 overflow-x-auto pb-2 sm:grid sm:max-h-[28rem] sm:w-[7rem] sm:grid-cols-1 sm:overflow-y-auto sm:pb-0">
+            <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:max-h-[22rem] sm:w-[5.25rem] sm:grid-cols-1 sm:overflow-y-auto sm:pb-0">
               {galleryImages.map((img: string, i: number) => (
-                <button key={i} onClick={() => setActiveImage(img)} className={`h-24 w-24 shrink-0 overflow-hidden rounded-[22px] border bg-white transition-all sm:w-full ${activeImage === img ? 'border-[#7C4E2F] p-1.5 shadow-md' : 'border-[#E6D9C8] hover:border-[#7C4E2F]/50'}`}>
-                  <img src={img} alt={selectedTitle} className="h-full w-full rounded-[16px] object-cover" />
+                <button key={i} onClick={() => setActiveImage(img)} className={`h-20 w-20 shrink-0 overflow-hidden border bg-white transition-all sm:h-24 sm:w-full ${activeImage === img ? 'border-[#7C4E2F] p-1 shadow-md' : 'border-[#E6D9C8] hover:border-[#7C4E2F]/50'}`}>
+                  <img src={img} alt={selectedTitle} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
-              {detailCards.slice(0, 3).map((item) => (
+            <div className="grid gap-4 md:grid-cols-2">
+              {detailCards.map((item) => (
                 <div key={item.label} className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">{item.label}</p>
                   <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">{item.value}</p>
                 </div>
               ))}
+              <div className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">Description</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
+                  {product.description || 'A refined Timberbell piece designed to bring warmth, balance, and practical elegance into everyday living.'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -417,28 +411,24 @@ export default function ProductDetailClient({
       <RelatedProducts productId={product.id} category={product.category} />
 
       <section className="space-y-8 border-t border-[#E6D9C8] pt-16">
-        <div className="grid gap-5 rounded-[34px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_left,#fffdfa_0%,#f7efe4_50%,#efe4d4_100%)] p-5 shadow-[0_26px_80px_-60px_rgba(55,32,15,0.45)] lg:grid-cols-[1.05fr_0.95fr_auto] lg:items-center">
+        <div className="grid gap-5 rounded-[34px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 shadow-[0_26px_80px_-60px_rgba(55,32,15,0.45)] lg:grid-cols-[0.9fr_1.1fr_auto] lg:items-center">
           <div className="rounded-[28px] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Experience index</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Customer rating</p>
             <div className="mt-4 flex items-end gap-4">
               <span className="font-display text-5xl leading-none text-[#2B2119]">{averageRating ? averageRating.toFixed(1) : '0.0'}</span>
               <div className="pb-1">
                 <div className="flex">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
-                <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} collected notes</p>
+                <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} reviews</p>
               </div>
-            </div>
-            <div className={`mt-5 inline-flex rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] ${featuredReviewTone.pill}`}>
-              {featuredReviewTone.eyebrow}
             </div>
           </div>
           <div className="space-y-3">
             {ratingBreakdown.map((item) => {
               const percentage = reviews.length ? (item.count / reviews.length) * 100 : 0
-              const profile = ratingProfiles[item.value as keyof typeof ratingProfiles]
               return (
                 <div key={item.value} className="rounded-[22px] border border-[#E6D9C8] bg-white/80 p-3">
                   <div className="mb-2 flex items-center justify-between gap-3 text-[11px]">
-                    <span className="font-semibold uppercase tracking-[0.16em] text-[#2B2119]">{profile.eyebrow}</span>
+                    <span className="font-semibold uppercase tracking-[0.16em] text-[#2B2119]">{item.value} star</span>
                     <span className="text-[#8C7A6B]">{item.count}</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-[#E8DCCB]">
@@ -458,17 +448,26 @@ export default function ProductDetailClient({
             <div className="space-y-3">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Design verdict</label>
-                  <p className="mt-2 text-sm text-[#6B594A]">Choose the statement that best matches the full experience, not just the finish.</p>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Overall rating</label>
+                  <p className="mt-2 text-sm text-[#6B594A]">Choose your star score, then add a short note about the real experience.</p>
                 </div>
-                <div className={`rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-[0.22em] ${ratingProfiles[newReview.rating as keyof typeof ratingProfiles].accent}`}>
-                  {ratingProfiles[newReview.rating as keyof typeof ratingProfiles].title}
+                <div className="flex items-center gap-1 rounded-full border border-[#E6D9C8] bg-white px-4 py-2">
+                  {Array.from({ length: 5 }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setNewReview({ ...newReview, rating: idx + 1 })}
+                      className="transition-transform hover:scale-105"
+                      aria-label={`Rate ${idx + 1} stars`}
+                    >
+                      <StarIcon variant={newReview.rating > idx ? 'full' : 'empty'} />
+                    </button>
+                  ))}
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 {ratingOptions.map((option) => {
                   const active = newReview.rating === option.value
-                  const profile = ratingProfiles[option.value as keyof typeof ratingProfiles]
                   return (
                     <button
                       key={option.value}
@@ -478,7 +477,6 @@ export default function ProductDetailClient({
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#8C7A6B]">{profile.eyebrow}</p>
                           <span className="mt-2 block text-sm font-semibold text-[#2B2119]">{option.label}</span>
                         </div>
                         <span className="flex">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={option.value > idx ? 'full' : 'empty'} />)}</span>
@@ -504,12 +502,7 @@ export default function ProductDetailClient({
                   <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />)}</div>
                   <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#8C7A6B]">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`rounded-full border px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] ${ratingProfiles[Math.max(1, Math.min(5, review.rating)) as keyof typeof ratingProfiles].pill}`}>
-                    {ratingProfiles[Math.max(1, Math.min(5, review.rating)) as keyof typeof ratingProfiles].eyebrow}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
-                </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
               </div>
               <p className="border-l-2 border-[#E6D9C8] pl-4 text-sm leading-relaxed text-[#2B2119]">{review.message}</p>
               {review.userId === currentUserId ? (

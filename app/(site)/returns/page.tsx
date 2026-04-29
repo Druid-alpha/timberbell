@@ -5,8 +5,8 @@ import Breadcrumb from '@/app/_components/Breadcrumb'
 
 export default function ReturnsPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-12 px-6 py-16">
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto max-w-4xl space-y-12 px-4 py-10 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Returns & Exchanges' }]} />
         <SectionHeading
           eyebrow="Guarantee"

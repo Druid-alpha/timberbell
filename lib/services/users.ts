@@ -2,6 +2,10 @@ import 'server-only'
 import { ObjectId } from 'mongodb'
 import { getDb } from '@/lib/db'
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export type DbUser = {
   _id: ObjectId
   name: string
@@ -23,7 +27,10 @@ export type DbUser = {
 
 export async function findUserByEmail(email: string) {
   const db = await getDb()
-  return db.collection<DbUser>('users').findOne({ email: email.toLowerCase() })
+  const normalizedEmail = String(email || '').trim().toLowerCase()
+  return db.collection<DbUser>('users').findOne({
+    email: { $regex: `^${escapeRegex(normalizedEmail)}$`, $options: 'i' },
+  })
 }
 
 export async function findUserById(id: string) {
@@ -38,9 +45,13 @@ export async function createUser(data: {
   avatarUrl?: string | null
 }) {
   const db = await getDb()
+  const normalizedEmail = String(data.email || '').trim().toLowerCase()
+  const existing = await findUserByEmail(normalizedEmail)
+  if (existing) return null
+
   const result = await db.collection('users').insertOne({
     name: data.name,
-    email: data.email.toLowerCase(),
+    email: normalizedEmail,
     passwordHash: data.passwordHash,
     emailVerified: false,
     role: 'user',

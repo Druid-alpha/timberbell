@@ -109,29 +109,31 @@ export default function ProductCard({
               <p className="text-[10px] uppercase tracking-[0.3em] text-[#8C7A6B]">
                 {product.category}
               </p>
-              <h3 className="font-display text-[1.35rem] leading-snug text-[#2B2119] break-words">
-                <Link href={`/products/${product.id}`}>{product.name}</Link>
-              </h3>
+              <div className="mt-1 flex items-center gap-2">
+                <h3 className="min-w-0 font-display text-[1.35rem] leading-snug text-[#2B2119] break-words">
+                  <Link href={`/products/${product.id}`}>{product.name}</Link>
+                </h3>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {visiblePalette.map((color, index) => (
+                    <span
+                      key={`${product.id}-list-title-${index}`}
+                      className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  {extraPaletteCount ? (
+                    <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[8px] font-bold text-[#7C4E2F]">
+                      +{extraPaletteCount}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
             </div>
             <div className="text-left md:text-right md:whitespace-nowrap">
               <div className="font-display text-xl text-[#2B2119]">{formatMoney(price)}</div>
             </div>
           </div>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              {visiblePalette.map((color, index) => (
-                <span
-                  key={`${product.id}-list-${index}`}
-                  className="h-4 w-4 shrink-0 rounded-full border border-black/10"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-              {extraPaletteCount ? (
-                <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[8px] font-bold text-[#7C4E2F]">
-                  +{extraPaletteCount}
-                </span>
-              ) : null}
-            </div>
             {variants.length ? (
               <span className="min-w-0 truncate text-[10px] uppercase tracking-[0.18em] text-[#8C7A6B]">
                 {variants.length} variants
@@ -238,11 +240,27 @@ export default function ProductCard({
             <p className="mb-1 truncate text-[8px] font-semibold uppercase tracking-[0.18em] text-[#8C7A6B] sm:text-[9px] sm:tracking-[0.22em]">
               {product.category}
             </p>
-            <h3 className="line-clamp-2 min-h-[2.2rem] break-words font-display text-[1.05rem] leading-snug text-[#2B2119] sm:text-[1.18rem]">
-              <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
-                {product.name}
-              </Link>
-            </h3>
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-2 min-h-[2.2rem] min-w-0 break-words font-display text-[1.05rem] leading-snug text-[#2B2119] sm:text-[1.18rem]">
+                <Link href={`/products/${product.id}`} className="hover:text-[#7C4E2F] transition-colors">
+                  {product.name}
+                </Link>
+              </h3>
+              <div className="flex shrink-0 items-center gap-1">
+                {visiblePalette.map((color, index) => (
+                  <span
+                    key={`${product.id}-grid-title-${index}`}
+                    className="h-3 w-3 shrink-0 rounded-full border border-black/10"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+                {extraPaletteCount ? (
+                  <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[7px] font-bold text-[#7C4E2F]">
+                    +{extraPaletteCount}
+                  </span>
+                ) : null}
+              </div>
+            </div>
           </div>
           <div className="flex items-end justify-between gap-2.5">
             <div className="min-w-0">
@@ -258,21 +276,7 @@ export default function ProductCard({
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-            {visiblePalette.map((color, index) => (
-              <span
-                key={`${product.id}-grid-${index}`}
-                className="h-3 w-3 shrink-0 rounded-full border border-black/10"
-                style={{ backgroundColor: color }}
-              />
-            ))}
-            {extraPaletteCount ? (
-              <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full border border-[#D8C7B3] bg-white px-1 text-[7px] font-bold text-[#7C4E2F]">
-                +{extraPaletteCount}
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-0 items-center justify-end gap-2">
           {variants.length ? (
             <span className="shrink-0 text-[8px] font-semibold uppercase tracking-[0.14em] text-[#8C7A6B]">
               {variants.length} options

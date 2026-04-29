@@ -1,23 +1,8 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/lib/redux/ReduxProvider";
 import { ToastProvider } from "@/app/_components/ToastProvider";
 import { absoluteUrl, siteConfig } from "@/lib/site";
-
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const display = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-display",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -59,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${body.variable} ${display.variable} antialiased`}>
+      <body className="antialiased">
         <ReduxProvider>
           <ToastProvider>
             {children}

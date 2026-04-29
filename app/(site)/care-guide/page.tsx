@@ -20,8 +20,8 @@ export default function CareGuidePage() {
   ]
 
   return (
-    <div className="mx-auto max-w-5xl space-y-24 px-6 py-16">
-      <div className="flex flex-col gap-6">
+    <div className="mx-auto max-w-5xl space-y-20 px-4 py-10 sm:px-6 sm:py-16">
+      <div className="flex flex-col gap-4">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Care Guide' }]} />
         <SectionHeading
           eyebrow="Preservation"

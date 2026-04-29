@@ -282,7 +282,7 @@ export default function ProductFilterClient({
   )
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-12 sm:px-6 sm:py-16">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
       <div className="flex items-center justify-between gap-3">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Shop' }]} />
         <div className="flex items-center gap-2">
@@ -337,9 +337,9 @@ export default function ProductFilterClient({
                 disabled={page <= 1 || isPending}
                 className={`rounded-full border px-4 py-2 transition ${page <= 1 || isPending ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white'} ${pagingDirection === 'prev' && isPending ? 'scale-[0.98] opacity-70' : ''}`}
               >
-                {pagingDirection === 'prev' && isPending ? 'Loading...' : 'Prev'}
+                Prev
               </button>
-              <span>{isPending ? 'Updating page...' : `Page ${page} / ${Math.max(1, Math.ceil(total / 12))}`}</span>
+              <span>{`Page ${page} / ${Math.max(1, Math.ceil(total / 12))}`}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -349,7 +349,7 @@ export default function ProductFilterClient({
                 disabled={page >= Math.max(1, Math.ceil(total / 12)) || isPending}
                 className={`rounded-full border px-4 py-2 transition ${page >= Math.max(1, Math.ceil(total / 12)) || isPending ? 'border-[#E6D9C8] text-[#C1B4A4]' : 'border-[#7C4E2F] text-[#7C4E2F] hover:bg-[#7C4E2F] hover:text-white'} ${pagingDirection === 'next' && isPending ? 'scale-[0.98] opacity-70' : ''}`}
               >
-                {pagingDirection === 'next' && isPending ? 'Loading...' : 'Next'}
+                Next
               </button>
             </div>
           ) : null}

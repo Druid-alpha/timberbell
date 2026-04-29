@@ -32,9 +32,9 @@ export default function JournalPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-24 px-6 py-16">
+    <div className="mx-auto max-w-5xl space-y-20 px-4 py-10 sm:px-6 sm:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Journal' }]} />
         <SectionHeading
           eyebrow="Stories"

@@ -44,6 +44,10 @@ export async function POST(request: Request) {
     avatarUrl: parsed.data.avatarUrl,
   })
 
+  if (!userId) {
+    return NextResponse.json({ message: 'Email already in use' }, { status: 409 })
+  }
+
   const verificationToken = generateOtpCode()
   await createEmailVerification(
     userId,

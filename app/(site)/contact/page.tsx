@@ -36,28 +36,16 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-12 sm:px-6 sm:py-16">
+    <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6 sm:py-16">
       <section className="overflow-hidden rounded-[40px] border border-[#E6D9C8] bg-[radial-gradient(circle_at_top_right,rgba(124,78,47,0.16),transparent_30%),linear-gradient(135deg,#fffdf9,#f4eee4)] px-6 py-8 shadow-[0_30px_90px_-65px_rgba(55,32,15,0.5)] sm:px-8 sm:py-10">
         <div className="flex flex-col gap-6">
           <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Contact' }]} />
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+          <div className="grid gap-8 lg:grid-cols-[1fr] lg:items-end">
             <SectionHeading
               eyebrow="Contact"
               title="Connect with the Timberbell studio"
               description="Ask about deliveries, product guidance, complaints, or general support."
             />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: 'Studio', value: 'Lagos' },
-                { label: 'Response', value: 'Guided' },
-                { label: 'Support', value: 'Direct' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-[24px] border border-[#E6D9C8] bg-white/80 px-4 py-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">{item.label}</p>
-                  <div className="mt-3 font-display text-2xl leading-tight text-[#2B2119]">{item.value}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </section>
