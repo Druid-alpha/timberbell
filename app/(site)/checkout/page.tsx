@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import Breadcrumb from '@/app/_components/Breadcrumb'
 import { formatMoney } from '@/lib/utils/format'
 import { NIGERIA_STATES, getDeliveryQuote, type DeliveryMethod } from '@/lib/constants/shipping'
 import { getStateTowns, getTownAreas } from '@/lib/constants/nigeria-locations'
@@ -134,6 +135,24 @@ export default function CheckoutPage() {
     }
   }
 
+  const StepIndicator = ({ current }: { current: number }) => (
+    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+      {[1, 2, 3].map((s) => (
+        <div key={s} className="flex items-center gap-2">
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${current === s ? 'bg-[#7C4E2F] text-white' : current > s ? 'bg-[#2A3320] text-white' : 'bg-[#E6D9C8] text-[#8C7A6B]'}`}
+          >
+            {current > s ? 'OK' : s}
+          </div>
+          <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${current === s ? 'text-[#2B2119]' : 'text-[#8C7A6B]'}`}>
+            {s}
+          </span>
+          {s < 3 ? <div className="hidden h-px w-8 bg-[#E6D9C8] sm:block" /> : null}
+        </div>
+      ))}
+    </div>
+  )
+
   if (loading) {
     return <div className="mx-auto max-w-6xl px-6 py-16 text-sm text-[#6B594A]">Initializing studio checkout...</div>
   }
@@ -141,14 +160,16 @@ export default function CheckoutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-3xl space-y-6">
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Cart', href: '/cart' }, { label: 'Checkout' }]} />
+        <StepIndicator current={step} />
 
-          {!emailVerified ? (
-            <div className="rounded-[32px] border border-[#E6D9C8] bg-[#FFF7EF] px-5 py-4 text-sm text-[#6B594A]">
-              Verify your email to continue. <Link href="/verify" className="font-semibold underline">Open verification</Link>
-            </div>
-          ) : null}
+        {!emailVerified ? (
+          <div className="rounded-[32px] border border-[#E6D9C8] bg-[#FFF7EF] px-5 py-4 text-sm text-[#6B594A]">
+            Verify your email to continue. <Link href="/verify" className="font-semibold underline">Open verification</Link>
+          </div>
+        ) : null}
 
-          <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-5 shadow-[0_24px_60px_-48px_rgba(55,32,15,0.45)] sm:p-8">
+        <form onSubmit={handleSubmit} className="space-y-8 rounded-[40px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#f8f1e8,#fffdfa)] p-5 shadow-[0_24px_60px_-48px_rgba(55,32,15,0.45)] sm:p-8">
             <AnimatePresence mode="wait">
               {step === 1 && (
                 <motion.div
@@ -340,8 +361,8 @@ export default function CheckoutPage() {
                 {step === 3 ? 'Continue To Paystack' : 'Continue to next step'}
               </button>
             </div>
-          </form>
-          {status && <p className="mt-6 text-center text-xs font-bold text-[#7C4E2F] animate-pulse">{status}</p>}
+        </form>
+        {status && <p className="mt-6 text-center text-xs font-bold text-[#7C4E2F] animate-pulse">{status}</p>}
       </div>
     </div>
   )

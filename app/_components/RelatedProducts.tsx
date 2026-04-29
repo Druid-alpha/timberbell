@@ -77,12 +77,12 @@ export default function RelatedProducts({ productId, category }: { productId: st
           <h2 className="font-display text-3xl text-[#2B2119]">Complementary Pieces</h2>
           <p className="text-sm text-[#6B594A]">Other curators also integrated these into their space.</p>
         </div>
-        <Link href={`/productfilter?category=${category}`} className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] border-b border-[#7C4E2F]">
+        <Link href={`/productfilter?category=${category}`} scroll className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#7C4E2F] border-b border-[#7C4E2F]">
           View collection
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:gap-8 lg:grid-cols-4">
+      <div className="flex gap-4 overflow-x-auto pb-2 lg:grid lg:grid-cols-4 lg:gap-8 lg:overflow-visible lg:pb-0">
         {products.map((product, i) => (
           <motion.div
             key={product.id}
@@ -90,7 +90,7 @@ export default function RelatedProducts({ productId, category }: { productId: st
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
-            className="group relative"
+            className="group relative w-[15rem] shrink-0 lg:w-auto"
           >
             <Link href={`/products/${product.id}`} className="block space-y-4">
               <div className="relative aspect-[4/5] overflow-hidden rounded-[32px] border border-[#E6D9C8] bg-[#F4EEE4]">

@@ -395,22 +395,16 @@ export default function ProductDetailClient({
       <RelatedProducts productId={product.id} category={product.category} />
 
       <section className="space-y-10 border-t border-[#E6D9C8] pt-16">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1">
-            <h2 className="font-display text-4xl text-[#2B2119]">Collector Reviews</h2>
-            <p className="max-w-2xl text-sm text-[#6B594A]">Ratings help buyers trust the piece faster. If you bought it, a quick score and honest note on comfort, finish, delivery, or styling makes this page far more useful.</p>
+        <div className="flex flex-col gap-4 rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <div className="flex shrink-0">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
+            <span className="text-sm font-semibold text-[#2B2119]">{ratingLabel}</span>
+            <span className="text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} reviews</span>
           </div>
           <button onClick={() => { if (myReview) { setEditingReviewId(myReview.id); setNewReview({ rating: myReview.rating, message: myReview.message }) } else { setEditingReviewId(null); setNewReview({ rating: 5, message: '' }) } setIsAddingReview(!isAddingReview) }} className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition-all shadow-sm hover:bg-[#7C4E2F] hover:text-white">
             {isAddingReview ? 'Cancel' : myReview ? 'Edit your rating' : 'Rate this piece'}
           </button>
         </div>
-
-        {!myReview ? (
-          <div className="rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 text-sm text-[#6B594A] shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Why feedback matters</p>
-            <p className="mt-3 leading-relaxed">Your review helps confirm quality, shows how the piece performs in real homes, and gives the next buyer the confidence to choose well.</p>
-          </div>
-        ) : null}
 
         {isAddingReview && (
           <form onSubmit={submitReview} className="space-y-6 rounded-[32px] border-2 border-[#7C4E2F]/10 bg-[#F4EEE4] p-8 shadow-inner arkwood-reveal">
@@ -426,26 +420,22 @@ export default function ProductDetailClient({
             </div>
             <textarea placeholder="Share your thoughts on the texture, comfort, or how it sits in your space..." value={newReview.message} onChange={(e) => setNewReview({ ...newReview, message: e.target.value })} className="h-32 w-full rounded-2xl border border-[#E6D9C8] bg-white p-5 text-sm ring-inset transition-all focus:outline-none focus:ring-2 focus:ring-[#7C4E2F]" required />
             <button type="submit" className="rounded-full bg-[#7C4E2F] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_-10px_rgba(124,78,47,0.5)] transition-all active:scale-[0.97] hover:shadow-lg">
-              {editingReviewId ? 'Update community note' : 'Post community note'}
+              {editingReviewId ? 'Update review' : 'Submit review'}
             </button>
           </form>
         )}
 
-        <div className="grid gap-8">
+        <div className="grid gap-4">
           {reviews.length > 0 ? reviews.map((review, i) => (
-            <div key={review.id || i} className="group relative space-y-5 rounded-[32px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdfa,#ffffff)] p-8 shadow-[0_24px_60px_-45px_rgba(55,32,15,0.45)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_30px_70px_-40px_rgba(55,32,15,0.5)]">
+            <div key={review.id || i} className="space-y-4 rounded-[24px] border border-[#E6D9C8] bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between">
-                <div className="flex gap-0.5 rounded-full border border-[#E6D9C8] bg-[#F9F5EF] px-3 py-2">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />)}</div>
-                <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#8C7A6B]">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-              </div>
-              <p className="text-lg font-medium italic leading-relaxed text-[#2B2119]">&ldquo;{review.message}&rdquo;</p>
-              <div className="flex items-center gap-3 pt-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F4EEE4] text-[10px] font-bold text-[#7C4E2F] ring-1 ring-[#7C4E2F]/10 shadow-inner">{review.customer?.[0]?.toUpperCase()}</div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
-                  <p className="text-[9px] uppercase tracking-[0.1em] text-[#8C7A6B]">Verified Curator</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />)}</div>
+                  <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#8C7A6B]">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
               </div>
+              <p className="text-sm leading-relaxed text-[#2B2119]">{review.message}</p>
               {review.userId === currentUserId ? (
                 <div className="flex flex-wrap gap-4 border-t border-[#F4EEE4] pt-4">
                   <button type="button" onClick={() => { setEditingReviewId(review.id); setNewReview({ rating: review.rating, message: review.message }); setIsAddingReview(true) }} className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Edit</button>
