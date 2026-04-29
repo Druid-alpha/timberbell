@@ -7,7 +7,6 @@ import WishlistButton from '@/app/_components/WishlistButton'
 import { useAppDispatch } from '@/lib/redux/hooks'
 import { addItem } from '@/lib/redux/cartSlice'
 import Breadcrumb from '@/app/_components/Breadcrumb'
-import RelatedProducts from '@/app/_components/RelatedProducts'
 import { useToast } from '@/app/_components/ToastProvider'
 import { ensureReservationCountdown } from '@/lib/reservation'
 import { getColorName } from '@/lib/utils/color-name'
@@ -113,17 +112,6 @@ export default function ProductDetailClient({
   })()
 
   const ratingLabel = `${averageRating.toFixed(1)} / 5`
-  const ratingBreakdown = [5, 4, 3, 2, 1].map((value) => ({
-      value,
-      count: reviews.filter((review) => Math.round(review.rating || 0) === value).length,
-    }))
-  const ratingOptions = [
-    { value: 5, label: 'Outstanding', note: 'Exceeded expectation' },
-    { value: 4, label: 'Excellent', note: 'Strong quality and finish' },
-    { value: 3, label: 'Good', note: 'Solid with minor tradeoffs' },
-    { value: 2, label: 'Fair', note: 'Needs improvement' },
-    { value: 1, label: 'Poor', note: 'Did not meet expectation' },
-  ] as const
   const stars = (() => {
     const safeRating = Math.round(averageRating * 2) / 2
     return Array.from({ length: 5 }).map((_, index) => {
@@ -210,22 +198,6 @@ export default function ProductDetailClient({
 
   const myReview = reviews.find((review) => review.userId === currentUserId) ?? null
 
-  async function deleteReview(id: string) {
-    const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE' })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      setStatus(data.message || 'Unable to delete your review.')
-      return
-    }
-    const remaining = reviews.filter((review) => review.id !== id)
-    setReviews(remaining)
-    if (editingReviewId === id) {
-      setEditingReviewId(null)
-      setIsAddingReview(false)
-      setNewReview({ rating: 5, message: '' })
-    }
-  }
-
   const StarIcon = ({ variant, size = 'sm' }: { variant: 'full' | 'half' | 'empty'; size?: 'sm' | 'lg' }) => (
     <svg viewBox="0 0 24 24" className={`${size === 'lg' ? 'h-5 w-5' : 'h-3.5 w-3.5'}`} fill="none" aria-hidden="true">
       <defs>
@@ -266,9 +238,6 @@ export default function ProductDetailClient({
   const displayStockStatus = displayVariant?.stockStatus ?? product.stockStatus
   const displayMaterials = displayVariant?.materials?.length ? displayVariant.materials.join(', ') : product.materials?.join(', ') || 'Natural wood & organic fabric'
   const selectedTitle = displayVariant?.name ? `${product.name} - ${displayVariant.name}` : product.name
-  const detailCards = [
-    { label: 'Materials', value: displayMaterials },
-  ]
 
   return (
     <div className="mx-auto max-w-7xl space-y-16 overflow-x-hidden px-4 py-10 sm:px-6 sm:py-16">
@@ -307,20 +276,7 @@ export default function ProductDetailClient({
                 </button>
               ))}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {detailCards.map((item) => (
-                <div key={item.label} className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">{item.label}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">{item.value}</p>
-                </div>
-              ))}
-              <div className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">Description</p>
-                <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
-                  {product.description || 'A refined Timberbell piece designed to bring warmth, balance, and practical elegance into everyday living.'}
-                </p>
-              </div>
-            </div>
+            <div />
           </div>
         </div>
 
@@ -339,6 +295,19 @@ export default function ProductDetailClient({
                 </div>
               </div>
               <WishlistButton productId={product.id} />
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">Description</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">
+                  {product.description || 'A refined Timberbell piece designed to bring warmth, balance, and practical elegance into everyday living.'}
+                </p>
+              </div>
+              <div className="rounded-[26px] border border-[#E6D9C8] bg-white/80 p-5 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8C7A6B]">Materials</p>
+                <p className="mt-3 text-sm leading-relaxed text-[#6B594A]">{displayMaterials}</p>
+              </div>
             </div>
 
             {product.variants?.length > 0 && (
@@ -408,39 +377,23 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      <RelatedProducts productId={product.id} category={product.category} />
-
       <section className="space-y-8 border-t border-[#E6D9C8] pt-16">
-        <div className="grid gap-5 rounded-[34px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 shadow-[0_26px_80px_-60px_rgba(55,32,15,0.45)] lg:grid-cols-[0.9fr_1.1fr_auto] lg:items-center">
-          <div className="rounded-[28px] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Customer rating</p>
-            <div className="mt-4 flex items-end gap-4">
-              <span className="font-display text-5xl leading-none text-[#2B2119]">{averageRating ? averageRating.toFixed(1) : '0.0'}</span>
-              <div className="pb-1">
-                <div className="flex">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
-                <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} reviews</p>
+        <div className="rounded-[34px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdf9,#f7efe4)] p-5 shadow-[0_26px_80px_-60px_rgba(55,32,15,0.45)]">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-[28px] border border-white/70 bg-white/70 p-5 shadow-sm backdrop-blur">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#8C7A6B]">Customer rating</p>
+              <div className="mt-4 flex items-end gap-4">
+                <span className="font-display text-5xl leading-none text-[#2B2119]">{averageRating ? averageRating.toFixed(1) : '0.0'}</span>
+                <div className="pb-1">
+                  <div className="flex">{stars.map((s, i) => <StarIcon key={i} variant={s as any} />)}</div>
+                  <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-[#8C7A6B]">{reviews.length} reviews</p>
+                </div>
               </div>
             </div>
+            <button onClick={() => { if (myReview) { setEditingReviewId(myReview.id); setNewReview({ rating: myReview.rating, message: myReview.message }) } else { setEditingReviewId(null); setNewReview({ rating: 5, message: '' }) } setIsAddingReview(!isAddingReview) }} className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition-all shadow-sm hover:bg-[#7C4E2F] hover:text-white">
+              {isAddingReview ? 'Close rating' : myReview ? 'Edit your rating' : 'Rate this product'}
+            </button>
           </div>
-          <div className="space-y-3">
-            {ratingBreakdown.map((item) => {
-              const percentage = reviews.length ? (item.count / reviews.length) * 100 : 0
-              return (
-                <div key={item.value} className="rounded-[22px] border border-[#E6D9C8] bg-white/80 p-3">
-                  <div className="mb-2 flex items-center justify-between gap-3 text-[11px]">
-                    <span className="font-semibold uppercase tracking-[0.16em] text-[#2B2119]">{item.value} star</span>
-                    <span className="text-[#8C7A6B]">{item.count}</span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-[#E8DCCB]">
-                    <div className="h-full rounded-full bg-[#7C4E2F]" style={{ width: `${percentage}%` }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-          <button onClick={() => { if (myReview) { setEditingReviewId(myReview.id); setNewReview({ rating: myReview.rating, message: myReview.message }) } else { setEditingReviewId(null); setNewReview({ rating: 5, message: '' }) } setIsAddingReview(!isAddingReview) }} className="rounded-full border-2 border-[#7C4E2F] px-8 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#7C4E2F] transition-all shadow-sm hover:bg-[#7C4E2F] hover:text-white">
-            {isAddingReview ? 'Cancel' : myReview ? 'Edit your review' : 'Write a review'}
-          </button>
         </div>
 
         {isAddingReview && (
@@ -448,8 +401,8 @@ export default function ProductDetailClient({
             <div className="space-y-3">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Overall rating</label>
-                  <p className="mt-2 text-sm text-[#6B594A]">Choose your star score, then add a short note about the real experience.</p>
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-[#8C7A6B]">Tap to select stars</label>
+                  <p className="mt-2 text-sm text-[#6B594A]">Choose your stars, then add your own note.</p>
                 </div>
                 <div className="flex items-center gap-1 rounded-full border border-[#E6D9C8] bg-white px-4 py-2">
                   {Array.from({ length: 5 }).map((_, idx) => (
@@ -465,60 +418,13 @@ export default function ProductDetailClient({
                   ))}
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {ratingOptions.map((option) => {
-                  const active = newReview.rating === option.value
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setNewReview({ ...newReview, rating: option.value })}
-                      className={`rounded-[24px] border px-4 py-4 text-left transition-all ${active ? 'border-[#7C4E2F] bg-white shadow-[0_20px_40px_-32px_rgba(55,32,15,0.55)]' : 'border-[#E6D9C8] bg-white/70 hover:border-[#7C4E2F]'}`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <span className="mt-2 block text-sm font-semibold text-[#2B2119]">{option.label}</span>
-                        </div>
-                        <span className="flex">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={option.value > idx ? 'full' : 'empty'} />)}</span>
-                      </div>
-                      <p className="mt-2 text-xs text-[#8C7A6B]">{option.note}</p>
-                    </button>
-                  )
-                })}
-              </div>
             </div>
-            <textarea placeholder="What stood out about the quality, comfort, finish, delivery, or fit in your space?" value={newReview.message} onChange={(e) => setNewReview({ ...newReview, message: e.target.value })} className="h-32 w-full rounded-2xl border border-[#E6D9C8] bg-white p-5 text-sm ring-inset transition-all focus:outline-none focus:ring-2 focus:ring-[#7C4E2F]" required />
+            <textarea placeholder="Share your experience with the product." value={newReview.message} onChange={(e) => setNewReview({ ...newReview, message: e.target.value })} className="h-32 w-full rounded-2xl border border-[#E6D9C8] bg-white p-5 text-sm ring-inset transition-all focus:outline-none focus:ring-2 focus:ring-[#7C4E2F]" required />
             <button type="submit" className="rounded-full bg-[#7C4E2F] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_-10px_rgba(124,78,47,0.5)] transition-all active:scale-[0.97] hover:shadow-lg">
               {editingReviewId ? 'Update review' : 'Submit review'}
             </button>
           </form>
         )}
-
-        <div className="grid gap-4">
-          {reviews.length > 0 ? reviews.map((review, i) => (
-            <div key={review.id || i} className="space-y-4 rounded-[28px] border border-[#E6D9C8] bg-[linear-gradient(180deg,#fffdfa,#ffffff)] p-5 shadow-[0_18px_50px_-40px_rgba(55,32,15,0.35)]">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, idx) => <StarIcon key={idx} variant={review.rating > idx ? 'full' : 'empty'} />)}</div>
-                  <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#8C7A6B]">{new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#2B2119]">{review.customer}</span>
-              </div>
-              <p className="border-l-2 border-[#E6D9C8] pl-4 text-sm leading-relaxed text-[#2B2119]">{review.message}</p>
-              {review.userId === currentUserId ? (
-                <div className="flex flex-wrap gap-4 border-t border-[#F4EEE4] pt-4">
-                  <button type="button" onClick={() => { setEditingReviewId(review.id); setNewReview({ rating: review.rating, message: review.message }); setIsAddingReview(true) }} className="text-[10px] font-bold uppercase tracking-widest text-[#7C4E2F]">Edit</button>
-                  <button type="button" onClick={() => deleteReview(review.id)} className="text-[10px] font-bold uppercase tracking-widest text-red-600">Delete</button>
-                </div>
-              ) : null}
-            </div>
-          )) : (
-            <div className="flex flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-[#E6D9C8] py-20 text-center">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#F4EEE4]"><StarIcon variant="empty" size="lg" /></div>
-              <p className="max-w-xs text-sm font-medium text-[#8C7A6B]">No community notes yet. Share your experience to help others decide.</p>
-            </div>
-          )}
-        </div>
       </section>
     </div>
   )

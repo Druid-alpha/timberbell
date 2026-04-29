@@ -117,11 +117,16 @@ export default function RegisterPage() {
       return
     }
 
+    if (res.status === 409) {
+      setStatus('That email is already registered. Please sign in instead.')
+      return
+    }
+
     setStatus(data.message || 'Registration failed. Try again.')
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 px-6 py-16">
+    <div className="mx-auto max-w-4xl space-y-10 px-6 py-10 sm:py-16">
       <SectionHeading
         eyebrow="Register"
         title="Create your Timberbell profile"

@@ -1,15 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import SectionHeading from '@/app/_components/SectionHeading'
+
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      {open ? (
+        <>
+          <path d="M3 3l18 18" strokeLinecap="round" />
+          <path d="M10.6 10.7a3 3 0 0 0 4.1 4.1" strokeLinecap="round" />
+          <path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c5.6 0 9.4 4.4 10 5.2a.9.9 0 0 1 0 .9 17.6 17.6 0 0 1-4.2 4.5" strokeLinecap="round" />
+          <path d="M6.2 6.3A18 18 0 0 0 2 9.2a.9.9 0 0 0 0 .9C2.6 11 6.4 15.4 12 15.4c.8 0 1.6-.1 2.4-.3" strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <path d="M2 12s3.8-8 10-8 10 8 10 8-3.8 8-10 8-10-8-10-8Z" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  )
+}
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const passwordTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current)
+    }
+  }, [])
+
+  function revealPassword() {
+    setShowPassword(true)
+    if (passwordTimerRef.current) window.clearTimeout(passwordTimerRef.current)
+    passwordTimerRef.current = window.setTimeout(() => setShowPassword(false), 2000)
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -39,7 +73,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 px-6 py-16">
+    <div className="mx-auto max-w-4xl space-y-10 px-6 py-10 sm:py-16">
       <SectionHeading
         eyebrow="Login"
         title="Welcome back to Timberbell"
@@ -55,14 +89,24 @@ export default function LoginPage() {
             placeholder="Email address"
             className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
           />
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 text-sm"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              className="w-full rounded-2xl border border-[#E6D9C8] bg-white px-4 py-3 pr-14 text-sm"
+            />
+            <button
+              type="button"
+              onClick={revealPassword}
+              className="absolute inset-y-0 right-2 inline-flex items-center justify-center rounded-full px-3 text-[#8C7A6B] transition hover:text-[#7C4E2F]"
+              aria-label="Show password for 2 seconds"
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          </div>
           <button
             type="submit"
             className="w-full rounded-full bg-[#7C4E2F] px-5 py-3 text-sm font-semibold text-white"
